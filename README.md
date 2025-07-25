@@ -19,7 +19,7 @@ This repository uses two licenses.
 
 * **Apache License 2.0**
 
-  all directories except `./_collections/_portal_posts`
+  All directories except `./_collections/_portal_posts`
 * **Creative Commons - Attribution-ShareAlike 4.0 International**
 
-  `./_collections/_portal_posts` directory
+  Directory `./_collections/_portal_posts`. License is available here: `./_collections/_portal_posts/_LICENCE.txt`

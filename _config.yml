@@ -50,6 +50,7 @@ exclude:
   - CODE_OF_CONDUCT.md
   - CONTRIBUTING.md
   - LICENSE.txt
+  - _collections/_portal_posts/LICENSE.txt
 
 # Don't generate json file on build
 redirect_from:
