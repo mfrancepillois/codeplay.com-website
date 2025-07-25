@@ -29,9 +29,9 @@
 {%- if layout.thumbnail or page.thumbnail -%}
 
 {%- if page.thumbnail -%}
-{{tabs}}<meta property="og:image" content="{{site.url}}{{page.thumbnail}}" />
+{{tabs}}<meta property="og:image" content="{{site.url}}/{{ site.baseurl }}{{page.thumbnail}}" />
 {%- else -%}
-{{tabs}}<meta property="og:image" content="{{site.url}}{{layout.thumbnail}}" />
+{{tabs}}<meta property="og:image" content="{{site.url}}/{{ site.baseurl }}{{layout.thumbnail}}" />
 {%- endif -%}
 
 {{emptyline}}
@@ -47,5 +47,5 @@
 {{emptyline}}
 
 {%- if page.url -%}
-{{tabs}}<meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+{{tabs}}<meta property="og:url" content="{{ site.url }}/{{ site.baseurl }}{{ page.url }}" />
 {%- endif -%}

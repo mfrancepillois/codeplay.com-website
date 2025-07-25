@@ -23,10 +23,10 @@
             "id": "{{post.title | slugify}}",
             "title": "{{ post.title | escape }}",
             "authors": [{
-                "avatar": "{{ site.url }}{{foundAuthor.avatar}}",
+                "avatar": "{{ site.url }}/{{ site.baseurl }}{{foundAuthor.avatar}}",
                 "name": "{{foundAuthor.title}}"
             }],
-            "url": "{{ site.url }}{{ post.url }}",
+            "url": "{{ site.url }}/{{ site.baseurl }}{{ post.url }}",
             "category": "{{ post.category }}",
             "thumbnail": "{{ site.url }}{{ post.thumbnail }}",
             "description": "{{ post.description }}",
