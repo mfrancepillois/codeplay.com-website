@@ -1,0 +1,54 @@
+---
+id: 171
+category: sieve
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "What is Sieve?"
+url: what-is-sieve
+description:
+redirect_from:
+  - /company/documents/what-is-sieve
+layout: company/documents/view
+---
+
+<p>
+The Sieve System ===
+Single-core C++ software contains large numbers of dependencies. Dependencies are situations where one part of the software must be executed after another part of the software. Therefore, the 2 sections cannot be executed at the same time. It might be possible for the programmer to remove those dependencies, either because they are false dependencies (false dependencies are dependencies that exist because of the way the program is written, they do not have to be there) or because the algorithm used has dependencies in it (so the programmer would use a different algorithm if they were writing the program for a multi-core processor).
+</p><p>
+It is impracticable for a compiler to automatically change the order of execution of the program to make several parts of the program to be executed at the same time on different processors. Programmer intervention is required. The Codeplay Sieve C++ solution is aimed at reducing to a minimum the extent of such programmer intervention. The Sieve concept is very simple, but has a significant impact on the ability of programmers to write software for parallel systems.
+</p><p>
+The Sieve concept is very simple, but has a significant impact on the ability of programmers to write software for parallel systems.
+</p><p>
+A sieve is defined as a block of code contained within a sieve {} marker and any functions that are marked with sieve.
+Inside a sieve, all side-effects are delayed until the end of the sieve.
+Side effects are defined as modifications of data that are declared outside the sieve.
+These 3 rules have a huge impact on the ability of a compiler to auto-parallelize.
+</p><p>
+The Sieve concept is called &ldquo;sieve&rdquo; because it sieves out the side effects from your software and then lets you apply them later.
+</p><p>
+Delaying the side effects removes a huge number of dependencies (leaving only the more complex dependencies to be dealt with through programmer intervention), which allows the compiler to safely alter the order of execution without breaking the reliable execution of the program. This means that the compiler can automatically split up the program and distribute it amongst multiple processors to be executed at the same time (i.e. re-ordering). Inside a sieve block, dependencies can only exist on named local variables. Global variables or pointers to external data can never have dependencies inside a sieve block. This means that any dependencies that do still exist inside a sieve block can be identified by the compiler and output in a simple message that the programmer can easily understand.  The compiler will print a message saying that there is a dependency on variable 'x' at line n and that the programmer might want to find a way to remove the dependency to increase parallelism. Removing the last few dependencies is essential to achieving parallel execution of the program. So by providing clear, understandable information to the programmer about where the compiler cannot auto-parallelize, the programmer is able to modify the program to be in a form that the compiler can auto-parallelize.
+</p><p>
+Separating data outside the sieve from data inside the sieve also allows multiple memory spaces to be used. Multiple memory spaces can improve performance of multi-core software by having a different memory space for each processor. By having a separate memory space for each processor, each processor can load and store data from its local memory very quickly. By also providing slower, shared memory spaces, processors can work on shared data.  Special Direct Memory Access units (DMA) can be created to quickly transfer data between the different memory spaces. DMA has the advantage over random memory access that it can stream data quickly from large, cheap DRAM.
+</p><p>
+Sieve is well suited to non-uniform memory architectures and can use speculative execution, extending the range of programs which can be parallelized.
+</p><p>
+Because of the deterministic characteristic of the Sieve concept, Sieve code will behave in the same way on a single-core environment that it does on a multi-core environment, which means that is possible to debug Sieve C++ programs in a single-threaded environment, duplicating and fixing bugs that exist in the multi-threaded execution.
+</p><p>
+Sieve is particularly suited to software development for parallel processor environments, environments such as:
+</p><p>
+Distributed computing environments in which a single application is to be distributed across
+Multiple computers across a network (e.g. a &ldquo;grid&rdquo;).
+Situations where a processor can be customized to the application.
+Multiple processor server systems.
+Dual-core or quad-core PC processors
+Special-purpose co-processors
+Multi-core special-purpose processors.
+</p><p>
+It is possible to write a single Sieve C++ program and try it out on different combinations of processors, memory sizes and clock speeds to compare power needs against performance.
+</p><p>
+The Sieve system provides the ideal environment for development of complex software which is portable and scalable for use on parallel processors.
+</p>
+
+
+
+

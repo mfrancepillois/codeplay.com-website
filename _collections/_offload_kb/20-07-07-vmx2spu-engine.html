@@ -1,0 +1,41 @@
+---
+id: 86
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "VMX2SPU Engine"
+redirect_from:
+  - /kb/86
+layout: products/offload/kb/view
+---
+<p>Offload&trade; features a fully optimizing VMX2SPU engine. What this means, is that any code the Offload&trade; compiler finds which needs duplicating for SPU usage will be transformed from optimized Altivec intrinsic into optimal SPU intrinsics. This is incredibly useful as it can exploit lots of performance with very little programmer effort.
+</p><p>
+Like the VMX2SPU header file included in some Cell implementations, Altivec intrinsics are transformed into a single SPU intrinsic, or a series of them depending on operation.
+</p><p>
+Where the Offload&trade; really shines however is that with the VMX2SPU implementation being integrated into the compiler, we can take full advantage of it's knowledge of data alignment and movement.
+</p>
+
+<p>
+<strong>For example:</strong>
+</p>
+<pre><code>//PPU code for loading an unaligned vector pointer
+inline vector float inline loadUnaligned(float* p)
+{
+	vector float left = vec_lvlx(0, p);
+	vector float right = vec_lvrx(16, p);
+	return vec_or(left, right);
+}
+</code></pre><p>On SPU, this will be transformed into the following using traditional VMX2SPU headers:
+</p>
+<pre><code>inline __offload vector float inline loadUnaligned(float* p)
+{
+	vector unsigned char *p1 = (vector unsigned char *)((unsigned char *)(p) + 0);
+	vector float left = (spu_slqwbyte(*(__typeof(p1))(((int)p1) &amp; ~0xF), (unsigned int)p1 &amp; 0xF));
+	vector unsigned char *p2 = (vector unsigned char *)((unsigned char *)(p) + 16);
+	vector float right =(spu_slqwbyte(*(__typeof(p2))(((int)p2) &amp; ~0xF), (unsigned int)p2 &amp; 0xF));
+	return spu_or(left, right);
+}
+</code></pre><p>Using &lt;offload&gt; however, would allow that code to be optimized further; if an aligned pointer was passed into loadUnaligned and the function was inlined the two loads and spu_or would be optimized away into a single load operation. This yields fast code, and can have much smaller code size.
+</p>
+
+

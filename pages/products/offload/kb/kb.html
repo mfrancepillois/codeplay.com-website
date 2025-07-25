@@ -1,0 +1,117 @@
+---
+layout: page
+nav_style: alt
+title: Offload Knowledge Base
+permalink: /products/offload/kb/
+stylesheets:
+  - /assets/css/pages/products/offload/kb/kb.css
+redirect_from:
+  - /products/offload/knowledgebase
+  - /products/offload/
+---
+
+<!-- Section: KB -->
+<section id="kb" class="reduce-top-header">
+    <div class="wrapper">
+        <div class="side-bar">
+            <header>
+                <h1>Offload KB</h1>
+            </header>
+
+            <div class="recruitment-notice">
+                <h1>Old Content Alert</h1>
+                <p>Please note that this is a old document archive and the will most likely be out dated or superseded
+                    by various other products and is purely here for historical purposes.</p>
+            </div>
+
+            <div id="kb-list" class="columns two">
+                <div>
+                    <h2>Getting Started</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "getting-started" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>Getting Performance</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "performance" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>Offload Library</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "offload-library" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+                </div>
+                <div>
+                    <h2>FAQs</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "faq" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>Case Studies</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "case-studies" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>Features</h2>
+                    <ol>
+                        {%- assign items = site.offload_kb | where: "category", "features" -%}
+                        {%- for item in items -%}
+                        <li>
+                            <div>
+                                <a href="{{item.url}}">
+                                    <h3>{{item.title}}</h3>
+                                </a>
+                            </div>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

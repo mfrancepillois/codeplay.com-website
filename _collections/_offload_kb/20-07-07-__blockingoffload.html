@@ -1,0 +1,27 @@
+---
+id: 9
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__blockingoffload"
+redirect_from:
+  - /kb/9
+layout: products/offload/kb/view
+---
+<p>The basic Offload&trade; keyword is __blockingoffload - which is used to denote a synchronous or blocking offload block (as opposed to non-blocking offload blocks).
+</p>
+<pre><code>__blockingoffload()
+{
+	; // performs it's execution on the SPU
+};
+</code></pre><p>The __blockingoffload keyword is followed by function-like parenthesis, then the scope of the block. Any work within this scope is performed on the SPU instead of on the PPU. A __blockingoffload block can optionally take parameters that will be passed into the __blockingoffload block's context.
+</p>
+<pre><code>int number = 42;
+__blockingoffload(number)
+{
+	;
+};
+</code></pre><p> Within the __blockingoffload block, number has been passed in by value, and can be used in calculations within. Parameters passed into __blockingoffload blocks are useful for bringing local variables on the stack within the __blockingoffload block for use.
+</p>
+
+

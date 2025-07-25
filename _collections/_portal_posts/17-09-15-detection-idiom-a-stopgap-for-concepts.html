@@ -1,0 +1,180 @@
+---
+id: 274
+url: 09-15-17-detection-idiom-a-stopgap-for-concepts
+user_id: 813
+date: 2017-09-15T12:22:30.7200Z
+category: blogs
+title: "Detection Idiom - A Stopgap for Concepts"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/09-15-17-detection-idiom-a-stopgap-for-concepts
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Codeplay engineer Simon Brand is speaking at Meeting C++ later this year and regularly blogs about C++ on his opinions and experiences. This week Simon has published a blog covering his opinions on the Concepts proposal for the C++ standard.&nbsp; Concepts is a proposed C++ feature which allows succinct,&nbsp;expressive,&nbsp;and powerful constraining of templates. They have now been merged in to C++20,&nbsp;but in many cases, we need similar functionality right now. This post shows how you can use the Deduction Idiom to access some of that power in your C++ today,&nbsp;as well as the metaprogramming tricks which underlie its implementation.</p><br>
+<p>Concepts is a proposed C++ feature which allows succinct, expressive, and powerful constraining of templates. They have been threatening to get in to C++ for a long time now, with the first proposal being rejected for C++11. They were finally merged in to C++20 a few months ago, which means we need to hold on for another few years before they’re in the official standard rather than a Technical Specification. In the mean time, there have been various attempts to implement parts of concepts as a library so that we can have access to some of the power of Concepts without waiting for the new standard. The detection idiom, which is part of the Library Fundamentals 2 Technical Specification, is one such solution. This post will outline the utility of it, and show the techniques which underlie its implementation.</p>
+<p><strong><u>A problem</u></strong></p>
+<p>We are developing a generic library. At some point on our library we need to calculate the foo factor for whatever types the user passes in.</p>
+<p>template &lt;class T&gt;</p>
+<p>int calculate_foo_factor (const T&amp; t);</p>
+<p><em>Some types will have specialized implementations of this function, but for types which don’t we’ll need some generic calculation.</em></p>
+<p>struct has_special_support {</p>
+<p>&nbsp; int get_foo() const;</p>
+<p>};</p>
+<p>struct will_need_generic_calculation {</p>
+<p>&nbsp; // no get_foo member function</p>
+<p>};</p>
+<p><em>Using concepts we could write calculate_foo_factor like so:</em></p><br>
+<p>template &lt;class T&gt;</p>
+<p>concept bool SupportsFoo = requires (T t) {</p>
+<p>&nbsp; { t.get_foo() } -&gt; int;</p>
+<p>};</p>
+<p>template &lt;SupportsFoo T&gt;</p>
+<p>int calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; &nbsp; return t.get_foo();</p>
+<p>}</p>
+<p>template &lt;class T&gt;</p>
+<p>int calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; &nbsp; // insert generic calculation here</p>
+<p>&nbsp; &nbsp; return 42;</p>
+<p>}</p>
+<p>This is quite succinct and clear: SupportsFoo is a concept which checks that we can call get_foo on t with no arguments, and that the type of that expression is int. The first calculate_foo_factor will be selected by overload resolution for types which satisfy the SupportsFoo concept, and the second will be chosen for those which don’t.</p>
+<p>Unfortunately, our library has to support C++14. We’ll need to try something different. I’ll demonstrate a bunch of possible solutions to this problem in the next section. Some of them may seem complex if you aren’t familiar with the metaprogramming techniques used, but for now, just note the differences in complexity and abstraction between them. The metaprogramming tricks will all be explained in the following section.</p><br>
+<p><strong><u>Solutions</u></strong></p>
+<p><em>Here’s a possible solution using expression SFINAE:</em></p>
+<p>namespace detail {</p>
+<p>&nbsp; template &lt;class T&gt;</p>
+<p>&nbsp; auto calculate_foo_factor (const T&amp; t, int)</p>
+<p>&nbsp; &nbsp; -&gt; decltype(std::declval&lt;T&gt;().get_foo()) {</p>
+<p>&nbsp; &nbsp; return t.get_foo();</p>
+<p>&nbsp; }</p>
+<p>&nbsp; template &lt;class T&gt;</p>
+<p>&nbsp; int calculate_foo_factor (const T&amp; t, ...) {</p>
+<p>&nbsp; &nbsp; // insert generic calculation here</p>
+<p>&nbsp; &nbsp; return 42;</p>
+<p>&nbsp; }</p>
+<p>}</p>
+<p>template &lt;class T&gt;</p>
+<p>int calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; return detail::calculate_foo_factor(t, 0);</p>
+<p>}</p>
+<p>Well, it works, but it’s not exactly clear. What’s the int and ... there for? What’s std::declval? Why do we need an extra overload? The answers are not the important part here; what is important is that unless you’ve got a reasonable amount of metaprogramming experience, it’s unlikely you’ll be able to write this code offhand, or even copy-paste it without error.</p><br>
+<p><em>The code could be improved by abstracting out the check for the presence of the member function into its own metafunction:</em></p>
+<p>template &lt;class... Ts&gt;</p>
+<p>using void_t = void;</p>
+<p>template &lt;class T, class=void&gt;</p>
+<p>struct supports_foo : std::false_type{};</p>
+<p>template &lt;class T&gt;</p>
+<p>struct supports_foo&lt;T, void_t&lt;decltype(std::declval&lt;T&gt;().get_foo())&gt;&gt;</p>
+<p>: std::true_type{};</p><br>
+<p><em>Again, some more expert-only template trickery which I’ll explain later. Using this trait, we can use std::enable_if to enable and disable the overloads as required:</em></p>
+<p>template &lt;class T, std::enable_if_t&lt;supports_foo&lt;T&gt;::value&gt;* = nullptr&gt;</p>
+<p>auto calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; return t.get_foo();</p>
+<p>}</p>
+<p>template &lt;class T, std::enable_if_t&lt;!supports_foo&lt;T&gt;::value&gt;* = nullptr&gt;</p>
+<p>int calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; // insert generic calculation here</p>
+<p>&nbsp; return 42;</p>
+<p>}</p>
+<p>This works, but you’d need to understand how to implement supports_foo, and you’d need to repeat all the boilerplate again if you needed to write a supports_bar trait. It would be better if we could completely abstract away the mechanism for detecting the member function and just focus on what we want to detect. This is what the detection idiom provides.</p><br>
+<p>template &lt;class T&gt;</p>
+<p>using foo_t = decltype(std::declval&lt;T&gt;().get_foo());</p>
+<p>template &lt;class T&gt;</p>
+<p>using supports_foo = is_detected&lt;foo_t,T&gt;;</p>
+<p>is_detected here is part of the detection idiom. Read it as “is it valid to instantiate foo_t with T?” std::declval&lt;T&gt;() essentially means “pretend that I have a value of type T” (more on this later). This still requires some metaprogramming magic, but it’s a whole lot simpler than the previous examples. With this technique we can also easily check for the validity of arbitrary expressions:</p><br>
+<p>template &lt;class T, class U&gt;</p>
+<p>using equality_t = decltype(std::declval&lt;T&gt;() == std::declval&lt;U&gt;());</p>
+<p>template &lt;class T, class U&gt;</p>
+<p>using supports_equality = is_detected&lt;equality_t, T, U&gt;;</p><br>
+<p>struct foo{};</p>
+<p>struct bar{};</p>
+<p>struct baz{};</p>
+<p>bool operator== (foo, bar);</p>
+<p>static_assert( supports_equality&lt;foo,bar&gt;::value, "wat");</p>
+<p>static_assert(!supports_equality&lt;foo,baz&gt;::value, "wat");</p><br>
+<p><em>We can also compose traits using std::conjunction:</em></p><br>
+<p>template &lt;class T&gt;</p>
+<p>using is_regular = std::conjunction&lt;std::is_default_constructible,</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; std::is_copy_constructible,</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; supports_equality&lt;T,T&gt;,</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; supports_inequality&lt;T,T&gt;,</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; supports_less_than&lt;T,T&gt;&gt;;</p>
+<p>If you want to use is_detected today, then you can check if your standard library supports std::experimental::is_detected. If not, you can use the implementation from cppreference or the one which we will go on to write in the next section. If you aren’t interested in how this is written, then turn back, for here be metaprogramming dragons.</p><br>
+<p><strong><u>Metaprogramming demystified</u></strong></p>
+<p>I’ll now work backwards through the metaprogramming techniques used, leading up to implementing is_detected.</p>
+<p>Type traits and _v and _t suffixes</p>
+<p>A type trait is some template which can be used to get information about characteristics of a type. For example, you can find out if some type is an arithmetic type using std::is_arithmetic:</p>
+<p>template &lt;class T&gt;</p>
+<p>void foo(T t) {</p>
+<p>&nbsp; &nbsp; &nbsp;static_assert(std::is_arithmetic&lt;T&gt;::value, "Argument must be of an arithmetic type");</p>
+<p>}</p>
+<p>Type traits either “return” types with a ::type member alias, or values with a ::value alias. _t and _v suffixes are shorthand for these respectively. So std::is_arithmetic_v&lt;T&gt; is the same as std::is_arithmetic&lt;T&gt;::value, std::add_pointer_t&lt;T&gt; is the same as typename std::add_pointer&lt;T&gt;::type1.</p>
+<p>decltype specifiers</p>
+<p>decltype gives you access to the type of an entity or expression. For example, with int i;, decltype(i) is int.</p>
+<p>std::declval trickery</p>
+<p>std::declval is a template function which helps create values inside decltype specifiers. std::declval&lt;foo&gt;() essentially means “pretend I have some value of type foo”. This is needed because the types you want to inspect inside decltype specifiers may not be default-constructible. For example:</p>
+<p>struct foo {</p>
+<p>&nbsp; &nbsp; foo() = delete;</p>
+<p>&nbsp; &nbsp; foo(int);</p>
+<p>&nbsp; &nbsp; void do_something();</p>
+<p>};</p>
+<p>decltype(foo{}.do_something())               // invalid</p>
+<p>decltype(std::declval&lt;foo&gt;().do_something()) // fine</p>
+<p>SFINAE and std::enable_if</p>
+<p>SFINAE stands for Substitution Failure Is Not An Error. Due to this rule, some constructs which are usually hard compiler errors just cause a function template to be ignored by overload resolution. std::enable_if is a way to gain easy access to this. It takes a boolean template argument and either contains or does not contain a ::type member alias depending on the value of that boolean. This allows you to do things like this:</p>
+<p>template &lt;class T&gt;</p>
+<p>std::enable_if_t&lt;std::is_integral_v&lt;T&gt;&gt; foo(T t);</p>
+<p>template &lt;class T&gt;</p>
+<p>std::enable_if_t&lt;std::is_floating_point_v&lt;T&gt;&gt; foo(T t);</p>
+<p>If T is integral, then the second overload will be SFINAEd out, so the first is the only candidate. If T is floating point, then the reverse is true.</p><br>
+<p><strong><u>Expression SFINAE</u></strong></p>
+<p>Expression SFINAE is a special form of SFINAE which applies to arbitrary expressions. This is what allowed this example from above to work:</p>
+<p>namespace detail {</p>
+<p>&nbsp; template &lt;class T&gt;</p>
+<p>&nbsp; auto calculate_foo_factor (const T&amp; t, int)</p>
+<p>&nbsp; &nbsp; -&gt; decltype(std::declval&lt;T&gt;().to_foo()) {</p>
+<p>&nbsp; &nbsp; return t.get_foo();</p>
+<p>&nbsp; }</p>
+<p>&nbsp; template &lt;class T&gt;</p>
+<p>&nbsp; int calculate_foo_factor (const T&amp; t, ...) {</p>
+<p>&nbsp; &nbsp; // insert generic calculation here</p>
+<p>&nbsp; &nbsp; return 42;</p>
+<p>&nbsp; }</p>
+<p>}</p>
+<p>int calculate_foo_factor (const T&amp; t) {</p>
+<p>&nbsp; return calculate_foo_factor(t, 0);</p>
+<p>}</p>
+<p>The first overload will be SFINAEd out if calling to_foo on an instance of T is invalid. The difficulty here is that both overloads will be valid if the too_foo call is valid. For this reason, we add some dummy parameters to the overloads (int and ...) to specify an order for overload resolution to follow2.</p>
+<p>void_t magic</p>
+<p>void_t is a C++17 feature (although it’s implementable in C++11) which makes writing traits and using expression SFINAE a bit easier. The implementation is deceptively simple3:</p>
+<p>template &lt;class... Ts&gt;</p>
+<p>using void_t = void;</p><br>
+<p><em>You can see this used in this example which we used above:</em></p>
+<p><em><br></em></p>
+<p>template &lt;class T, class=void&gt;</p>
+<p>struct supports_foo : std::false_type{};</p>
+<p>template &lt;class T&gt;</p>
+<p>struct supports_foo&lt;T, void_t&lt;decltype(std::declval&lt;T&gt;().get_foo())&gt;&gt;</p>
+<p>: std::true_type{};</p>
+<p>The relevant parts are the class=void and void_t&lt;...&gt;. If the expression inside void_t is invalid, then that specialization of supports_foo will be SFINAEd out, so the primary template will be used. Otherwise, the whole expression will be evaluated to void due to the void_t and this will match the =void default argument to the template. This gives a pretty succinct way to check arbitrary expressions.</p>
+<p>That covers all of the ingredients we need to implement is_detected.</p><br>
+<p><strong><u>The implementation</u></strong></p>
+<p>For sake of simplicity I’ll just implement is_detected rather than all of the entities which the Lib Fundamentals 2 TS provides.</p>
+<p>namespace detail {</p>
+<p>&nbsp; template &lt;template &lt;class...&gt; class Trait, class Enabler, class... Args&gt;</p>
+<p>&nbsp; struct is_detected : std::false_type{};</p>
+<p>&nbsp; template &lt;template &lt;class...&gt; class Trait, class... Args&gt;</p>
+<p>&nbsp; struct is_detected&lt;Trait, void_t&lt;Trait&lt;Args...&gt;&gt;, Args...&gt; : std::true_type{};</p>
+<p>}</p>
+<p>template &lt;template &lt;class...&gt; class Trait, class... Args&gt;</p>
+<p>using is_detected = typename detail::is_detected&lt;Trait, void, Args...&gt;::type;</p>
+<p>Let’s start with that last alias template. We take a variadic template template parameter (yes really) called Trait and any number of other type template arguments. We forward these to our detail::is_detected helper with an extra void argument which will act as the class=void construct from the previous section on void_t4. We then have a primary template which will “return” false as the result of the trait. The magic then happens in the following partial specialization. Trait&lt;Args...&gt;&gt; is evaluated inside void_t. If instantiating Traits with Args... is invalid, then the partial specialization will be SFINAEd out, and if it’s valid, it’ll evaluate to void due to the void_t. This successfully abstracts away the implementation of the detection and allows us to focus on what we want to detect.</p>
+<p>That covers it for the detection idiom. This is a handy utility for clearing up some hairy metaprogramming, and is even more useful since it can be implemented in old versions of the standard. Let me know if there are any other parts of the code you’d like explained down in the comments or on Twitter.</p>
+<p><strong><u>See here for information on why the typename keyword is needed in some places. ?</u></strong></p>
+<p><ul><li><span style="color: inherit; font-size: 1.1rem;">Have a look here for a better way to do this. ?</span><br></li><li><span style="color: inherit; font-size: 1.1rem;">Due to standards defect CWG1558, implementations needed an extra level of abstraction to work on some compilers. ?</span><br></li><li><span style="color: inherit; font-size: 1.1rem;">The reason we can’t use the same trick is that parameter packs must appear at the end of the template parameter list, so we need to put the void in the middle. ?</span><br></li></ul></p>
+<p><br><span style="color: inherit; font-size: 1.1rem;">Please find attached the link to Simon's blog &amp; some interesting posts... We'd love to hear you opinion &amp; thoughts on this - https://blog.tartanllama.xyz/detection-idiom/&nbsp;</span><br></p>
+

@@ -1,0 +1,34 @@
+---
+id: 152
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__cp_typestringliteral"
+redirect_from:
+  - /kb/152
+layout: products/offload/kb/view
+---
+<p>As of release 2.5 (19th Dec 2011) the Offload C++ compiler provides the intrinsic __cp_typestringliteral(type) which returns the string literal of a type. This can be useful for example when debugging templated code, but also to determine the type of variables or typedefs whose declarations do not make it obvious what the actual type is (for example could be declared using another typedef or template).
+</p>
+<pre><code>#include &lt;iostream&gt;
+
+template &lt;class T&gt; void f(T)
+{
+   printf(&quot;The type is %s \n&quot;,__cp_typestringliteral(T));
+}
+
+template &lt;class T&gt; struct str {};
+
+int main()
+{
+    f(str&lt;int&gt;());
+    f([](){return str&lt;double&gt;();});
+    printf(&quot;std::cout is of type %s
+&quot;, __cp_typestringliteral(decltype(std::cout)) );
+}
+</code></pre><p> The above code prints:
+</p>
+<p>
+
+The type is struct str&lt;int &gt;The type is lambda&lt;mainlambdatest2.cpp(13)&gt;std::cout is of type class std::basic_ostream&lt;char ,std::char_traits&lt;char &gt; &gt;</p>
+

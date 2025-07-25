@@ -1,0 +1,62 @@
+---
+id: 147
+category: vectorc
+date: 2013-05-24T17:16:38.7200Z
+date_updated: 0
+title: "VectorC Compiler Engine"
+url: vectorc-compiler-engine
+description:
+redirect_from:
+  - /company/documents/vectorc-compiler-engine
+layout: company/documents/view
+---
+<p><strong>Codeplay's VectorC compiler platform is a highly configurable C/C++ compiler engine that can bring full (or subset) C/C++ support to your new processor architecture.</strong>
+</p><p>
+VectorC has been designed to be easily customised (adding built-in intrinsics, types, operators), making it very suitable for use in creating custom-built C and C++ compilers for new processor designs. VectorC has proven to be an optimal compiler solution for mobile media processors and special purpose accelerators where other compilers such as GCC won't provide the best performance for the features of the processor.
+</p><p>
+If you need a compiler for your processor then <a href="{{ '/support/' | relative_url }}">contact us now</a> to discuss what we can do for you.
+</p><h2>C/C++ Support</h2><p>The VectorC engine supports C, C++, and is also one of the first commercial compilers to include support for the most useful C++0x features (such as ‘auto’ and delegating constructors).
+</p><p>
+VectorC can compile source code with multiple proprietary source extensions. It has built-in support for:
+</p><p>
+Microsoft style C++ extensions
+GCC style extensions
+Both Microsoft and GCC inline assembly formats
+HLSL extensions
+Altivec extensions
+C++ ABI compatible with Visual Studio and GCC
+</p><p>
+VectorC also supports C++ to C compilation through a fully featured C backend.
+</p><p>
+VectorC can easily be configured to support new language extensions, backends, and optimization pathways.
+</p>
+<h2>Optimizations</h2><p>VectorC performs all the standard non-vector optimizations expected of a high-performance compiler. As the engine understands multiple memory spaces and distributed latencies, it can optimize data-movement through double-buffered streaming DMA when required, in addition to standard write combining and prefetching functions.
+</p><p>
+ Common optimization core so that all appropriate existing optimizations can be used on the new architecture
+Software pipelining so that loops can be automatically parallelized on pipelined architectures.
+Vectorization so that fast SIMD vector code can be produced from scalar or vector source code on SIMD architectures.
+Portable intrinsic functions that let users write complex vector operations as built in functions. VectorC converts these into the best combination of instructions on each architecture that the source code is compiled for.
+</p>
+<h2>Vectorization</h2><p>Vectorizing is the art of recognising implicit parallelisms in standard C and C++ code and automatically taking advantage of advanced CPU 'vector' units via SIMD instruction such as MMX, SSE/SSE2, 3D Now and even Altivec when output to C. VectorC, as it’s name implies, was designed to exploit vectorization from the outset.
+</p><h2>Development Integration</h2><p>Codeplay has made it easy to adapt VectorC and gain the advantages of working with the familiar Microsoft Visual Studio environment through comprehensive support for the Microsoft ABI. All it takes is a mouse click to switch compilation units over to VectorC from within the Visual Studio IDE.
+</p><p>
+For GCC users, we support the GCC command line syntax.
+</p>
+<h2>The Interactive Optimizer</h2><p>When speed is of the essence, carefully considered code adjustment is required. VectorC’s Interactive Optimizer removes the guesswork in that process and displays the quality of the output assembly of your code along with helpful optimization advice.
+</p>
+<h2>Custom Calling Conventions</h2><p>Another unique VectorC feature, Codeplay's custom calling conventions provide a mechanism to lower function calling overhead and speed up code. GNU inline assembly support is provided as standard within VectorC.
+</p><h2>Native implementations</h2><p>VectorC is available as a native implementation on Windows based architectures – native support on Linux-based architectures will be made available when justified by customer demand.
+</p>
+<h2>C Backend</h2><p>Our C source backend allows us to output optimized C++ with or without multicore extensions in the case where rapid prototyping onto a custom accelerator processor is required, and a C compiler for the target already exists. This gives VectorC a distinct advantage over other solutions – it can compile C++ code to any architecture which has an existing C compiler. Current implementations have been tested on Windows and Linux with x86, PowerPC Linux, and Cell Linux. The C source is fully compatible with existing C and C++ libraries compiled with Visual Studio or GCC.   <strong>Complete System</strong>
+</p><p>
+VectorC has been developed from the ground up over a period of 10 years and has no third-party product dependencies.
+</p>
+<h2> Compatibility and Code Generation Features</h2><p>Object code link compatibility with Visual Studio®8, GCC3 and Metrowerks CodeWarrior™
+IDE integration: CodeWarrior™, Visual Studio®6, Visual Studio®.NET.
+Existing architectures supported: MIPS, Athlon™ with 3DNow!, Pentium®4, Pentium®4 with SSE3, VU and Emotion Engine MIPS core of PlayStation®2. Compilers for new architectures can be quickly developed from existing architecture support.
+In addition to our advanced optimizations, the full range of normal compiler optimizations are available – e.g. global common sub expression elimination, constant folding, use of conditional moves, instruction scheduling, register allocation.
+Output formats: COFF, ELF, assembly language, Dwarf 1, Dwarf 2, Stabs
+</p>
+
+
+

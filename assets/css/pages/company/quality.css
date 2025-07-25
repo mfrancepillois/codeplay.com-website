@@ -1,0 +1,71 @@
+---
+---
+
+section#iso-banner {
+    background-color: #111;
+    background-image: url({{ '/assets/images/company/quality/iso-bg.jpg' | relative_url }});
+    background-size: cover;
+    padding: 4rem 0;
+    transition: .3s all;
+    color: white;
+}
+
+    section#iso-banner .wrapper {
+        display: block;
+    }
+
+    section#iso-banner .wrapper > div:nth-of-type(1) {
+        text-align: left;
+        padding-bottom: 2rem;
+    }
+
+
+    section#iso-banner .wrapper > div:nth-of-type(2) {
+        grid-area: left;
+    }
+
+    section#iso-banner h1 {
+        font-size: 1.6rem;
+    }
+
+    section#iso-banner a {
+        opacity: .7;
+        transition: .2s all;
+        margin-top: 1.5rem;
+        display: block;
+    }
+
+    section#iso-banner a:hover {
+        opacity: 1;
+    }
+
+    section#iso-banner a span {
+        vertical-align: top;
+        margin-right: .3rem;
+    }
+
+@media screen and (min-width: 800px) {
+    section#iso-banner .wrapper {
+        display: grid;
+        grid-template-areas: "left right";
+        grid-column-gap: 6rem;
+    }
+
+    section#iso-banner .wrapper > div:nth-of-type(1) {
+        grid-area: right;
+        display: flex;
+        align-items: center;
+        justify-content: right;
+        padding-bottom: 0;
+    }
+}
+
+
+ul {
+    padding-left: 1rem;
+}
+
+    ul li {
+        list-style-position: outside;
+        padding: .4rem 0;
+    }

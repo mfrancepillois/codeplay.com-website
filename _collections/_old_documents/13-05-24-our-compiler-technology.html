@@ -1,0 +1,89 @@
+---
+id: 50
+category: compiler
+date: 2013-05-24T17:34:31.7200Z
+date_updated: 0
+title: "Our Compiler Technology"
+url: our-compiler-technology
+description:
+redirect_from:
+  - /company/documents/our-compiler-technology
+layout: company/documents/view
+---
+<h2> Core compiler features</h2><ul><li> Mature sophisticated vectorizer and optimizer (featuring for example loop unrolling, software pipelining, branch elimination/subsitution using conditional moves etc)</li>
+</ul>
+<ul>
+<li> Backends for various processors (several AMD/INTEL x86 processors), PS2 EE (MIPS), PS2 Vector Unit (VU), several special customers processors</li>
+</ul>
+<ul>
+<li> VLIW (advanced scheduler can output more then one instruction	per cycle)</li>
+</ul>
+<ul>
+<li> Branch delay slot filling </li>
+<li> Ideal for simple systems that have simple tool chains (only	assembler)</li>
+</ul>
+<ul>
+<li> The compiler can layout global and other data statically in	memory which is ideal for systems without a linker. This also adds optimization opportunities for memory accesses.</li>
+</ul>
+<ul>
+<li> Ability to generate efficient code for architectures supporting non-byte addressing (very important for pointer arithmetic on architectures such as the PS2 VU that has 16 byte addressing)</li>
+</ul><ul>
+<li> C++ to C translation (Our compiler can optionally output C code,  so optimized C code can be generated from C/C++ code)</li>
+</ul>
+<ul>
+<li> Most Microsoft and GNU C/C++ language extensions are supported</li>
+</ul>
+<ul>
+<li> Implementation of Microsoft and Itanium C++ ABI. Our implementation of the Itanium ABI can be configured to generate less code then other implementations (such as GCC)</li>
+</ul>
+<ul>
+<li> HLSL/OpenCL language extensions (vector data types, swizzles	etc.) can be used inside C/C++ code</li>
+</ul>
+<ul>
+<li> AltiVec extensions (vector data types and intrinsics) can be	used inside C/C++ code</li>
+</ul>
+<ul>
+<li> Memory spaces - functions and data can be put in different memory spaces. This is an important feature for heterogeneous multicore processors</li>
+<li> Inline assembly (GNU and Microsoft styles), assembly optimizations. Our compilers can be	used to optimize inline assembly. Inline assembly is optimized and scheduled together with instructions generated from C/C++ code</li>
+</ul>
+<ul>
+<li> Calling conventions can be user-defined to allow optimal register usage across function calls and to interface with existing assembly code</li>
+<li> Flexible scheduling, supports stalling and non-stalling architectures</li>
+<li> Several command line options to ban potentially dangerous	language features, for example C-style casts in C++</li>
+</ul>
+<ul>
+<li> Useful warnings on code that causes unspecified behavior</li>
+</ul>
+<ul>
+<li> Output formats: assembly, COFF, ELF, C source code</li>
+</ul>
+<ul>
+<li> Debug formats: CodeView, Dwarf</li>
+</ul>
+<ul>
+<li> Integration with Visual Studio and Eclipse, legacy integration with CodeWarrior</li>
+</ul>
+
+<h2>Tool chain integration</h2><p>Complex tool chains: Our compilers integrate with the GCC tool chain (gcc 4, legacy support for gcc 2.9 is also provided if required). Support for most gcc command line options is provided.
+</p><p>
+Our PC compiler integrates with Visual Studio. It supports Visual Studio command line options, and generates code compatible with that produced by cl.exe.
+</p><p>
+Simple tool chains: Early tool chains for new processors often provide only assemblers. Our compilers are ideally suited to that as they can output assembler-ready code, i.e. the compiler can layout static data and perform fix-ups etc.
+</p><h2>Useful advice messages</h2><p>Our compilers implement a number of command line options to support enforcing good coding practices, but also to obtain more information from the compiler. These options have been added to ease and to save time debugging, and to shield users from accidentally introducing code that leads to unspecified behaviour.
+</p><p>
+The compiler generates warnings on unsafe pointer casts (casting pointers to structs that are defined later in the translation unit).
+</p><p>
+Pointer casts often (inadvertently) loose the alignment information of the data pointed to. This may lead to problems on processors that require strict alignment (such as the PS2 VU). Our compilers attempt to preserve the correct alignment or issue a warning/advice message on those casts.
+</p><p>
+Error message printing can be configured to display verbose information on declarations and types (where declared, what base classes etc).
+</p><p>
+On failed lookups the compiler attempts to suggest alternative lookups. This is very useful on complex code involving many namespaces. For example::
+</p>
+<pre>*** Cannot find 'foo' in current scope, but this identifier has been declared
+in namespace 'namesp1::inner' and can be accessed using
+'namesp1::inner::foo' or by preceeding the access with 'using namespace
+namesp1::inner;'.--- In file: footest.cpp, at line: 29, column: 3
+</pre><p>More examples to come soon!
+</p><h2>Useful compilation modes</h2><p>Several well- accepted C++ coding guidelines (<a href="http://www.gotw.ca/publications/c++cs.htm">outlined in this book</a>) can be enforced. For example there are command line options to ban C-style casts and to enforce the  'virtual' keyword on overriding methods. Alternatively to banning C-style casts, there is an option to compile C-style casts with the more restricted and safer semantics of a static_cast. This is useful to ensure safer casts if legacy code uses many C-style casts.
+</p>
+

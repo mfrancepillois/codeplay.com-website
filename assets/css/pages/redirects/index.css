@@ -1,0 +1,10 @@
+#loading {
+    text-align: center;
+}
+
+#loading svg {
+    display: inline-block;
+    width: 150px;
+    height: 150px;
+    margin: auto;
+}

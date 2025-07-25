@@ -1,0 +1,27 @@
+---
+title: "Toward Performance Portability of Highly Parametrizable TRSM Algorithm Using SYCL"
+date: 2021-06-17T09:01:00.760000+00:00
+category: videos
+layout: portal/portal-article-view
+user_id: 840
+thumbnail: /assets/images/portal/article-images/toward-performance-protability-trsm-sycl.jpg
+---
+
+<iframe width="560"
+        height="315"
+        data-requiresCookieAcceptance="true"
+        data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/h1SWotuxguw"></iframe>
+
+<br /><br />
+<p><b>Presented at IWOCL and SYCLcon 2021</b></p>
+
+<p>Presented in 1979, BLAS is, to this day, the de-facto standard for low-level linear algebra routines. BLAS provides essential linear algebra routines used in various domains such as numerical and scientific computing, weather simulation, computational fluid dynamics, machine learning and adopted for a broad range of hardware from HPC to embedded systems and AI specialized accelerators.
+</p>
+<p>While originally BLAS routines have been implemented for CPU, with the emergence of GPGPU BLAS routines had to be re-written to exploit the provided extensive computational power. Machine learning is rapidly changing this landscape again by incentivizing the development of specialized hardware that can
+    perform certain operations more efficiently. With various range of hardware, having different memory hierarchy, different cache line size, and various memory access pattern, with different number of registers and different type of memory connections, performance portability of BLAS routine across various platforms while avoiding rewrites of existing code is a major challenge of the heterogeneous programming world.</p>
+<p>Written in SYCL programming Language, SYCL-BLAS is an open-source BLAS library that provides performance portability across various SYCL-enabled platforms.
+</p>
+<p>This paper presents the implementation of a parametric tile-based TRSM routine for SYCL-BLAS by employing a highly optimized GEMM routine provided in SYCL-BLAS.
+</p>
+<p>Our results shows that we can achieve up to 2.6x speedup on Intel GPU, 7x on AMD GPU and up to 3.4x speedup on ARM GPU compared with the highly optimized clBLAST and clBLAS libraries by tuning the tile size per-device without reimplementing the kernel.
+</p>

@@ -1,0 +1,40 @@
+---
+id: 122
+category: faq
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Function call within Offload block fails to link!"
+redirect_from:
+  - /kb/122
+layout: products/offload/kb/view
+---
+<p>&quot;Help! A function call from within an Offload&trade; block is failing to link!&quot;Offload&trade; blocks require all the function definitions to be present in one C++ file at compile time, as Offload&trade; requires the function definitions to duplicate the code for SPU.The most common cause of this problem is when a function definition is in another C++ file, that the Offload&trade; block is not compiling, and thus cannot see the method.
+</p>
+<pre><code>//  Foo.h
+struct Foo
+{
+	int bar();
+};
+
+// Foo.cpp
+int Foo::bar()
+{
+	return 42;
+}
+
+// Offload.cpp
+#include &quot;Foo.h&quot;
+
+static void func()
+{
+	Foo foo; // fine because we know about struct Foo
+	foo.bar(); // fine because we can link against bar in the linker
+	__blockingoffload()
+	{
+		foo.bar(); // fails to link because the Offload compiler could not see the definition
+	};
+}
+</code></pre><p>The above code fails to SPU-link as the Offload&trade; compiler cannot see the definition for Foo::bar to compile this function for SPU! There is one of two options available to fix this problem.The first (and most simple) is to move the function definition into the header file. Moving functions into header files will not always work for every case though (and may want to be avoided altogether).The second option is to use an Offload&trade; unity compile, including Foo.cpp in Offload.cpp. The issue though is that Offload&trade; will output duplicate function definitions for each method! To overcome this, the Offload compiler provides the -outputoffloadcode command line option (see <a href="{{ '/kb/13' | relative_url }}">/kb/13.html</a> for more details) which will output the minimal amount of PPU code required (the code that contains Offload&trade; blocks), and the duplicated SPU code!The -outputoffloadcode command line option is a very useful and powerful feature, allowing tens or hundreds of C++ files to be included within the one Offload&trade; file, without causing duplicate functions!
+</p>
+
+

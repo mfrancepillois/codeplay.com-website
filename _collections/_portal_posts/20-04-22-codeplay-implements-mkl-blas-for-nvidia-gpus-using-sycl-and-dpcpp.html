@@ -1,0 +1,74 @@
+---
+id: 381
+url: 04-22-20-codeplay-implements-mkl-blas-for-nvidia-gpus-using-sycl-and-dpcpp
+user_id: 840
+date: 2020-04-22T14:26:35.7200Z
+category: blogs
+title: "Codeplay implements MKL-BLAS for NVIDIA GPUs using SYCL and DPC++"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/04-22-20-codeplay-implements-mkl-blas-for-nvidia-gpus-using-sycl-and-dpcpp
+thumbnail: /assets/images/portal/article-images/99dfca94be465bdbe2a5bdfe13da8b8a.png
+layout: portal/portal-article-view
+---
+  <span><img src="{{ '/assets/images/portal/article-images/99dfca94be465bdbe2a5bdfe13da8b8a.png' | relative_url }}" align="right"></span>
+<p><span>Software developers are looking more than ever at how they can accelerate their applications without having to write optimized processor specific code. SYCL is the industry standard for C++ acceleration, giving developers a platform to write high-performance code in standard C++, unlocking the performance of accelerators and specialized processors. Codeplay recently made a <a href="https://www.codeplay.com/portal/02-03-20-codeplay-contribution-to-dpcpp-brings-sycl-support-for-nvidia-gpus">significant contribution to DPC++</a>, an open source implementation of the SYCL standard, by adding support for NVIDIA hardware. </span>
+</p>
+
+<p>
+  <span>DPC++ forms part of the <a href="https://www.oneapi.com/">oneAPI programming model</a> and is an open, cross-architecture language built upon the ISO C++ and Khronos SYCL standards. DPC++ extends these standards and provides explicit parallel constructs and offload interfaces to support a broad range of computing architectures and processors. </span>
+  <span>Ultimately the goal of this project is to add DPC++ to the open source LLVM project.<br>
+  </span>
+</p>
+
+<p>
+  <span>Now that DPC++ is able to target NVIDIA hardware, the next step is to enable and optimize commonly used libraries that use SYCL so that they can execute on these GPUs. </span>
+</p>
+
+<p>
+  <span>The <a href="https://github.com/oneapi-src/oneMKL">oneMKL BLAS library</a> is the first math library implementation for oneAPI to enable support for NVIDIA GPUs and uses the interoperability features implemented by DPC++. This work consists of a major open source contribution to the oneAPI intiative by Codeplay. It also represents an opportunity for developers to use SYCL as an alternative to using CUDA for developing high performance parallel applications.<br>
+  </span>
+</p>
+
+<p>BLAS (Basic Linear Algebra Subprograms) are a set of operations that include matrix multiplication, vector addition, and linear combinations, and are the standard building blocks for many software applications. The BLAS API provides a way to optimize for performance on different hardware architectures whilst maintaining a common interface for developers.</p>
+
+<p>
+  This implementation of BLAS provides a level of functionality that enables developers using artificial intelligence, high performance computing and machine learning to take advantage of the most common set of functions for linear algebra. The oneMKL BLAS APIs can be combined with other math libraries to target a range of processors and architectures through a standard interface.</p>
+
+<p>Many developers around the world are already using NVIDIA GPUs to accelerate their applications, and this contribution enables those developers to write high performance, math-intensive applications that can be run on multiple architectures using a cross platform, open standard programming interface. By using SYCL, developers can maintain a single code base and target processors from NVIDIA, Intel, AMD, Arm and others.</p>
+
+<p>While support for multiple architectures is interesting it's important to be able to achieve the same level of performance that developers see when using the proprietary NVIDIA CUDA libraries. So when implementing the BLAS operations, the native cuBLAS interfaces were used to ensure that the execution follows the same as the native CUDA library. This is the same method used in the core support for NVIDIA GPUS developed by Codeplay for DPC++. The function calls are routed through native CUDA interfaces to maintain performance.</p>
+
+<p>The initial contribution we have made is in an "experimental" state and whilst it is fully functional and performance benchmarks show comparable results with OpenCL native and CUDA native code, we expect to be able to make some performance improvements over time as well as fix any minor issues that are discovered.</p>
+
+<p>
+  <strong>Trying out oneMKL BLAS on NVIDIA GPUs<br>
+  </strong>
+</p>
+
+<p>Follow these steps to set up your machine to make use of the NVIDIA support for oneMKL.</p>
+<ul>
+  <li>Clone the MKL BLAS <a href="https://github.com/oneapi-src/oneMKL">source code project</a>
+  </li>
+  <li>Follow the step-by step instructions in the <a href="https://github.com/oneapi-src/oneMKL">oneMKL README</a> file to build the library</li>
+  <li>Once the library has been built and is installed<ul>
+      <li>Include the oneMKL.hpp into your application</li>
+      <li>Set up your SYCL device selector to choose your NVIDIA GPU</li>
+      <li>Adapt your function calls to select the NVIDIA GPU</li>
+      <li>Link your application with liboneMKL.so</li>
+    </ul>
+  </li>
+</ul>
+
+<p>You'll find some examples in the <a href="https://github.com/oneapi-src/oneMKL">oneMKL README</a> on how to include the header file and how to call some of the functions this library provides.</p>
+
+<p>There is also an example of how to set up the SYCL device selector for NVIDIA GPUs in the DPC++ <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/GetStartedGuide.md#code-the-program-for-a-specific-gpu">Getting Started Guide</a>.</p>
+
+<p>
+  <strong>Getting Support for oneMKL BLAS on NVIDIA GPUs<br>
+  </strong>
+</p>
+
+<p>You can get support through the <a href="https://github.com/oneapi-src/oneMKL/issues">oneMKL GitHub repository Issues</a>. If you have discovered a bug be sure to include a way for it to be reproduced, ideally with source code.</p>

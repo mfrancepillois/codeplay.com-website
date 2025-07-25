@@ -1,0 +1,94 @@
+---
+id: 32
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "PPU virtual methods on SPU"
+redirect_from:
+  - /kb/32
+layout: products/offload/kb/view
+---
+<p>Whatever your view on the use of virtual functions in game code - they can and are frequently used (even if just for corner cases). Offload fully supports virtual functions on the SPU.
+</p>
+<pre><code>
+#include &lt;liboffload&gt;
+
+struct Foo
+{
+	virtual void f();
+	virtual void f(int);
+};
+
+static void func(Foo* foo)
+{
+	__blockingoffload(foo)
+	{
+		foo-&gt;f();
+		foo-&gt;f(42);
+	};
+}
+</code></pre><p>In the above example, the virtual functions f are being called from the SPU, and will result in a runtime fail. The Offload compiler will warn on compile that the virtual functions are not present in the function domain, but will halt execution at runtime when it cannot resolve these functions. Offload requires virtual functions to be explicitly added to a function domain, a comma separated list of pointers that could be called within the Offload context (See <a href="{{ '/kb/132' | relative_url }}">/kb/132.html</a> for further details on domains).
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+struct Foo
+{
+	virtual void f();
+	virtual void f(int);
+};
+
+static void func(Foo* foo)
+{
+	__blockingoffload[Foo::f]()
+	{
+		foo-&gt;f();
+		foo-&gt;f(42);
+	};
+}
+</code></pre><p>As seen in the example above, the Offload block has extra information added to it. The function domain is specified by using square brackets surrounding a comma separated list of functions.
+</p>
+<pre><code>
+#include &lt;liboffload&gt;
+
+struct Foo
+{
+	virtual void f();
+	virtual void f(int);
+	virtual int g();
+};
+
+static void func(Foo* foo)
+{
+	__blockingoffload[Foo::f, Foo::g]()
+	{
+		foo-&gt;f();
+		foo-&gt;f(42);
+		int bar = foo-&gt;g();
+	};
+}
+</code></pre><p>Adding in new virtual functions to the function domain is simple!Virtual functions used on local data on the SPU require a slightly modified syntax to work.
+</p>
+<pre><code>
+#include &lt;liboffload&gt;
+
+struct Foo
+{
+	virtual void f();
+	virtual void f(int);
+	virtual int g();
+};
+
+static void func()
+{
+	__blockingoffload[Foo::f this, Foo::g this]()
+	{
+		Foo foo;
+		foo.f();
+		foo.f(42);
+		int bar = foo.g();
+	};
+}
+</code></pre><p>As can be seen in the above example, the function domain pointers are now followed by the keyword this - which denotes that the virtual pointers work on local SPU data.
+</p>
+
+

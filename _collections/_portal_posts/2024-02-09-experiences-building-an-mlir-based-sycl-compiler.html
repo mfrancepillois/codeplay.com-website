@@ -1,0 +1,109 @@
+---
+category: blogs
+date: '2024-02-09T14:01:45.775395'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+title: Experiences Building an MLIR-based SYCL Compiler
+user_id: 8218
+---
+
+<p>Today’s blog post is a bit different from other posts on this website, as it is intended to give a brief overview of
+  a research publication.</p>
+<p>The research publication, an outcome of a project that we at Codeplay collaborated on with Intel, is going to be
+  presented at CGO 2024 in March, and a preprint of the publication is available on <a
+      href="https://arxiv.org/abs/2312.13170">arXiv.org</a>.</p>
+<p>In contrast to most other Codeplay blogs, the features in this publication are not available in a product right away,
+  but rather give an idea of what will be coming in the future. </p>
+<p>More concretely, today’s post is about how future SYCL compilers can be equipped to perform more powerful
+  optimizations using new compiler techniques.</p>
+<h4><b>Compiler Intermediate Representations</b></h4><p>The ability for a compiler to perform advanced optimizations
+  hinges on the intermediate representations (IR) used by compiler. The expressive power of the IRs and their ability to
+  capture relevant parts of the high-level semantics of a program determine how good the compiler is able to understand
+  and optimize the input program. </p>
+<p>If we take the DPC++ SYCL compiler as an example, a major part of the compilation flow uses two intermediate
+  representations (there are more IRs involved, in particular in the backend, but these are out-of-scope for this
+  post).</p>
+<p>The Clang abstract syntax tree (AST) is a representation of the syntactical elements of the source code and semantics
+  of the input C++ language (e.g. implicit conversions). As such, its level of abstraction is quite close to the input
+  program language.</p>
+<p>After a few initial steps and still quite early in the compilation pipeline, the Clang AST is then translated to LLVM
+  IR. LLVM IR is a low-level intermediate representation in the form of a control-flow graph (CFG) with single static
+  assignment (SSA) form. As such, its abstraction level is closer to assembly code.</p>
+<p>This, as illustrated in the figure below, also means that early in the compilation, the compiler goes from a
+  high-level representation to a rather low-level one in a single step, which means that a lot of the high-level
+  semantics of the programs aren’t available to the compiler optimizations anymore.</p>
+<p><img
+    src="{{ '/assets/images/blogs/2024-02-09-experiences-building-an-mlir-based-sycl-compiler/abstraction-gap-llvm.png' | relative_url }}"/><br/>
+</p>
+<p>This deficit not only affects all Clang-based C/C++ compilers, but also compilers for other programming languages or
+  domains. Therefore, there are a number of efforts to close this gap through abstraction.</p>
+<h4><b>The MLIR Framework</b></h4><p>One of those efforts that gained wide-spread adoption is <a
+    href="https://mlir.llvm.org/">MLIR</a>. MLIR provides common infrastructure that allows compiler developers to
+  easily develop targeted intermediate representations that capture the high-level semantics of a particular domain. The
+  types, attributes and operations defined for a domain are encapsulated in so-called dialects in MLIR. And just like
+  how a program is usually a mixture of multiple domains (e.g. mixing elements from the loop domain with operations from
+  the vector domain), MLIR also makes it possible to combine multiple dialects during compilation. </p>
+<p>Using the different dialects, the lowering from high-level to low-level in MLIR can happen in more, but smaller,
+  steps as illustrated in the figure below, ensuring that each compiler optimization can happen at just the right level
+  of abstraction.</p>
+<p><img
+    src="{{ '/assets/images/blogs/2024-02-09-experiences-building-an-mlir-based-sycl-compiler/abstraction-gap-mlir.png' | relative_url }}"/><br/>
+</p>
+<p>This makes MLIR an interesting candidate for building the next generation of SYCL compilers and that’s exactly what
+  we set out to do: to build a prototype of an MLIR-based SYCL compiler.</p>
+<h4><b>The SYCL-MLIR Compiler</b></h4><p>To that end, we define a SYCL dialect, representing core elements of SYCL such
+  as position of a work-item in the execution grid and memory access through buffers and accessors with operations and
+  types in the dialect. </p>
+<p>The SYCL-MLIR compiler then processes the device code Clang AST and generates a combination of MLIR dialects,
+  including this SYCL dialect, instead of LLVM IR.</p>
+<p>Using the additional SYCL domain-specific knowledge captured by the SYCL dialect then allows us to build powerful
+  analyses and transformations that leverage the SYCL semantic information for better optimization of device code. </p>
+<h4><b>Host Analyses for Device Optimization</b></h4><p>Better IRs for better device code optimization is not the only
+  challenge we set out to address in the project. Another factor limiting optimization of SYCL device is the fact that
+  compilation of device code and host code happens in isolation from each other.</p>
+<p>This is also largely due to the fact that LLVM IR isn’t equipped to represent the host module and device module at
+  the same time. For MLIR, on the other hand, nesting of the IR is a core principle and therefore the device code module
+  can simply be nested inside the host code module.</p>
+<p>By looking at the device code in context of its invocation from the host code, we can learn a lot more about it than
+  from an isolated inspection. Therefore, we created a number of analyses that extract such information, e.g. constant
+  parameters or accessor aliasing information, from the host code and provide them to device transformations, where the
+  information is used for optimization.</p>
+<h4><b>Performance Evaluation</b></h4><p>Combining the information obtained from host code and the powerful analyses and
+  optimizations based on the expressive power of the SYCL MLIR dialect can lead to significantly better optimization of
+  SYCL device code.</p>
+<p>To demonstrate that, we evaluated our compiler on a number of benchmarks from the SYCL-Bench benchmark suite on an
+  Intel Data Center GPU Max 1100 (also known as Ponte Vecchio), comparing it against DPC++ and the AdaptiveCpp compiler
+  that uses just-in-time compilation.</p>
+<p>A comparison for the benchmarks from the “polybench” is shown in the following figure (Diagram taken from the
+  [preprint] (<a href="https://arxiv.org/abs/2312.13170">Experiences Building an MLIR-based SYCL Compiler</a>))</p>
+<p><img src="{{ '/assets/images/blogs/2024-02-09-experiences-building-an-mlir-based-sycl-compiler/poly-combined.svg' | relative_url }}"/><br/>
+</p>
+<p>Across all benchmarks that we investigated, the SYCL-MLIR compiler outperforms both compilers in the comparison
+  (geo.-mean speedup of 1.18x over DPC++), demonstrating the potential of using MLIR to enhance SYCL compilation.</p>
+<h4><b>Conclusion</b></h4><p>While the MLIR-based SYCL compiler is only a prototype at this stage, it shows that
+  capturing the semantics of a programming model like SYCL in an expressive IR and performing the lowering in the
+  compiler in small steps to give optimizations the opportunity to operate at the right level of abstraction. This is a
+  promising opportunity for the future. </p>
+<p>Of course there are still some significant challenges to address. MLIR-based frontends for C/C++, such as the <a
+    href="https://polygeist.llvm.org/">polygeist</a> frontend or the interesting [ClangIR](<a
+    href="https://llvm.github.io/clangir//">https://llvm.github.io/clangir/</a>) project, still have limitations. </p>
+<p>And while using host information for device code optimization is an important first step, joint optimization of host
+  and device code holds even more potential for improvement. </p>
+<p>So, there are plenty of challenges left to fuel our and the compiler community’s research for the next
+  years.<br/><br/>If you want to learn more about the project, take a look at the preprint on [arXiv.org](<a
+      href="https://arxiv.org/abs/2312.13170">https://arxiv.org/abs/2312.13170</a> ) and feel free to ask us questions
+  by getting in touch through our website. If you want a more immersive experience, make the trip to [CGO 2024](<a
+      href="https://conf.researchr.org/home/cgo-2024">https://conf.researchr.org/home/cgo-2024</a>) in March 2024, watch
+  our presentation and meet us there. </p>
+<p>With Codeplay’s office based in Edinburgh, we can personally vouch for the beauty of the city hosting CGO this
+  year!</p>
+<p><br/></p>
+<h5>Notices and Disclaimers</h5><p>Performance varies by use, configuration and other factors.</p>
+<p>Performance results are based on testing on 2023-11-17 and may not reflect all publicly available updates. See
+  section VIII in the <a href="https://arxiv.org/abs/2312.13170">preprint</a> for configuration details.</p>
+<p>No product or component can be absolutely secure.</p>
+<p>Your cost and results may vary.</p>
+<p>Intel technologies may require enabled hardware, software or service activation.</p>
+

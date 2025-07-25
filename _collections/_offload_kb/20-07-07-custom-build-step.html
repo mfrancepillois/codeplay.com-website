@@ -1,0 +1,54 @@
+---
+id: 42
+category: getting-started
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Custom Build Step"
+redirect_from:
+  - /kb/42
+layout: products/offload/kb/view
+---
+<p>Offload&trade; can be used as a custom build step in Visual Studio or in a makefile, it is just a compiler that takes input files and compiler options and produces an object file.When using Offload&trade; as a custom build step, ensure that the correct environment variables have been set prior to performing the operation. Some developers using Offload&trade; have found that having a wrapper batch file to set the required variables prior to execution is useful, and below you will find an example batch file you could use!
+</p>
+<pre><code>@echo off
+
+setlocal
+
+set OFFLOADFOLDER=%~dp0
+set SIEVE_PS3_SDK=%OFFLOADFOLDER%offload-sdk
+
+if not &quot;%PATH%&quot;==&quot;&quot; set PATH=;%PATH%
+set PATH=%OFFLOADFOLDER%%PATH%
+
+if not &quot;%INCLUDE%&quot;==&quot;&quot; set INCLUDE=;%INCLUDE%
+set INCLUDE=%OFFLOADFOLDER%offload-sdkinclude%INCLUDE%
+
+set CMDS=%*
+set OCDIR=
+
+set TMP=%1&quot; &quot;
+set TMP=%TMP:&quot;=%
+
+:loop
+
+if &quot;%TMP%&quot;==&quot; &quot; goto continue
+
+if &quot;%TMP%&quot;==&quot;-ocdir &quot; set OCDIR=%~2
+
+shift
+set TMP=%1&quot; &quot;
+set TMP=%TMP:&quot;=%
+
+goto loop
+
+:continue
+
+if not &quot;%OCDIR%&quot;==&quot;&quot; rmdir /S /Q &quot;%OCDIR%&quot;
+
+%OFFLOADFOLDER%offloadps3cpp.exe %CMDS%
+</code></pre><p>The above batch file example assumes that the offload-sdk folder is in the same folder as the OffloadPS3CPP.exe executable and the batchfile, and that the batchfile is being called with a fully qualified path, e.g. 'C:yourpath	ooffloadatchfile.bat'. It will also attempt to remove the previous iterations OutputC folder, as is recommended.
+</p>
+
+
+
+

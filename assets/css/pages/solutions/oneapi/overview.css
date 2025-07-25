@@ -1,0 +1,70 @@
+---
+---
+
+section#splash {
+    background-color: #001cea;
+    color: white;
+    background-image: url({{ '/assets/images/solutions/oneapi/splashbg.png' | relative_url }});
+}
+
+section#splash .button {
+    background: rgba(0, 0, 0, .7);
+    margin-right: .5rem;
+}
+
+
+section:not(#splash) .button {
+    background: #001cea;
+}
+
+section#community {
+    background-color: rgba(0, 0, 0, .05);
+}
+
+section#community img {
+    max-width: 440px;
+}
+
+
+section#plugins {
+    background-color: #001cea;
+    color: white;
+}
+
+section#plugins .selector {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 1rem;
+}
+
+@media screen and (min-width: 1000px) {
+    section#plugins .selector {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+section#plugins .selector > div {
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, .1);
+    padding: 3rem 2rem;
+    transition: .2s all;
+    text-align: center;
+}
+
+section#plugins .selector > div:hover {
+    background-color: rgba(0, 0, 0, .2);
+}
+
+section#plugins .selector a {
+    display: block;
+    padding: 1rem;
+    margin-top: .5rem;
+    background-color: rgba(0, 0, 0, .3);
+}
+
+section#plugins .selector h1 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}

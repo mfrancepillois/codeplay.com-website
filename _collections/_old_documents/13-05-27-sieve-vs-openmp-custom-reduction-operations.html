@@ -1,0 +1,133 @@
+---
+id: 85
+category: sieve
+date: 2013-05-27T13:31:37.7200Z
+date_updated: 1369654297
+title: "Sieve vs. OpenMP: Custom reduction operations"
+url: sieve-vs-openmp-custom-reduction-operations
+description:
+redirect_from:
+  - /company/documents/sieve-vs-openmp-custom-reduction-operations
+layout: company/documents/view
+---
+<p>Both Sieve and OpenMP provide some support for reductions: Sieve via its accumulator classes, OpenMP via its reduction clause. However, the reduction clause of OpenMP is very limited - certain reductions operators are available over basic types (float and int), but there is no way to define your own custom reductions for specific applications.
+</p><p>
+In this post I will illustrate the respective approaches to reduction taken by Sieve and OpenMP, and show how Sieve's accumulator mechanism can be used to define a custom reduction over structures - leading to parallel reductions which are not possible using OpenMP.
+</p><p>
+First let's consider a simple kind of reduction: summing the elements of an array.
+</p>
+
+<p>
+<strong>Summing array elements</strong>
+</p>
+<pre>int Sum(int* A, int length)
+{
+	int result = 0;
+	for(int i=0; i&lt;length; ++i)
+	{
+		result += A[i];
+	}
+
+	return result;
+}
+</pre><p>This reduction can be parallelised easily: if there are many processors then each processor can sum a distinct part of the array, and these partial sums can be computed in parallel.  The partial sums can then be gathered by one of the processors, added, and written back to the result variable.
+</p><p>
+The following code fragments show how to re-write this code for parallelisation using OpenMP (left) and Sieve (right).
+</p>
+
+<p>
+<strong>Parallel reduction using OpenMP</strong><strong>Parallel reduction using Sieve</strong>   int OpenMPSum(int* A, int length) {     int result = 0;     /* The 'parallel for' pragma        allows reduction to be specified */     #pragma omp parallel for reduction (+:result);     for(int i=0; i&lt;length; ++i)	{;       result += A[i];     }   return result;;   } int SieveSum(int* A, int length) {     int result;     sieve {       // Each core maintains a partial sum, x       IntSum x merges result;       for(IntIterator i(0); i&lt;length; ++i) {         /* Partial sums can be computed            independently in parallel */         x += A[i];       }     } // Partial sum variables are summed into result here   return result;   }
+</p><p>
+In the OpenMP version, we use the 'parallel for' construct to specify that iterations of the loop should be computed in parallel.  We use the 'reduction' clause to specify that we want to perform a sum reduction into variable result.  Easy!
+</p><p>
+In the Sieve version, we wrap the code we wish to parallelise in a sieve block, and we use an iterator class (IntIterator) to indicate that the loop can be parallelised (see Colin's 'Loop Carried Dependencies in Sieve' post for more details on iterators).  To specify the reduction, we introduce a new variable x, which is an instance of IntSum, an 'accumulator' class.  This is a standard class (provided with the Sieve library) which accumulates partial sums.  Each core involved in parallel execution of the sieve block gets its own copy of the variable x in which to compute a distinct partial sum.  We specify that the results of these partial sums should be merged into 'result' at the end of the block by writing 'IntSum x merges result'.
+</p><p>
+Semantically, for this example the Sieve approach is analogous to the OpenMP pragma-based approach.  The use of explicit iterator and accumulator classes provides type-safety and determinism, whereas correct use of OpenMP pragmas, resulting in deterministic execution, is hard for a compiler to enforce. The Sieve approach uses slightly more syntax, but the advantage is that the accumulator-based approach is much more flexible than the OpenMP reduction clause.  The reason for this is that the user can define his/her own accumulator class for any associative operation on any data type.  On the other hand, OpenMP provides support for only a handful of basic operations on primitive types.
+</p><p>
+Let's consider a slightly more complex reduction example which we can easily parallelise using Sieve, but not using OpenMP.
+</p><p>
+Suppose we have an array of 4d vectors, and we want to find the smallest element of the array using the standard lexicographical ordering (where e.g. (1,1,2,3)&lt;(1,1,2,4) and (2,4,3,3)&gt;(1,5,5,5), etc.).  The following serial code shows how the smallest vector in an array can be computed:
+</p>
+
+<p>
+<strong>Computing the minimum vector in an array</strong>
+</p>
+<pre>typedef struct float4_s {     float x, y, z, w;   } float4;
+
+int lessThan(float4 p, float4 q)
+{
+	return (p.x&lt;q.x) || (p.x==q.x &amp;&amp; p.y&lt; q.y) || (p.x==q.x &amp;&amp; p.y==q.y &amp;&amp; p.z&lt;q.z) || (p.x==q.x &amp;&amp; p.y==q.y &amp;&amp; p.z==q.z &amp;&amp; p.w&lt;q.w);
+}
+float4 VecMin(float4* input, int length)
+{
+	float4 result = input[0];
+
+	for(int i=1; i&lt;length; ++i)
+	{
+		if(lessThan(input[i],result))
+			result = input[i];
+	}
+
+	return result;
+}
+</pre><p>In an attempt to parallelise this reduction with OpenMP, we might try to write something like:
+</p>
+<pre>#pragma omp parallel for reduction (min: result)   for(int i=1; i&lt;length; ++i)
+{
+    if(lessThan(input[i],result))       result = input[i];
+}
+</pre><p>in the hope that we can define the 'min' operation to suit our purposes.  However, this is not possible: Section 2.8.3.6 of the <a href="http://www.openmp.org/drupal/mp-documents/spec25.pdf">OpenMP 2.5 spec</a>states as a restriction to the 'reduction' clause the fact that custom reductions cannot be defined.  In fact, it is not even possible to overload basic operations (such as + and *) to allow reduction over structures.
+</p><p>
+We can quite easily write a custom Sieve accumulator class which allows us to parallelise the vector minimisation example.  We first give the parallelised code, assuming that we have an appropriate accumulator class, VectorMinLex:
+</p>
+
+<p>
+<strong>Computing the minimum vector in an array using Sieve</strong>
+</p>
+<pre>float4 SieveVecMin(float4* input, int length)
+{
+    float4 result;     sieve
+    {
+        VectorMinLex smallest(input[0]) merges result;       for(IntIterator i(1); i&lt;10; ++i)
+        {
+            if(lessThan(input[i],smallest))           smallest = input[i];
+        }
+    }
+    return result;
+}
+</pre><p>The code for the accumulator is quite straightforward:
+</p>
+
+<p>
+<strong>Vector minimisation accumulator</strong>
+</p>
+<pre>accumulatorclass VectorMinLex
+{
+    float4 acc; // The accumulator local state is a vector   public:     immediate VectorMinLex(float4 initial)
+    {
+        acc = initial;
+    }
+    // We use operator overloading to allow this accumulator class to be used in a float4 context      immediate void operator = (float4 p)
+    {
+        acc = p;
+    }
+    immediate operator float4() const
+    {
+        return acc;
+    }
+    /* The merge rule (marked using '&gt;') describes how an array of accumulators      should be used to form a single float4 value at the end of the sieve block */     &gt;VectorMinLex(float4* target, const VectorMinLex** resultv, const unsigned int resultc)
+    {
+        int resultIndex = 0;       for(int i=1; i&lt;resultc; i++)
+        {
+            if(lessThan(*resultv[i], *resultv[resultIndex])) resultIndex = i;
+        }
+        *target = resultv[resultIndex]-&gt;acc;
+    }
+};
+</pre><p>The only complex thing here is the merge rule, which is denoted by the '&gt;' token.  This rule is called at the end of a sieve block, by the run-time system, to produce a final value to merge back to the target variable.  In our example, each core has its own accumulator variable, 'smallest'.  This variable computes the minimum vector in a certain portion of the array (determined by the run-time depending on the architecture).  At the end of the sieve block the merge rule is used to take the minimum of all these accumulators and assign it to the target variable, 'result'.
+</p><p>
+The instance methods of the accumulator class are tagged immediate to indicate that they should not generate side-effects to data outside the class.
+</p><p>
+Hopefully it's easy to see that this is a powerful and general concept for implementing reductions.  It would be genuinely useful if OpenMP included something similar, but unfortunately there appear to be no plans - Section 2.9.3.6 of <a href="http://www.openmp.org/drupal/mp-documents/spec30_draft.pdf">draft 3.0 of the OpenMP spec</a> maintains the restrictions of version 2.5.
+</p>
+

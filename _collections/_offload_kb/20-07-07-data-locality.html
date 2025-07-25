@@ -1,0 +1,43 @@
+---
+id: 33
+category: performance
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Data Locality"
+redirect_from:
+  - /kb/33
+thumbnail:
+  - /public/uploaded/public/outerdataaccess.png
+layout: products/offload/kb/view
+---
+<p><img src="{{ '/public/uploaded/public/outerdataaccess.png' | relative_url }}" alt="Untitled"/>Any outer data accesses within an Offload block go through our software cache, which allows for very speedy offloading of code to the SPU. When iterating over code with performance in mind though, one of the first and most simple optimizations that can be performed is to bring data local instead.
+</p>
+<pre><code>static void func()
+{
+	int foo1[1000];
+	__blockingoffload()
+	{
+		int bar1 = 0;
+		for(unsigned int i = 0; i &lt; 1000; i++)
+		{
+			bar1 += foo1[i];
+		}
+
+		int foo2[1000];
+		__builtin_memcpy(foo2, foo1, sizeof(foo1));
+
+		int bar2 = 0;
+		for(unsigned int i = 0; i &lt; 1000; i++)
+		{
+			bar2 += foo2[i];
+		}
+
+		// bar1 &amp; bar2 will have same value!
+	};
+}
+</code></pre><p>In the above example, each of the loops performs identical operations, and the resultant bar values will be the same. The difference for performance between the two loops though is notable. The first loop will go through the software cache, each element of foo1 has to be DMA'ed in individually. On the second loop, since the array foo1 in its entirety is copied locally in one larger DMA, when we access foo2 within the loop all the accesses are through local memory, and are thus substantially faster!Handily, the __builtin_memcpy works on all combinations of outer/inner memory (So do normal memory copies invoked by dereferencing pointers to large data). This means that the one compiler intrinsic can be used for all of your memcpy needs!
+</p><p>
+See <a href="{{ '/kb/135' | relative_url }}">/kb/135.html</a> for further examples on caching PPU data in SPU-local storage.
+</p>
+
+

@@ -1,0 +1,36 @@
+---
+id: 118
+category: sieve
+date: 2011-11-01T17:32:25.3600Z
+date_updated: 0
+title: "How does Sieve integrate with my current tool chain?"
+url: how-does-sieve-integrate-with-my-current-tool-chain
+description:
+redirect_from:
+  - /company/documents/how-does-sieve-integrate-with-my-current-tool-chain
+layout: company/documents/view
+---
+<p>The sieve toolkit easily integrates with existing standard C/C++ development tools that you may already be using, this includes an existing C/C++ compiler (such as GCC) which may be the only compiler supporting your new processor architecture.
+</p><p>
+ Here is an illustration of how the Sieve System components provided by Codeplay integrate into existing development tool chains:
+</p><p>
+ <img src="{{ '/assets/images/portal/article-images/54f609fd0e9d8e25538519c977b88ebf.png.png' | relative_url }}" alt="Untitled"/> 1. Development begins with the C++ Source Code. Using your existing IDE and version control system, combined with the Sieve programming tools, you can modify your existing code base or write entirely new programs marked up with Sieve.
+</p><p>
+ 2. The Target Descriptor file allows programmers to enable and configure specific processor features in the Sieve compiler.
+</p><p>
+ 3. Applying Sieve is minimally invasive to your code and requires no changes to data structures so it is easy to use #defines to enable and disable Sieve extensions.
+</p><p>
+ 4. The Sieve compiler compiles your Sieve C++ code into an ANSI C form, similar to bytecode, using Codeplay s OutputC technology. The C code has been parallelized to the specifications of the target multi-core architecture and is ready to be compiled into objects using your existing C/C++ compiler.
+</p><p>
+ 5. The Sieve Runtime library provides processor specific implementations of Sieve. This is the only architecture dependent component, and Codeplay can provide or build a runtime for any existing or future multi-core processor.
+</p><p>
+ This ensures that Sieve code is portable. Programs do not have to be rewritten or extensively modified to run on radically different multi-core processor designs.
+</p><p>
+ 6. The object files and the Sieve runtime library can then be linked using your existing linker.
+</p><p>
+ 7. Finally we have our software application, ready to take full of advantage of the processing power of the target multi-core device.
+</p>
+
+
+
+

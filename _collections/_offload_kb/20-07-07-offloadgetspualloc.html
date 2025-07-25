@@ -1,0 +1,21 @@
+---
+id: 52
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadGetSPUAlloc"
+redirect_from:
+  - /kb/52
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>unsigned int offloadGetSPUAlloc( void )
+</code></pre>
+<p>
+The return value is the number of SPUs available for use by Offload. This number may change until the first Offload block spawn, upon which time it is fixed until runtime shutdown.
+</p><p>
+Sets the number of SPUs to allocate to Offload
+</p>
+
+

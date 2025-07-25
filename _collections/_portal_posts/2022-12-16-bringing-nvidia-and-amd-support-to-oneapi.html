@@ -1,0 +1,182 @@
+---
+title: "Bringing Nvidia&reg; and AMD support to oneAPI"
+date: 2022-12-16T16:00:00.000000+00:00
+layout: portal/portal-article-view
+user_id: 653
+category: blogs
+thumbnail: /assets/images/portal/article-images/2022-12-16-thumb2.jpg
+---
+
+<h2>Developers can write SYCL&trade; code and use oneAPI to target Nvidia* and AMD* GPUs with free binary plugins</h2>
+
+<figure>
+    <img src="{{ '/assets/images/portal/article-images/2022-12-16-image-1.jpg' | relative_url }}" />
+</figure>
+
+<p>Today is a milestone for me as Codeplay&reg; officially releases plug-ins for oneAPI on Nvidia and AMD GPUs along
+    with technical support,
+    <a href="{{ '/portal/press-releases/2022/12/16/codeplay-announces-oneapi-for-nvidia-and-amd-gpu-hardware' | relative_url }}">see
+        the announcement</a>. I have been working on this project from the beginning and it’s exciting for our
+    team to be able to make this available to the broader developer community. This release provides plugins
+    for the Intel® DPC++/C++ Compiler using the oneAPI Toolkits to enable Nvidia and AMD GPU platform targets.
+    Although support for Nvidia and AMD GPUs has been available in the DPC++ open-source repository for a
+    while now, this is the first official binary release. Together with this release, Codeplay is providing
+    a commercial “Priority Support” package for customers who want quick answers to technical problems and
+    general support for their oneAPI deployment on Nvidia platforms directly with our team.</p>
+
+<p>If you want to jump straight into using the new release visit our
+    <a href="https://developer.codeplay.com/products/oneapi/nvidia/2023.0.0/guides/get-started-guide-nvidia"
+       target="_blank"
+       rel="noopener">“Get Started” guide for Nvidia GPUs</a> or
+    <a href="https://developer.codeplay.com/products/oneapi/amd/2023.0.0/guides/get-started-guide-amd"
+       target="_blank"
+       rel="noopener">“Get Started” guide for AMD GPUs</a>. You can find out what features are and aren’t yet
+    supported for the plugins on the “Features” pages.</p>
+
+<p>What we are releasing are plugin components that complement the Intel® oneAPI Toolkits. The Intel oneAPI
+    Toolkits provide the DPC++/C++ Compiler with the OpenCL and Level Zero plugins by default, and the
+    Codeplay plugins introduce support for the Nvidia and AMD GPU platforms respectively. The Codeplay
+    plugins require the Intel oneAPI Base Toolkit to be installed, they cannot be used on their own.</p>
+
+<p>The Codeplay plugins will be released with the same cadence as the Intel oneAPI Toolkit releases; this first
+    one being 2023.0, with additional minor releases which will match the latest CUDA and ROCm SDK releases,
+    ensuring that the plugins work with the latest platform drivers.</p>
+
+<p>In the 2023.0 release, oneAPI for Nvidia GPUs has most SYCL 2020 features implemented.</p>
+
+<p>The oneAPI for Nvidia GPUs plugin primarily supports Nvidia A100 GPUs, with at least CUDA SDK 11.7 and the
+    recommended Nvidia driver. However, any GPU with at least compute capability sm_50 should work. </p>
+
+<p>oneAPI for AMD GPUs is still in beta stage, but it does implement more than 50% of the SYCL 2020 features.</p>
+
+<p>The oneAPI for AMD GPUs plugin is primarily supported on AMD W6800 GPUs (gfx1030) with ROCm 4.5.2. We do
+    however also test regularly using AMD MI50 (gfx906), MI100 (gfx908) and Radeon RX 6700 XT
+    (gfx1031)  GPUs.</p>
+
+<p>We’re interested to hear from the community who are using the plugins with a range of GPUs.</p>
+
+<h2>Supported Features</h2>
+
+<p>All major SYCL 2020 features are supported on the Nvidia GPUs plugin, including the various levels of
+    Unified Shared Memory (USM), subgroup algorithms, atomics and reduction operations. Some advanced
+    SYCL extensions are also working and mapped efficiently to CUDA, for example Nvidia Tensor Cores
+    can be programmed using the “joint_matrix” extension from Intel, using the same performance portable
+    code as in similar Intel hardware features, such as Intel® Advanced Matrix Extensions (Intel® AMX).</p>
+
+<p>SYCL applications using our plugins on Nvidia or AMD GPUs are using the same execution path as any other
+    CUDA and HIP applications. Traditional Nvidia tools, such as profilers (nsys, ncu) or debuggers (cuda-gdb),
+    can be used with SYCL applications using Data Parallel C++ (DPC++). Advanced users can extract the generated
+    PTX from the compiler pipeline to identify potential low-level optimizations, and the PTX is converted
+    to SASS using native CUDA tooling.</p>
+
+<p>Backend interoperability is an important aspect of the SYCL 2020 specification and fully supported by
+    oneAPI for Nvidia GPUs. Users can retrieve native CUDA objects from almost any SYCL object, for example,
+    CUDA streams from SYCL queues or CUDA events from SYCL events. It is possible to use native CUDA libraries,
+    such as cuBLAS or cuDNN with SYCL applications using the interoperability mode.</p>
+
+<p>SYCL enables features that are not available on AMD or HIP. One example is the ability to asynchronously
+    execute arbitrary C++ code on the host following the same dependency scheduling as the devices. This is
+    done using SYCL host tasks.</p>
+
+<h2>How is this all possible</h2>
+
+<p>oneAPI for Nvidia GPUs relies on the infrastructure that Codeplay has built for the past three years in the
+    <a href="https://github.com/intel/llvm" target="_blank" rel="noopener">DPC++ open source repository</a>.
+    Codeplay has been taking advantage of the SYCL 2020 capability of targeting
+    multiple different backends to extend DPC++ with support for Nvidia GPUs via CUDA and AMD GPUs via HIP.
+    Codeplay also proposed a
+    <a href="https://github.com/KhronosGroup/SYCL-Docs/pull/197" target="_blank" rel="noopener">CUDA backend
+        specification</a> to the Khronos SYCL working group to enable other vendors to provide their own SYCL
+    implementations for CUDA.</p>
+
+<p>It has been possible to compile using DPC++ for Nvidia GPUs for more than a year on Lawrence Berkeley
+    National Laboratory, Oak Ridge National Laboratory, and Argonne National Laboratory clusters. Codeplay
+    has been working in collaboration with these organizations so that researchers can prepare their codes
+    to run on the Aurora, Frontier, Polaris and Perlmutter supercomputers. This is making it easier to move
+    code across hardware platforms from multiple vendors.</p>
+
+<p>The implementation we have contributed to DPC++ of Nvidia and AMD GPU targets has two main components.
+    One part includes several clang++ compiler driver patches, and the other implements the runtime plugin
+    itself. The compiler changes were integrated into the code that is built to produce the Intel oneAPI
+    Base Toolkit in order to simplify distribution. The plugin is built separately and only available in
+    oneAPI for Nvidia GPUs and oneAPI for AMD GPUs, downloadable from the
+    <a href="https://developer.codeplay.com" target="_blank" rel="noopener">Codeplay developer website</a>.
+    Note the standalone oneAPI Toolkits will allow compilation of SYCL applications targeting Nvidia and
+    AMD architectures, by that I mean the target flags will be accepted by the compiler, however without
+    the runtime plugin components they will not execute.</p>
+
+<p>The compiler driver patches enable the DPC++ frontend to build for Nvidia GPUs by identifying the target triple,
+    and then triggering actions to build the device image using the existing CUDA compiler support
+    from the LLVM project. </p>
+
+<p>The DPC++ frontend pushes the SYCL code down several passes and then calls the PTX backend from LLVM to generate
+    the PTX for the kernels in the SYCL application. Codeplay engineers are actively contributing and
+    improving support for new PTX ISA features, such as tensor cores, to ensure performance of the code
+    generated with the LLVM PTX backend is on comparable with the native NVCC compiler. By adopting the
+    upstream LLVM PTX, the DPC++ Nvidia plugin can benefit from a large community of developers already
+    working with Nvidia GPUs. The generated PTX ISA is usually comparable with the native NVCC compiler
+    when using the same optimization flags. Note that NVCC enables several default flags silently that
+    must be spelled out on the DPC++ CUDA backend, our documentation shows how to enable the right ones.</p>
+
+<p>The other components are the runtime plugins, which enable the SYCL runtime to call native APIs on Nvidia
+    and AMD platforms (CUDA Driver and HIP respectively). The runtime plugins are dynamic libraries that are
+    called from the SYCL runtime when available. The DPC++ compiler automatically links against the SYCL runtime
+    from the oneAPI distribution, and then if the Nvidia and/or AMD plugins are available, they can be
+    selected at runtime for execution. Using the SYCL device selection in the application allows it to
+    specifically select an Nvidia (or AMD device), as shown in Figure 1.</p>
+
+<figure>
+    <img src="{{ '/assets/images/portal/article-images/2022-12-16-image-2.jpg' | relative_url }}" />
+    <figcaption><b>Figure 1:</b> Example of a CUDA device selector that prints a message when a CUDA device has been
+        found. If there is no CUDA device, the SYCL queue will throw an error.</figcaption>
+</figure>
+
+<h2>Future Plans</h2>
+
+<p>During 2023 we will add more features to continue to support the latest AMD and Nvidia GPUs and SDK
+    releases and extend the number of platforms tested and supported. We also welcome contributions from
+    the community through the <a href="https://github.com/intel/llvm" target="_blank" rel="noopener">open
+        source project</a>.</p>
+
+<p>We will broaden hardware support of the oneAPI specification components such as the oneAPI Math Kernel Library
+    (oneMKL) and oneAPI Deep Neural Network Library (oneDNN). Official releases will be prepared for these libraries
+    using cuBLAS, cuDNN, hipBLAS and hipDNN support, ensuring that they are properly supported and
+    “Priority Support” can address critical issues.</p>
+
+<p>Further in the future, Codeplay hopes to add more multivendor hardware support to other oneAPI libraries, like
+    oneAPI Data Parallel C++ Library (oneDPL), and help to make the migration to SYCL as seamless as possible
+    for developers with Nvidia and AMD hardware.</p>
+
+<h2>Get Started</h2>
+
+<p>If you want to use the C++  SYCL compiler for Nvidia or AMD platforms, you can still get the source code and
+    build it yourself from the <a href="https://github.com/intel/llvm/" target="_blank" rel="noopener">Intel LLVM
+        repository</a>, <a href="https://intel.github.io/llvm-docs/" target="_blank" rel="noopener">following the
+        Getting Started guide</a>. That is the best way to get the cutting-edge features. You can interact with
+    the open source community there, asking questions or raising issues. Development of all Nvidia and AMD support
+    happens in the open source project first, and we are deeply committed to fostering an open ecosystem to develop
+    oneAPI support for multiple platforms with a strong community behind it. </p>
+
+<p>Alternatively you can download the plugins from our developer website and request Priority Support from
+    Codeplay by <a href="https://codeplay.com/company/contact/" target="_blank" rel="noopener">contacting us</a>.</p>
+
+<p>If you have any technical questions you can raise them on our
+    <a href="https://support.codeplay.com" target="_blank" rel="noopener">community forum</a> .</p>
+
+<h2>Notices and Disclaimers</h2>
+
+<p>* Other names and brands may be claimed as the property of others.</p>
+
+<p><sup>1</sup> Performance varies by use, configuration and other factors.</p>
+
+<p>Performance results are based on testing as of dates shown in configurations and may not reflect all
+    publicly available updates.  See backup for configuration details.  No product or component can be
+    absolutely secure. </p>
+
+<p>Your costs and results may vary. </p>
+
+<p>Intel technologies may require enabled hardware, software or service activation.</p>
+
+<p>© Codeplay Software Ltd. Intel, the Intel logo, Codeplay and Codeplay logo, and other Intel marks are
+    trademarks of Intel Corporation or its subsidiaries. Other names and brands may be claimed as the
+    property of others. SYCL is a registered trademark of the Khronos Group, Inc.</p>

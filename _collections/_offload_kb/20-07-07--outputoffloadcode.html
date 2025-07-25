@@ -1,0 +1,65 @@
+---
+id: 13
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-outputoffloadcode"
+redirect_from:
+  - /kb/13
+layout: products/offload/kb/view
+---
+<p>Offload by default will compile the input file for both PPU and SPU, duplicating all the PPU methods that are being used on the SPU into SPU code. One of the most useful features we have added is &ndash;outputoffloadcode, which will output only the minimal set of PPU functions required to call the Offload code, but still duplicating all the required SPU code.Lets consider the example;
+</p>
+<pre><code>struct Foo
+{
+	int work1();
+	int work2();
+};
+
+Int Foo::work1()
+{
+	; // do something
+	return -1;
+}
+
+Int Foo::work2()
+{
+	int result1 = work1();
+	int result2 = work1();
+	return result1 + result2;
+}
+</code></pre><p>Now, we wish to Offload some of the processing in work2, but want the rest of the code to be compiled for PPU without using Offload.
+</p>
+<pre><code>struct Foo
+{
+	int work1();
+	int work2();
+};
+
+int Foo::work1()
+{
+	; // do something
+	return -1;
+}
+
+#ifdef __offloadcplusplus
+
+int Foo::work2()
+{
+	int result1;
+
+	__offload()
+	{
+		result1 = work1();
+	};
+
+	int result2 = work1();
+	return result1 + result2;
+}
+#endif
+</code></pre><p>Now we have to compile this same C++ file twice, once to output the normal PPU code (but this time leaving out the definition of work2), and then again with Offload, with the &ndash;outputoffloadcode option added to the compiler. Offload will then correctly deduce that work2 has Offload specific code within it, and write out the PPU definition for that function, but also will ignore outputting all the other functions, instead duplicating the work for the SPU.
+</p><p>
+This option also comes in handy when Offload requires a definition for a function that resides within another C++ file. Without the &ndash;outputoffloadcode compiler option, when we included the C++ file within the current C++ file (so that we can see the definition) at the link stage lots of multiply defined errors would be thrown. Handily when we use the &ndash;outputoffloadcode option though the definitions will only be written out if they contain Offload specific code, meaning they will not be written out by the Offload compiler.
+</p>
+
+

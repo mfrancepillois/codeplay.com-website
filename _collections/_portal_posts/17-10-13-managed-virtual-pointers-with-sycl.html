@@ -1,0 +1,45 @@
+---
+id: 278
+url: 10-13-17-managed-virtual-pointers-with-sycl
+user_id: 843
+date: 2017-10-13T17:18:39.7200Z
+category: blogs
+title: "Managed Virtual Pointers with SYCL"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/10-13-17-managed-virtual-pointers-with-sycl
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>The ComputeCpp <a href="https://developer.codeplay.com/computecppce/latest/integration-guide">integration guide</a> covers the fundamentals of integrating SYCL<span class="external-link">™</span> with an existing codebase, however in this post we will present a utility that facilitates integrating SYCL into existing codebases that are not C++11 friendly. If your application uses malloc and frees for allocation, or has some existing CUDA®-based memory management, the Legacy Pointer <a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/include/legacy-pointer"></a> utility can help you to integrate your code with SYCL.</p>
+
+<p>Memory management on SYCL is handled via the buffer and image classes following a modern C++ approach. Device resources are handled transparently by the SYCL runtime, as explained in the <a href="https://developer.codeplay.com/computecppce/latest/sycl-guide-memory">memory section</a> of our SYCL guide.</p>
+
+<p>When you can't use modern C++, <a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/include/legacy-pointer"></a> the <a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/include/legacy-pointer">Legacy Pointer</a><a href="https://codeplay.com/portal/10-13-17-managed-virtual-pointers-with-sycl"></a> utility available on our GitHub repository can help simplify the integration of SYCL objects using the malloc/free allocation interface. The "Legacy Pointer" implementation is a very lightweight implementation that imitates the behavior of a pointer (for example it can be used in pointer arithmetic). The pointer maps to one or more SYCL buffer objects that can be retrieved later using the API. The number of SYCL buffers that can be handled by this utility is limited, which makes it unsuitable for all cases.</p>
+
+<p>A legacy pointer is a custom pointer address which represents a SYCL buffer and an offset. It is allocated and de-allocated on the host using SYCLmalloc() and SYCLfree() respectively and supports pointer arithmetic. It cannot be de-referenced on the host, but accessors to it can be obtained through SYCL command groups.</p>
+
+<p>A similar result can be achieved via another utility called "<a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/utils/vptr"></a><a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/include/vptr">Managed Virtual Pointers</a>". It has a more comprehensive implementation of a virtual address space that is handled via malloc and free functions, and can re-use and compact existing spaces using a garbage collection mechanism. This enables a much larger number of SYCL buffers alongside other features.</p>
+
+<p>The "Managed Virtual Pointer" requires a PointerMapper object to map the virtual pointer address to a SYCL buffer and offset. This object can only be created once and is used for multiple virtual pointers. It is responsible for the efficient management of the virtual pointer address space. It also exposes methods to retrieve the buffer and offset, and to create accessors for the virtual pointers on the host.</p>
+
+<p>For those integrating with SYCL from existing code bases "Managed Virtual Pointers" can make life easier, and actually our team is already using these within our SYCL implementation of Eigen, the linear algebra library used by TensorFlow. Eigen relies on C99 allocations for memory to enable CUDA pointers on the device. This forced their design to follow the usage of raw pointers for device allocations, which makes the development of other platforms more difficult. However, to avoid major changes to the Eigen codebase, "Managed Virtual Pointers" are used to offer an effortless integration of the SYCL buffers. A leaf-node in an Eigen expression uses a standard (void*) pointer as its storage type which is the same for the interfaces used in both the CUDA and CPU interfaces. However when developing using SYCL a buffer is considered a data container, and accessing the container is done using memory accessors (you can find out more about accessors in our <a href="https://developer.codeplay.com/computecppce/latest/sycl-guide-memory">SYCL guide to memory</a>). This meant we could not integrate SYCL with the existing Eigen expression interface because SYCL accessors can't deal with standard pointer types. By using "Managed Virtual Pointers" we are able to construct the same expression interface as CUDA for SYCL on the the host side and internally convert it to the correct accessor type when constructing the device kernel.</p>
+
+<p>Developers can use the interfaces "SYCLmalloc" and "SYCLfree" to allocate and free memory on the device. The virtual pointer returned from this interface can be used to pass data structures with pointers to the device, so if some existing code uses data structures that contain pointers, the structures can be retained and used within a SYCL codebase.</p>
+
+<p>Here's a snippet of code that shows how "Managed Virtual Pointers" works.</p>
+
+<pre class="prettyprint lang-offload linenums"><code>// Create the Pointer Mapper structure<br>PointerMapper pMap;<br>// Create a SYCL buffer of 10 floats<br>// This pointer is a number that identifies the buffer<br>// in the pointer mapper structure<br>float * a = static_cast&lt;float *&gt;(SYCLmalloc(10 * sizeof(float), pMap));<br>// Create a SYCL buffer of 25 integers<br>int * b = static_cast&lt;int *&gt;(SYCLmalloc(25 * sizeof(int), pMap));<br>// Create a pointer to the 5th element<br>// This simply adds 5 * sizeof(float *) to the base address.<br>float * c = a + 5;<br>// Invalid usage: no-dereference on the host<br>// float myVal = *c;<br>// Valid access on host: Use host-accessor<br>{<br>  auto syclAcc = pMap.get_buffer(a).get_access&lt;access::mode::read,<br>                                              access::target::host_buffer&gt;();<br>  float myVal = syclAcc[0];<br>}<br>// Free the pointers<br>SYCLfree(a);<br>SYCLfree(b);// Free the Pointer Mapper structure</code></pre>
+
+
+<p>A buffer is allocated with the PointerMapper passed to the SYCLmalloc function call, and this returns back a pointer to that address space. The get_buffer and get_offset function calls are used to access different areas in the allocated memory buffer. On the host side the PointerMapper can be used to access a buffer in the same way as it normally would be using SYCL, but the PointerMapper manages the access.</p>
+
+<p>The implementation was intentionally made as memory efficient as possible to avoid unnecessary overhead. It is able to reuse virtual pointers and release them from memory, meaning it is unlikely to run out of virtual addresses and can keep memory usage low.</p>
+
+<p>Documentation is available on our <a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/include/vptr">GitHub repository</a><a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/utils/vptr"></a> and there are a couple of examples of using the "Managed Virtual Pointers" on GitHub in the form of tests, a <a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/tests/vptr/basic.cc">basic example</a> and one that demonstrates the <a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/tests/vptr/offset.cc">use of offsets</a><a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/utils/vptr/tests/offset.cc"></a>.</p>
+
+<p>We are also open to any contributions to the project, so please feel free to fork the projects and send us a merge request with your improvements.</p>
+

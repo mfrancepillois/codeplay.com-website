@@ -1,0 +1,46 @@
+table {
+    margin: 2rem 0;
+}
+
+
+ol, ul {
+    list-style-position: inside;
+}
+
+
+#jump-links {
+    display: inline-block;
+}
+
+#jump-links li {
+    font-weight: bold;
+    padding: .4rem 0;
+}
+
+#jump-links li:not(:last-of-type) {
+    border-bottom: #ccc 1px solid;
+}
+
+#jump-links li:hover {
+    text-decoration: underline;
+}
+
+h2 {
+    margin-top: 2rem;
+    position: relative;
+}
+
+table tr td:first-of-type {
+    font-weight: bold;
+}
+
+
+h2 span {
+    position: absolute;
+    visibility: hidden;
+    top: -100px;
+}
+
+.indent-two {
+    padding: 0 2rem;
+}

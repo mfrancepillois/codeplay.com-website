@@ -1,0 +1,547 @@
+---
+title: "SYCL for Safety Practitioners – SYCL ADAS Applications Topology Explained"
+date: 2020-11-09T10:21:50.360000+00:00
+category: blogs
+user_id: 649
+thumbnail: /assets/images/portal/article-images/sycl-safety-part-2-graphic-1.png
+layout: portal/portal-article-view
+---
+
+<h2>SYCL for Safety Practitioners Series</h2>
+<p>Part 1 -&nbsp;<a href="https://codeplay.com/portal/blogs/2020/07/13/sycl-safety-part-1.html">An Introduction</a></p>
+<p>Part 2 -&nbsp;<a href="https://codeplay.com/portal/blogs/2020/09/01/sycl-safety-part-2.html">SYCL for Automotive AI
+    and ADAS applications</a></p>
+<p>Part 3 - SYCL ADAS Applications Topology Explained</p>
+
+<h2>Introduction&nbsp;</h2>
+<p>Welcome to the third article in this series. In the first, I introduced this series of articles for Safety
+    Practitioners assessing the SYCL™ open standard programming model. In the previous article, I talked about how SYCL
+    can support many of the demands outlined in chapter 6 of the ISO 26262:2018 functional safety standard. In this
+    article, I will show you how the SYCL stack topology can support functional safety. What do I mean by topology?
+    Topology here means a large-scale structure with many clear distinct layers separated by API boundaries. In each
+    layer there are further structures where data flows between components as well as up and down through the layers in
+    the stack. The shape of the structure is mainly vertical with the application at the top. This article will show how
+    this structure is well defined yet versatile to meet the needs of the automotive application and the demands of the
+    safety practitioner.</p>
+<h2>SYCL supports functional safety design</h2>
+<p>What is it that makes the topology suitable for safety? Tomorrow's vehicles will have&nbsp;either semi- or fully
+    autonomous systems&nbsp;within them – SAE L3 to L5. These will need to understand their operational environment in
+    order to operate within the expected safety norm. To do this a vehicle’s ECU (its central computer) may process
+    gigabytes of data from various sources (sensors or V2X communications) and combine that with an operational context
+    it built in the previous seconds or minutes.&nbsp;In real-time, the application calculates the next iteration of
+    decisions in tens of milliseconds. It recognizes objects, considers non-optimal driving environments, multiple
+    evolutionary scenarios and degraded sensors.&nbsp;It prioritizes actions, negotiates (with other units), and builds
+    avoidance strategies which humans can do naturally.</p>
+<p>The CPU is a generalist computational device. While it can do a wide variety of tasks, it cannot necessarily perform
+    some types of work very efficiently compared to specialist compute devices (sometimes called accelerators). These
+    specialist compute devices can be used to offload that work, acting as co-processors supporting the CPU and
+    performing operations such as matrix operations far faster than a CPU can. To operate and utilize these
+    co-processors in a coordinated and efficient manner requires communication and synchronization. SYCL enables the
+    synergy of these&nbsp;devices&nbsp;within the ADAS application or supporting maths and AI algorithm libraries. Table
+    1 lists some of the possible co-processors. When these devices are brought together with a CPU onto a SoC, it is
+    called a heterogeneous platform.</p>
+<p>&nbsp;</p>
+<table id="side-table">
+    <tbody>
+    <tr>
+        <td width="113">
+            <p><b>Co-processor</b></p>
+        </td>
+        <td width="180">
+            <p><b>Purpose</b></p>
+        </td>
+    </tr>
+    <tr>
+        <td width="113">
+            <p>Vision</p>
+        </td>
+        <td width="180">
+            <p>Image processing</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="113">
+            <p>AI</p>
+        </td>
+        <td width="180">
+            <p>Tensor / matrix convolutions</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="113">
+            <p>CNN</p>
+        </td>
+        <td width="180">
+            <p>Convolutional Neural Networks for AI</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="113">
+            <p>DSP</p>
+        </td>
+        <td width="180">
+            <p>Conversion of analog signals and digital signal processing</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="113">
+            <p>GPU</p>
+        </td>
+        <td width="180">
+            <p>Scaled parallel data compute</p>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<style>
+    #side-table {
+        max-width: 360px;
+        width: 100%;
+    }
+
+    #side-table td {
+        padding: .5rem;
+    }
+
+    #side-table td p {
+        padding: 0;
+        margin: 0;
+    }
+</style>
+
+<p>Table 1: SYCL target acceleration devices or Co-processor</p><p><img
+        src="{{ '/assets/images/portal/article-images/sycl-for-safety-practitioners-2.png' | relative_url }}"><br></p><p>Figure 1: SYCL's
+    layered application model</p>
+<p>The diagram in figure 1&nbsp;is used throughout the series of articles and summarizes the accelerated computing stack
+    topology.&nbsp; A compute stack is a complex system and complexity is one of the concerns for safety practitioners.
+    The ISO 26262:2018 Functional Safety Standard strongly encourages code oversight and review.</p>
+<h2>SYCL relieves multithreading anxiety</h2>
+<p>In the past, programming highly parallel architectures was a complicated and&nbsp;troubled&nbsp;affair. Scheduling
+    and synchronizing parallel processes and arbitrating shared resources, while at the same time avoiding the
+    introduction of errors that lead to issues such as deadlocks or livelocks, is a complex task that requires
+    specialist skills and tools.</p>
+<p>One of SYCL’s strengths in supporting safety is that it frees up the developer from managing the synchronization of
+    data movement and kernel execution. SYCL supports data synchronization between kernels by automatically generating a
+    data dependency graph and transferring data and scheduling work accordingly. A SYCL application is resilient to
+    indeterministic program failure, which has troubled multi-threaded applications in the past. The SYCL data
+    dependency graph ensures no deadlocks can occur between two distinct tasks, and developers can easily reason about
+    the order of execution of the different tasks in the system.</p>
+<h2>Safety in layers</h2>
+<p>The stack is not necessarily developed by one company. Depending on the&nbsp;application&nbsp;and the software
+    libraries employed there can be a diversity of&nbsp;developers&nbsp;involved at the higher layers of the stack.&nbsp;Fortunately,&nbsp;with
+    access to the open-source and/or open-standard community, a safety&nbsp;practitioner is free to converse with the
+    other parties if they need to.&nbsp;Apart from the hardware driver supplied by the SoC hardware vendor, the upper
+    layers and the parts within a layer are broadly defined by open standard APIs.</p>
+<p>As the stack is split up into clear layers and boundaries by the APIs, it can make it easier to break down the
+    behavior of the stack and so be able to apply FMEAs at a component level or within a layer where components
+    interact.</p>
+<p>The lead provider of these open standard APIs is Khronos®. Khronos is a consortium of technology companies including
+    some from the automotive industry who define API specifications for all to freely use. SYCL is a Khronos open
+    standard, royalty free, API specification. Other relevant Khronos open standards used in the stack are:</p>
+<ul>
+    <li>OpenCL™</li>
+    <li>SPIR-V™ (a future article in the Safety for Practitioner series)</li>
+</ul>
+<p>The stack is quite versatile. SYCL, depending on your needs, can be integrated with as many or as few libraries as
+    needed. This means the stack can be streamlined for efficiency and safety. &nbsp;Some of the libraries and
+    frameworks include, but are not limited to:</p>
+<ul>
+    <li>SYCL-BLAS, an open-source BLAS kernel library</li>
+    <li>Google's™ Tensorflow™ ML framework</li>
+    <li>SYCL_DNN and SYCL-ML libraries.</li>
+    <li>Intel® oneAPI ® libraries</li>
+</ul>
+<p>This diverse set of libraries which support a SYCL backend continues to grow driven by the SYCL developer
+    community.</p>
+<p>The focus of SYCL development has been and continues to be on compute performance. The evidence is showing that a
+    SYCL application is quite capable of meeting, and in some cases surpassing, the performance of its competitors in
+    automotive applications. However, the current SYCL specifications and available implementations have been developed
+    with little or no consideration for operational edge cases with safety mitigation plans.&nbsp;This is an important
+    point which can be managed by a suitable safety concept for each use case.</p>
+<h2>Co-processors meet performance demands</h2>
+<p>The diagram in figure 2 reveals in greater detail the&nbsp;topology of the stack. A SYCL enabled application, like
+    other applications, needs a CPU to execute. Previous automotive ECU solutions and supporting applications are no
+    different. What is different is the addition of&nbsp;specialist co-processers. These co-processors enable the
+    parallel tasks that might have been run on a CPU to be offloaded to a processor using many more cores with execution
+    scaled up many times to a point way beyond what would be possible on a CPU. The diagram highlights the origin of the
+    kernels (a kernel is a small program representing a 'task') and how they are sent down through the stack to the
+    co-processors to be executed. Once a kernel has completed&nbsp;execution, its results are returned to the
+    application for processing and&nbsp;decision&nbsp;making.&nbsp;Notice that the kernels can come from either the ADAS
+    application or the&nbsp;libraries it uses.</p><p><img
+        src="{{ '/assets/images/portal/article-images/sycl-for-safety-practitioners-3.png' | relative_url }}"><br></p>
+<p>Figure 2: SYCL&nbsp;application in detail. Highlighting the execution paths of kernels.</p>
+<p>To develop the application, an ADAS developer is unlikely to be concerned with the layers below the SYCL API. The
+    developer will, however, need to understand the configuration of the chosen acceleration device or devices in order
+    to get optimal performance. The safety practitioner will be concerned with what happens at all levels.&nbsp;</p>
+<h2>SYCL flow</h2>
+<p>With reference to figure 2, a developer has encapsulated a function of work to be performed on some data in a
+    standard C++ lambda function or functor. On compilation of the code, the compiler identifies the function of work as
+    a kernel program. The program is compiled for a specific co-processor. Compilation can take place at run time or
+    offline. Offline compilation allows binaries to be prepared and verified by a toolchain before being embedded into
+    the application to be executed when required. The SYCL toolchain can support any additional controls while reducing
+    the size of the SYCL implementation.</p>
+<p>The runtime automatically synchronizes the kernel’s execution with the host side code so that no further intervention
+    is needed by the programmer, again reducing the introduction of systematic errors. Conceptually, the kernel is
+    effectively generated at the top of stack in the application and passed down through the stack to the device once it
+    is passed to the SYCL API. The single kernel or kernels are replicated and executed across the compute units in the
+    device. On kernel execution completing, the results can be copied back to the host upon request, when the host
+    application uses the designated buffers. The SYCL runtime implementation can use advanced data movement paths (e.g.
+    DMA) or graph analysis techniques to keep the amount of copies back to the host to a minimum, and take advantage of
+    special hardware architecture features that will improve performance.</p>
+<h2>SYCL customization enables a variety of safe applications</h2>
+<p>Like the upper layers of the stack, the SYCL layer can be customized. A conformant SYCL implementation must adhere to
+    a version of the SYCL API specification, which for QM or a low ASIL level is seen to be the model for development
+    and cost. For critical solutions, a SYCL implementation can have features removed where it makes sense &nbsp;to
+    better fit with the ISO 26262 requirement to remove unnecessary code. While any SYCL implementation can be reduced
+    by removing features, it can at the same time be enhanced with safety features to meet the demands of the safety
+    case. The SYCL stack can also support additional safety features like behavioral monitors or alternative operational
+    modes, for example, reaching a safe state.</p>
+<p>A typical SYCL implementation like Codeplay’s ComputeCpp™ and the other parts above it in the stack are developed as
+    SEooC components (referred to in automotive as “elements”). With the customer, &nbsp;the ComputeCpp runtime
+    implementation can be customized to meet the needs of the safety use cases and the target hardware.&nbsp;</p>
+<h2>Safety in layers – Separation of Concerns</h2>
+<p>While it is generally the responsibility of the ADAS application developer to tune the application, Codeplay assists
+    by performing tasks such as:</p>
+<ul>
+    <li>Optimization of data set size, layout and movement (i.e. ensuring the total data set can be partitioned and
+        moved across the system efficiently given the hardware resources available)
+    </li>
+    <li>Kernel fusion (i.e. combining multiple kernels to increase computational intensity)</li>
+    <li>ND-range parameter tuning (i.e. optimal configuration of execution parameters to maximize hardware
+        utilization)
+    </li>
+    <li>General SYCL development consultation and training</li>
+</ul>
+<p>Codeplay can also enhance the SYCL implementation to target a specific device by adding support for hardware features
+    such as:</p>
+<ul>
+    <li>Specialised SoC acceleration features like DMA optimizations</li>
+    <li>Caches or alternative memory spaces</li>
+</ul>
+<p>The very nature of the SYCL stack supports opportunities for collaboration, inspection and improvement by other
+    safety practitioners, the developer community and component vendors.</p>
+<p>The notable independence of the SYCL stack from the hardware also allows the development of the application to be
+    carried out in advance of any hardware-in-the-loop (HIL) development. This can allow developers to prove important
+    safety verification gates in advance.</p>
+<p>The layers in the stack are clearly defined by well-defined API boundaries. Such boundaries devolve clear
+    responsibilities. At the SYCL layer boundary is the Khronos SYCL specification. The backend is easily identified by
+    the Khronos OpenCL specification. At the higher layers, proprietary or open-source libraries to accelerate math or
+    sensor fusion algorithms like these listed here have identifiable boundaries:</p>
+<ul>
+    <li>SYCL-BLAS (Matrix Multiplication algorithms, Kalman filters etc)</li>
+    <li>ISO C++ Parallel STL library</li>
+    <li>Google's TensorFlow library</li>
+</ul><p><img src="{{ '/assets/images/portal/article-images/sycl-for-safety-practitioners-4.png' | relative_url }}"><br></p>
+<p>Figure 3: Example of a possible upper layer’s topology</p>
+<p>At the top is the ADAS application. Depending on the nature of the application the top two layers shown in figure 1
+    are defined by the ADAS developer.</p>
+<p>The distinct layers are well understood and can assist in the development of the safety design, integration and
+    verification.&nbsp; The relatively new concern is how to manage the long-term maintenance of the software. The clear
+    API boundaries allow either whole layers or parts within a layer to be debugged, fixed and replaced while leaving
+    the other parts intact. This can include the hardware too. Importantly, the other layers’ verification strategies
+    can remain in place.</p>
+<h2>SYCL stack resource management</h2>
+<p>A very important partner to the ADAS application and all the components in the stack is the RTOS. An RTOS is
+    necessary for the overall resource management of the platform. All the services or applications, including the ADAS
+    application, will have to negotiate with it to obtain their share of the resources. The RTOS manages the following:
+    primary memory management strategies, thread allocations, communications etc. The RTOS accompanies the SYCL stack as
+    part of the final solution.</p>
+<p>An important consideration when utilizing an acceleration stack with an API like SYCL’s is the capability of the
+    heterogeneous hardware and the supporting hardware drivers to support co-processor sharing. The SYCL implementations
+    themselves assume they have sole access to a device, so the sharing of a device between processes must be
+    implemented at a lower level, such as by the RTOS and the supporting hardware driver. The co-processor itself could
+    be a limit to it being shared.</p>
+<p>Even if the RTOS, hardware driver and co-processor allow sharing, it may not be viable to share the limited resources
+    like the device’s local memory between several concurrent processes. The latency caused by the time-slicing of the
+    device could severely impact performance. A major part of the latency impact would come from the suspension of a
+    kernel’s state, the backing up of the state, so it could be switched out for another application’s kernel’s to
+    re-start execution.</p>
+<p>As part of sharing a capable solution, it is important the hardware driver should support multiple process entry.
+    This requires the driver to be written in such a way to support separate re-entrant tasks.</p>
+<h2>SYCL supports fallback mechanisms</h2>
+<p>The topology of an ADAS application can be fixed or dynamic. SYCL allows an application to choose different
+    co-processors for use at any time (if they are available). This is known as dynamic selection. If no devices are
+    available at the time of the request, then the CPU can be used as the default acceleration device. The SYCL
+    implementation is guaranteed to always select a valid device. This can be a good safety&nbsp;strategy to use&nbsp;should
+    a co-processor fail, however an automotive application would likely use a fixed strategy, where it is set once and
+    used forever.&nbsp;</p>
+<p>Where the requirements and safety case have been established in advance of deployment, it is possible to remove
+    features which are not required from a SYCL implementation to reduce the complexity and the scope safety rigor
+    required. A few examples of the current implementation’s features that could be removed are:&nbsp;</p>
+<ul>
+    <li>Online compilation</li>
+    <li>The support for multiple SYCL out of order queues, replacing it with a single predictable queue mechanism to
+        dispatch kernels
+    </li>
+    <li>Support for multiple contexts on the same device</li>
+    <li>Image handling support</li>
+</ul>
+<p>&nbsp;As of today, the SYCL implementations are feature-rich allowing for all possible uses at any time.&nbsp;</p>
+<h2>Conclusion - A SYCL stack supports safety</h2>
+<p>This overview of the SYCL topology does show that through the use of open standards, clear boundaries of
+    responsibilities are well defined. Safety practitioners will be able to concentrate their safety analysis on small,
+    clearly defined parts of the system individually, before considering the system as a whole when it is time for item
+    integration.</p>
+<p>From this article a safety practitioner could extrapolate and see the advantages and opportunities a SYCL development
+    ecosystem provides:</p>
+<ul>
+    <li>The APIs integral to the stack enable continuous verification at all levels of the ‘V’ process model</li>
+    <li>Components can be verified individually or as an integrated system</li>
+    <li>The stack is versatile to meet the needs of the safety case</li>
+    <li>The SYCL specification and its implementations reduce the scope of testing required by providing one solution
+        for a range of applications
+        <ul>
+            <li>This reduces code repetition or duplication by developers</li>
+        </ul>
+    </li>
+</ul>
+<p>The transparency of the SYCL stack is the differentiator in the domain of the automotive application development for
+    ADAS and AD systems.</p>
+<p>Its state-of-the-art design has been developed by experts from many diverse backgrounds. The topology of the SYCL
+    stack is well-defined yet it is a customizable acceleration solution to meet the demands of tomorrow’s highly
+    performance-critical applications. It allows applications to work across a wide range of devices, from HPC centres
+    to power-efficient embedded systems needed for sensor fusion units in vehicles.</p>
+<h2>Contacts&nbsp;</h2>
+<p>If you would like to contribute, have any comments or questions then please do contact us via our <a
+        href="{{ '/company/contact/' | relative_url }}">contact form</a> and we will reach out to you directly.</p>
+<h2>List of Safety Practitioner&nbsp;articles:&nbsp;</h2>
+<ul>
+    <li><a href="{{ '/portal/blogs/2020/07/24/sycl-safety-part-1' | relative_url }}">Blog 1: SYCL for Safety
+        Practitioners – Introduction</a></li>
+    <li><a href="{{ '/portal/blogs/2020/09/01/sycl-safety-part-2' | relative_url }}">Article 2:&nbsp;SYCL for
+        Automotive AI and ADAS applications</a></li>
+    <li>Future Article 4: The SYCL C++ Programmer&nbsp;</li>
+</ul>
+<h2>Acronyms list</h2>
+<table width="601">
+    <tbody>
+    <tr>
+        <td width="98">
+            <p><strong>Acronyms&nbsp;</strong>&nbsp;</p>
+        </td>
+        <td width="503">
+            <p><strong>Description&nbsp;</strong>&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>ADAS&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Advanced Driver Assistance Systems&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>AD</p>
+        </td>
+        <td width="503">
+            <p>Autonomous Driving</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>AI&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Artificial Intelligence&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>API&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Application Programmable Interface, a frontend public-facing set of functions to a software library or
+                component&nbsp;&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>ASIL&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>ISO 26262 Automotive Safety Integrity Level&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>CNN</p>
+        </td>
+        <td width="503">
+            <p>Convolutional Neural Networks for AI</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>CPU&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Central Processing Unit hardware compute device&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>DPC++&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Intel's SYCL implementation Data Parallel C++&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>DSP&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Digital Signal Processor&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>ECU&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>(Automotive) Electronic Control Unit&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>FPGA&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Field Programmable Gate Array hardware compute device&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>FMEA</p>
+        </td>
+        <td width="503">
+            <p>Failure Mode and Effects Analyses</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>GPU&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Graphics Processing Unit hardware compute device&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>HPC&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>High Performance Compute&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>ISO 26262&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Automotive Functional Safety Standard 2018&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>OEM&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>(Automotive) Original Equipment Manufacturer&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>OpenCL&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>Khronos&nbsp;software API specification OpenCL&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>RTOS</p>
+        </td>
+        <td width="503">
+            <p>Real Time Operating System</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>SAE</p>
+        </td>
+        <td width="503">
+            <p>Society of Automotive Engineers defines 6 levels of driving automation ranging from 0 (fully manual) to 5
+                (fully autonomous).</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>SEooC&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>ISO 26262 term System Engineered Out&nbsp;of Context of an&nbsp;automotive functional use case&nbsp;&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>SoC&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>System on Chip integrated circuit&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>SYCL&nbsp;</p>
+        </td>
+        <td width="503">
+            <p>A&nbsp;Khronos&nbsp;API and implementation specification&nbsp;</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>V2V</p>
+        </td>
+        <td width="503">
+            <p>Automotive vehicles exchange data with other vehicles</p>
+        </td>
+    </tr>
+    <tr>
+        <td width="98">
+            <p>V2X</p>
+        </td>
+        <td width="503">
+            <p>Automotive vehicles exchange data with road infrastructure&nbsp;</p>
+        </td>
+    </tr>
+    </tbody>
+</table><h2><br>List of useful URLs&nbsp;</h2>
+
+<p>Introduction to SYCL:<br/><a target="_blank" href="http://www.youtube.com/watch?v=XXejyI4-WEI&amp;feature=youtu.be">www.youtube.com/watch?v=XXejyI4-WEI&amp;feature=youtu.be</a>&nbsp;
+</p>
+<p>SCYL programming learning material:<br/><a target="_blank" href="https://sycl.tech">https://sycl.tech</a>&nbsp;</p>
+<p>Khronos&nbsp;learning resources on SYCL:<br/><a href="https://www.khronos.org/sycl/resources" target="_blank">https://www.khronos.org/sycl/resources</a>&nbsp;
+</p>
+<p><a target="_blank" href="https://codeplay.coml/portal/news/2020/06/09/iso-cpp-and-sycl-join-for-the-future-of-heterogeneous-programming.html">ISO C++ and SYCL Join for the Future of Heterogeneous Programming</a>&nbsp;
+</p>
+<p>Codeplay:<br/><a href="http://www.codeplay.com">www.codeplay.com</a>&nbsp;</p>
+<p>Intel DPC++:<br/><a target="_blank" href="https://software.intel.com/content/www/us/en/develop/tools/oneapi.html">Intel oneAPI</a>&nbsp;
+</p>
+<h2><b>About the author&nbsp;</b></h2>
+<p>A generalist programmer with 24+ years of experience.</p>
+<p>Illya works for Codeplay Software as a Principal Engineer since 2013 overseeing the development of tools chains for
+    automotive semiconductor customers. He is the chair of the Khronos Safety Critical Advisory Forum (KSCAF) and a
+    member of the Khronos OpenCL and Vulkan Safety Critical working groups. Illya is also a member of the MISRA C++
+    committee. Illya has a BSc (Hons) degree (in Electrical and Electronic Engineering) by the University of Surrey (UK)
+    following a 4 years electronics apprenticeship at the MoD Royal Aircraft Establishment Farnborough (UK). After
+    university he spent 12 years programming games, tool chains and profilers for major games consoles like Playstation
+    3 and Playstation Vita for Sony Computer Entertainment Europe followed by further 2 years in a Scottish indy games
+    company improving performance and implementing anti-hack solutions for their open world multiplayer online video
+    game.</p>
+<h2>About Codeplay</h2>
+<p>Codeplay are experts in accelerated software using SYCL on most hardware platforms. It understands what is required
+    to create acceleration libraries that enable heterogonous platforms to operate AI and ADAS applications.</p>
+<p>&nbsp;</p>

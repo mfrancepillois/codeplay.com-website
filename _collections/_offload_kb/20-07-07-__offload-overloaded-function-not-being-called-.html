@@ -1,0 +1,130 @@
+---
+id: 76
+category: faq
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__offload overloaded function not being called!"
+redirect_from:
+  - /kb/76
+layout: products/offload/kb/view
+---
+<p><strong>&quot;My __offload function is not being called within an __offload block, help!&quot;</strong>One of the most frequently asked questions from new users of Offload&trade; is the above. Offload&trade; allows __offload functions which are called within an __offload block have some little intricacies that new users sometimes take a little while to understand, so an explanation is in order!
+</p>
+<pre><code>struct Foo
+{
+	int bar()
+	{
+		return 42;
+	}
+	__offload int bar()
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	int bar1 = foo1.bar(); // returns 42
+	__blockingoffload()
+	{
+		int bar2 = foo1.bar(); // returns 42
+		Foo foo2;
+		int bar3 = foo2.bar(); // returns 13
+	};
+}
+</code></pre><p>The above example shows a common mistake when using Offload&trade;. A user would have expected bar2 to be set to 13, whereas it is actually 42 - even though an __offload overload of the function bar has been provided.So what is going on? The __offload function for bar works only on local this pointers, meaning that only objects that are in local memory will call this method! That is why calling the bar function on foo2 will return the __offload overloaded result 13, rather than 42.If the intended behaviour was always to return 13 within an __offload block, no matter whether the this pointer was in local SPU memory or global PPU memory, the follow should be used instead.
+</p>
+<pre><code>struct Foo
+{
+	int bar()
+	{
+		return 42;
+	}
+
+	__offload int bar()
+	{
+		return 13;
+	}
+
+	__offload int bar() __outer
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	int bar1 = foo1.bar(); // returns 42
+	__blockingoffload()
+	{
+		int bar2 = foo1.bar(); // now returns 13
+		Foo foo2;
+		int bar3 = foo2.bar(); // returns 13
+	};
+}
+
+</code></pre><p>We have added a second __offload overload function for bar which works on outer PPU this pointers!Another common mistake to make with __offload functions is with pointer arguments.
+</p>
+<pre><code>struct Foo
+{
+	int bar(int * pointer)
+	{
+		return 42;
+	}
+
+	__offload int bar(int * pointer) __outer
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo;
+	int temp1 = 53;
+	int bar1 = foo.bar(&amp;temp1); // returns 42
+	__blockingoffload()
+	{
+		int bar2 = foo.bar(&amp;temp1); // returns 42
+		int temp2 = 8;
+		int bar3 = foo.bar(&amp;temp2); // returns 13
+	};
+}
+</code></pre><p>In the above example, it may be unexpected to find that calling the bar method using the address of temp1 as the argument returns 42, rather than returning 13 from the overloaded __offload function. __offload functions require pointer arguments to be explcitly defined as global PPU memory pointers, if the method is expected to handle PPU memory addresses.If the intention was that within the __offload block bar would always return 13 instead of 42, the following is how to achieve this.
+</p>
+<pre><code>struct Foo
+{
+	int bar(int * pointer)
+	{
+		return 42;
+	}
+
+	__offload int bar(int * pointer) __outer
+	{
+		return 13;
+	}
+
+	__offload int bar(__outer int * pointer) __outer
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo;
+	int temp1 = 53;
+	int bar1 = foo.bar(&amp;temp1); // returns 42
+	__blockingoffload()
+	{
+		int bar2 = foo.bar(&amp;temp1); // now returns 13
+		int temp2 = 8;
+		int bar3 = foo.bar(&amp;temp2); // returns 13
+	};
+}
+</code></pre><p>By adding in another __offload overload function that deals with __outer PPU memory pointers we can get the desired functionality, simple!
+</p>
+
+

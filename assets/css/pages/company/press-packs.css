@@ -1,0 +1,8 @@
+section#press-packs img,
+section#press-packs svg {
+    width: 150px;
+}
+
+.oneapi-construction-kit > div:first-of-type {
+    background-color: #3100ff !important;
+}

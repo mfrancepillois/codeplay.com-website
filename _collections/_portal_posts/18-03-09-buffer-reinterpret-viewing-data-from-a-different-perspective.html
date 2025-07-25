@@ -1,0 +1,198 @@
+---
+id: 292
+url: 03-09-18-buffer-reinterpret-viewing-data-from-a-different-perspective
+user_id: 846
+date: 2018-03-09T14:24:29.3600Z
+category: blogs
+title: "Buffer Reinterpret: Viewing data from a different perspective"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/03-09-18-buffer-reinterpret-viewing-data-from-a-different-perspective
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>SYCL developers are used to <u> strongly typed buffers</u>, which ensure type safety for data manipulation and minimize the risk of accessing out of bounds memory. <u>This is one of the main features of SYCL not available in OpenCL </u>. Users, however, sometimes need more freedom to operate on their data. They might know that buffers of one type can be transformed into buffers of another type, similar to C++'s reinterpret_cast feature. There are many arguments, for and against such action, from users. As SYCL implementers, we can provide some additional guarantees to such a conversion. One of the latest additions to the SYCL 1.2.1 specification, is a feature called <strong>Buffer Reinterpret! </strong> It is similar to C++ reinterpret_cast, yet guarantees either both type and bounds safety, or graceful failure through typed exceptions.</p>
+<p>Buffer Reinterpret comes as a method of the cl::sycl::buffer class with the following signature:</p>
+<p><strong>Buffer reinterpret interface</strong></p>
+
+<pre><code>namespace cl {
+namespace sycl {
+  template&lt;    typename T,
+              size_t dimensions = 1,
+              typename AllocatorT = cl::sycl::default_allocator&lt;T&gt;&gt;
+    class buffer {
+        ...
+        template &lt;   typename ReinterpretT,
+                    int ReinterpretDim&gt;
+        buffer&lt;  ReinterpretT,
+                ReinterpretDimensions,
+                AllocatorT&gt;
+            reinterpret(
+                range&lt;ReinterpretDimensions&gt; reinterpretRange)
+            const;
+        ...
+    }
+  }
+}</code></pre>
+
+<p>A reinterpreted buffer is a new view of the same underlying SYCL buffer object., sharing host data and OpenCL resources, yet the type associated with the buffer is changed from T to ReinterpretT. In addition, the shape and the type of the buffer can be modified to the users need, but the total number of bytes must remain the same. As such, the buffer remains strongly typed, yet ensures correct bounds checking, while operating with a different type.
+</p>
+
+<p>The SYCL 1.2.1 specification places the following constraints for this feature:</p>
+<ol>
+  <li>The total size of the reinterpreted buffer, calculated as<code> <code>sizeof(ReinterpretT) * reinterpretRange[0] * reinterpretRange[1] * reinterpretRange[2]</code>
+    </code>, should be equal to the total size of the original, calculated as <code>sizeof(T) * get_range(0) * get_range(1) * get_range(2)</code>. The get_size() function of the reinterpreted should return a value equal to the get_size() of the original.</li>
+  <li>If the size does not match, a cl::sycl::invalid_object_error exception will be thrown.<ul>
+      <li>
+        <strong>ComputeCpp CE 0.6.1</strong> currently does not support throwing typed exceptions as indicated by the SYCL specification. This is an upcoming feature of a future version.</li>
+    </ul>
+  </li>
+  <li>The reinterpreted buffer will act like a copy of the original buffer.<ol>
+      <ul><li>This is not a deep copy, as the reinterpreted buffer references the data of the original buffer.</li>
+      <li>As such, the binary representation of the data in the original buffer will be used for the reinterpreted buffer's new data type.<ul>
+          <li>e.g. When reinterpreting <u> <strong>cl::sycl::buffer&lt;uint8_t&gt;(cl::sycl::range&lt;1&gt;(4))</strong> </u> containing <em> <strong>{0xAB, 0xCD, 0xEF, 0x01}</strong> </em> to <strong> <u>cl::sycl::buffer&lt;uint16_t&gt;(cl::sycl::range&lt;1&gt;(2))</u> </strong>, the contents of the reinterpreted buffer will be viewed as <strong> <em>{<em> <strong>0xABCD, 0xEF01</strong> </em>}</em> </strong> on Intel CPU, Intel GPU, or any x86/x86_64 host.</li>
+        </ul>
+      </li>
+      <li>Please be advised, in case of different endian-ness between the devices used and the host machine, the representation may vary between them. In such edge cases, the user is responsible for converting to a format that can be usable in all cases.</li></ul>
+    </ol>
+  </li>
+</ol>
+
+<p>
+  We have tested our implementation on many test cases, on Intel CPU and Intel GPU devices, as well as supported AMD devices. <strong>ComputeCPP CE 0.6.1</strong> has a small bug that does not allow communication between reinterpreted and original buffers. It only occurs when mixing access between device and host, i.e. accessing on host, when a change has taken place on a device. For those cases there is a workaround that enforces the required communication. If a change takes place on host, then all buffers have the latest version of the data available.
+</p>
+
+<p>
+  The cases where a workaround is needed are when using the following:<br></p><ol><li>A runtime managed buffer with no user provided data, sharing data with reinterpreted. Data is set using the original buffer on the device and the change is visible on the reinterpreted buffer on host.</li><li>A runtime managed buffer with no user provided data, sharing data with reinterpreted. Data is set using the reinterpreted buffer on device and the change is visible on the original buffer on host.</li><li>A buffer with user-provided data, sharing data with reinterpreted. Data is set using the original buffer on the device and the change is visible on the reinterpreted buffer on host.</li><li>A buffer with user-provided data, sharing data with reinterpreted. Data is set using the reinterpreted buffer on device and the change is visible on the original buffer on host.</li></ol>
+<ol></ol>
+<h2>Step-by-step guide</h2>
+
+<p>For normal reinterpret usage:</p>
+<ol>
+  <li>Create the original buffer.<ul>
+      <li>When using the constructor that accepts a user pointer for the initial data, initialized data will be available to the reinterpreted buffers right away.</li>
+  </ul>
+    <strong>Original buffer</strong>
+    <pre><code>constexpr size_t NUM = 20;
+cl::sycl::buffer&lt;uint8_t&gt; originalBuffer {cl::sycl::range&lt;1&gt;(NUM)};</code></pre>
+    <ul>
+    </ul>
+  </li>
+  <li>
+    Use the original buffer, as usual.<br>
+  </li>
+  <li>Create a reinterpreted buffer using:<ul>
+      <li>At the point of creation of the reinterpreted buffer, both buffers should point to the same data.</li>
+  </ul>
+    <strong>Reinterpreting</strong>
+    <pre><code>// will work if (sizeof(float) == 4 &amp;&amp; sizeof(uint8_t) == 1) otherwise it will throw an exception
+auto buffer2 = originalBuffer.reinterpret&lt;float&gt;(cl::sycl::range&lt;1&gt;(NUM / 4));</code></pre>
+
+  </li>
+  <li>Use both buffers as required. The original buffer can now be destroyed if needed.
+    <ul>
+      <li>Utilize the workaround outlined below to ensure copy-back from the buffer you used to the other buffers (original/reinterpreted)</li>
+    </ul>
+  </li>
+</ol>
+<h2>Examples</h2>
+
+<p>
+  <strong><strong>Example 1</strong>: Buffer reinterpret on host</strong><br></p>
+
+<pre><code>{
+  constexpr size_t size = 12;
+  buffer&lt;uint8_t&gt; initial{range&lt;1&gt;(size)};
+  {
+    auto initialAcc =
+        initial.get_access&lt;access::mode::write&gt;();
+    for (uint8_t i = 0; i &lt; size; ++i) {
+      initialAcc[i] = i;
+    }
+  }
+  auto reint = initial.reinterpret&lt;int8_t&gt;(range&lt;1&gt;(size));
+  auto reintAcc =
+      reint.get_access&lt;access::mode::read&gt;();
+  for (size_t i = 0; i &lt; size; ++i) {
+    if(reintAcc[i] != i)
+      std::cout &lt;&lt; &quot;Error, data change is not visible in the reinterpreted buffer&quot;
+  }
+}</code></pre>
+
+<p><strong>Example 2:</strong> Buffer Reinterpret on device</p>
+
+<pre><code>{
+  constexpr size_t size = 12;
+  std::array&lt;bool, size&gt; success{false, false, false, false, false, false,
+                                 false, false, false, false, false, false};
+
+  buffer&lt;uint8_t, 1&gt; initial{range&lt;1&gt;(size)};
+  cl::sycl::queue q{cl::sycl::default_selector()};
+  // setup test data using the initial buffer accessor
+  q.submit([&amp;](cl::sycl::handler&amp; cgh) {
+    auto initialAcc = initial.get_access&lt;access::mode::write,
+                                         access::target::global_buffer&gt;(cgh);
+    cgh.parallel_for&lt;class device_kernel_1&gt;(range&lt;1&gt;(12), [=](id&lt;1&gt; i) {
+      initialAcc[i] = static_cast&lt;int8_t&gt;(i.get(0));
+    });
+  });
+  q.wait_and_throw();
+  auto reint = initial.reinterpret&lt;int8_t&gt;(range&lt;1&gt;(size));
+  {
+    buffer&lt;bool, 1&gt; successBuffer(success.data(),
+                                  cl::sycl::range&lt;1&gt;(success.size()));
+    // read data using the reinterpreted buffer and verify them
+    q.submit([&amp;](cl::sycl::handler&amp; cgh) {
+      auto reintAcc =
+          reint.get_access&lt;access::mode::read, access::target::global_buffer&gt;(cgh);
+      auto success_acc =
+          successBuffer
+              .get_access&lt;access::mode::write, access::target::global_buffer&gt;(cgh);
+      cgh.parallel_for&lt;class device_kernel_2&gt;(range&lt;1&gt;(size), [=](id&lt;1&gt; i) {
+        success_acc[i] = (reintAcc[i] == i.get(0));
+      });
+    });
+    q.wait_and_throw();
+  }
+  for (size_t i = 0; i &lt; size; ++i) {
+    if(!success[i])
+      std::cout &lt;&lt; &quot;Error, data change is not visible in the reinterpreted buffer&quot;
+    }
+  }
+}</code></pre>
+
+<p>
+  For <strong>ComputeCPP CE 0.6.1</strong> due to the aforementioned bug, when updating any buffer on the device and reading the original or reinterpreted buffer on host, the following copy-back workaround will be required. Please note that this bug only affects <strong>ComputeCPP CE 0.6.1</strong> and the workaround is not valid SYCL code. Later versions of ComputeCPP will not need this workaround:
+</p>
+<ol>
+  <li>
+    Create a scope, outside the submit statement.
+  </li>
+  <li>
+    Inside the scope, create a host accessor for the buffer updated inside the submit statement
+  </li>
+  <li>
+    Close the scope.
+  </li>
+  <li>
+    At this point the original buffer and all the reinterpret ones will be able to view the last updates.
+  </li>
+</ol>
+
+  <br>
+
+
+<p>
+  <strong>Workaround Example</strong><br></p>
+
+
+<pre><code>cl::sycl::buffer&lt;uint8_t&gt; originalBuffer {cl::sycl::range&lt;1&gt;(NUM)};
+auto buffer2 = originalBuffer.reinterpret&lt;float&gt;(cl::sycl::range&lt;1&gt;(NUM / 4));
+//do stuff in the OpenCL with buffer2
+{ //if you used buffer2
+    auto buffer2Acc = buffer2.get_access&lt;cl::sycl::access::mode::read&gt;();
+} // now originalBuffer is updated</code></pre>
+

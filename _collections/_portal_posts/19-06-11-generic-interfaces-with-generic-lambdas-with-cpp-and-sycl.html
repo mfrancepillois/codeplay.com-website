@@ -1,0 +1,257 @@
+---
+id: 347
+url: 06-11-19-sycl-cpp-generic-interfaces-with-generic-lambdas
+user_id: 852
+date: 2019-06-11T12:13:20.7200Z
+category: blogs
+title: "Generic Interfaces with Generic Lambdas with C++ and SYCL"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/06-11-19-sycl-cpp-generic-interfaces-with-generic-lambdas
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+							<h2 >Lambdas in SYCL</h2>
+
+<p>
+  C++  Lambdas, first introduced in C++11, are an important part of the way that the SYCL standard is defined and implemented. SYCL is required to handle different types and pass around functions so lambdas are a good fit allowing anonymous function objects to be passed to SYCL kernels. We talk about how we use lambdas in our guides and documentation, but never about how lambdas work or even how to use them in SYCL, so in this blog post we will examine how they can be used in SYCL.</p>
+
+<p>The C++ standard library allows us to pass lambdas to functions in order to provide a generic interface to the algorithms in the library so the users can have the ability to define their desired behavior. In this sense, lambdas allow us to program high-level APIs for generic use. I found a great language feature <a href="http://web.archive.org/web/20190629192634/https://isocpp.org/wiki/faq/cpp14-language#generic-lambdas">resource</a> from the <span >Standard C++ Organization which showcases such uses of lambdas, and describes the general differences between C++11 lambdas and C++14 generic lambdas.<br>
+    <br>C++ templates and lambda functions are really helpful tools for writing high-level application software. SYCL, on the other hand, is an interface that aims to enable developers to write clean code for optimized acceleration of software applications across an extensive range of hardware. To achieve that, SYCL interacts almost seamlessly with modern C++ features such as template code and lambda functions, aiming to make developing complex high-level and high-performance applications easier that it has ever been. <br>
+    <br>A good example of how both can be used together to great effect can be seen in the <a href="http://web.archive.org/web/20190629192634/https://github.com/KhronosGroup/SyclParallelSTL">Khronos Parallel STL implementation</a> of the Technical Specification for C++ Extensions for Parallelism. It enables acceleration of standard C++ algorithms where the operation carried out by the SYCL kernel can be a user-defined lambda function (or a class functor) that is provided by the developer calling the algorithm.</span>
+</p>
+<h2 >Introducing generic lambdas</h2>
+<p >C++14 has improved on C++11 lambdas with the introduction of generic lambda expressions and this means that developers can now utilize the <code >auto</code> type-specifier to indicate a generic lambda parameter. </p>
+<p >Note: The <code >auto</code> type deduction follows the rules of template argument deduction.</p>
+<p >Declaring a generic lambda is as easy as this:</p>
+
+<pre><code class="language-plaintext">auto lambda = [](auto a, auto b, auto c) { return a + b + c; };</code></pre>
+
+<p>and it can them be used with code like this:</p>
+
+<pre><code class="language-plaintext">auto res = lambda(1, 2, 3);</code></pre>
+
+
+<p >or another way to do it would be:</p>
+
+<pre><code class="language-plaintext">auto res = lambda(1, 2.2f, 3.3);</code></pre>
+
+<p >This definition gives a feeling of having a lot of “sugar sprinkled over the underlying C++ syntax”. Under the hood, the C++ implementation uses the closure type’s <code >operator()</code> to overload a template function. <br>Now here's some code that defines a type with equivalent behavior to the generic lambda defined above:</p>
+
+<pre><code>struct lambda {
+   template&lt;typename T1, typename T2, typename T3&gt;
+   auto operator()(T1 a, T2 b, T3 c) const { return a + b + c; }
+};</code></pre>
+
+<p >This can be used like this:</p>
+
+
+<pre><code class="language-plaintext">auto res = lambda{}(1, 2.2f, 3.3);</code></pre>
+
+<p >Both will give us the same results, however, using a generic lambda is generally the easier and preferred choice since it was added to <code>C++14</code>. </p>
+<p >And what makes generic lambdas such an interesting feature of C++ to use, is that it is a pure extension to the language and compiler implementations will output same sized binary for generic lambdas compared to the equivalent of using the template functor. This means there is no overhead. You can verify this by exploring the examples on <a href="http://web.archive.org/web/20190629192634/https://godbolt.org/z/Pzgq8g">Compiler Explorer</a><a href="http://web.archive.org/web/20190629192634/https://godbolt.org/z/Pzgq8g"></a>.</p>
+<p ><strong>Note</strong>: Although it seems logical, you may have already guessed that not all parameters in a generic lambda need to be defined with <code >auto</code> , but in most cases you would use generic lambdas like that to simplify type deduction.</p>
+<p >Furthermore, lambdas have a capture clause, where we can specify which outside variables are available for the lambda function and whether they should be captured by value or by reference.</p>
+<p >
+  <u>Capture by value</u>
+</p>
+
+
+<pre><code>int scalar = 10;
+auto lambda = [scalar](auto a, auto b, auto c) { return (a + b + c) * scalar; };</code></pre>
+
+<p >
+  <u>Capture by reference</u>
+</p>
+
+
+<pre><code>int result;
+auto lambda = [&amp;result](auto a, auto b, auto c) {
+   int scalar = 10;
+   return result = (a + b + c) * scalar;
+};</code></pre>
+
+
+<p >
+  <u>Capture by value and reference</u>
+</p>
+
+
+<pre><code>int result, scalar = 10;
+auto lambda = [&amp;result, scalar](auto a, auto b, auto c) {
+   return result = (a + b + c) * scalar;
+};</code></pre>
+
+
+<p >You can also have the following capture: <code>[=]</code> , which is a <em>default</em> capture by value for everything from the global scope. Similarly, <code>[&amp;]</code> will capture by reference. These are C++11 captures.</p><p >C++14 introduces <code>generalized capture</code> that allows the initialization of new variables in the capture clause, without the need to have those variables exist in the lambda function’s enclosing scope. <br>An example of initialization inside the capture block can be seen below.</p>
+
+
+<pre><code>int result, scalar = 10;
+auto lambda = [&amp;result, scalar](auto a, auto b, auto c) {
+   return result = (a + b + c) * scalar;
+};</code></pre>
+
+
+<p >In summary, we can now use C++14 to express something we couldn’t express before - a generic lambda that will work with any suitable type and just do the right thing.</p>
+<h2 >
+  Using generic lambdas in SYCL
+</h2>
+<p >Now let’s talk about how generic lambdas can be used in SYCL kernel code, and more specifically, within the context of Codeplay’s SYCL implementation - <a href="http://web.archive.org/web/20190629192634/https://developer.codeplay.com/home/">ComputeCpp</a>.</p><p >ComputeCpp has been developed purely in C++ with full support for C++11 and partial support for C++14 with a view to support newer features of C++.  As of now, generic lambdas as can be part of SYCL kernel code.</p>
+<p >Note that there is no guarantee that C++14 language features which are supported by ComputeCpp will also work accross other SYCL implementations because the minimum requirement of SYCL is a C++11 compiler.</p>
+<p >Defining kernels in SYCL through generic lambdas can come in handy every so often, depending on how one would like to structure the application being developed.</p>
+<p >This is how a standard SYCL kernel functor would look, defined as a C++ class.</p>
+
+
+<pre><code>template &lt;typename T&gt; class MyFunctor {
+  public:
+    MyFunctor(accessor_in&lt;T&gt;, accessor_out&lt;T&gt;) {
+      &lt;&lt;&lt; initialize accessors &gt;&gt;&gt;
+    }
+
+    void operator()(item&lt;1&gt; item) {
+        auto id = item.get_id(0);
+        accessor_out[id] = foo(accessor_in[id]);
+    }
+
+    T foo() { return T{ &lt;&lt;&lt; compute a result &gt;&gt;&gt; }; }
+
+  private:
+    sycl_accessor&lt;T&gt; _accessor_in;
+    sycl_accessor&lt;T&gt; _accessor_out;
+};
+</code></pre>
+
+<p >Here  <code>T foo() { return T{&lt;&lt;&lt; compute a result &gt;&gt;&gt;}; }</code> is part of the SYCL kernel functor <code>MyFunctor</code> and does some computation, the result of which is assigned to the global <code>accessor_out</code>.</p>
+<p >
+  <span >When developing high-level APIs or libraries, we may sometimes be required to allow the users to define a certain behavior of the feature provided by these APIs or libraries. For example, this is a common approach in the implementation of the C++ STL.<br>
+  </span>
+  <span >This is where generic lambdas are so handy to use and thankfully the ComputeCpp implementation supports them. Taking the above code block as an example, instead of implementing <code>foo()</code> inside the <code>MyFunctor</code> class, we can declare, by using templates, that this function will be provided by the user or the caller of the said class functor.<br>
+  </span>
+</p>
+<p >
+  <span >
+    <span >Enough abstract talk, let's dive into a real SYCL example program that defines a behavior that can be implemented using generic lambdas.<br>
+    </span>
+  </span>
+</p>
+<h3 >SYCL application example</h3>
+
+<p>To introduce how generic lambdas can be used with SYCL, we will build a simple application. <br>Let's write a sequence generator that could generate a desired sequence through a user-defined lambda that will be passed in the SYCL kernel that carries out the computation.<br>
+  <br>Before we begin, let's clearly define the goals and requirements for building this application feature<strong>:</strong>
+</p>
+
+<p>
+  <strong>
+    <br>Goal</strong>: A sequence generation function that works with C++ vectors and is accelerated using SYCL.<br>
+  <strong>Requirement</strong>: User-defined operations within the SYCL kernel code via the use of generic lambda functions.</p>
+
+<p>To begin with, set up the host containers that will hold the sequence. These consist of a vector holding the positions of the elements for the sequence and a vector for the numbers in each position.</p>
+
+<pre><code>constexpr size_t num_elements = SOME_BIG_VALUE;
+std::vector&lt;int&gt; input(num_elements);
+std::iota(input.begin(), input.end(), 0);
+std::vector&lt;int&gt; output(num_elements);
+std::fill(output.begin(), output.end(), 0);</code></pre>
+
+<p >Before we get into implementation, we have to define our kernel type.</p>
+
+<pre><code>namespace kernels {
+   class generator_kernel {};
+}</code></pre>
+
+<p >Now we want a generic function that will generate a sequence of elements based on what we request. It could <code>factorial</code>, <code>fibonacci</code>, <code>incremental</code>, or whatever we need and it also doesn't need to be strictly numeric. To provide this behavior, we have to define a template function, where we will have the <code>data type</code> and the <code>operation</code> that we will define by using a lambda. The following code isn't "production ready" but gives an idea of what could be done using SYCL and generic lambdas together.</p>
+
+<pre><code>template &lt;typename T, class Operation&gt;
+void generate_seq(const std::vector&lt;T&gt; &amp;input,
+                  std::vector&lt;T&gt; &amp;output,
+                  size_t num_elements, Operation op) {
+  buffer&lt;T, 1&gt; input_buf(input.data(), range&lt;1&gt;(num_elements));
+  buffer&lt;T, 1&gt; output_buf(output.data(), range&lt;1&gt;(num_elements));
+
+  // define and submit the SYCL queue
+  queue queue(default_selector{});
+  queue.submit([&amp;](handler &amp;cgh) {
+    auto input_acc = input_buf.template get_access&lt;access::mode::read&gt;(cgh);
+    auto output_acc = output_buf.template get_access&lt;access::mode::write&gt;(cgh);
+
+    &lt;&lt; Execute the kernel here &gt;&gt;
+  });
+}</code></pre>
+
+<p>
+  <code>class Operation</code> here is a template parameter which will be replaced with the type of the lambda function provided when <code>generate_seq</code> gets called. Currently it is designed, or more accurately, required to take in an index which indicates how many iterations will be done to generate the sequence. A smarter approach may be designed, however this is quick enough to showcase the generic behavior via lambda functions that we aim to achieve with <code>generate_seq</code>. <br>
+  <br>Next up, the use of our generic lambda operation can be seen in the SYCL kernel execution part.</p>
+
+
+<pre><code>cgh.parallel_for&lt;kernels::generator_kernel&gt;(
+   range&lt;1&gt;(num_elements), [=](id&lt;1&gt; idx) mutable {
+      output_acc[idx] = op(input_acc[idx]);
+});</code></pre>
+
+<p>The kernel becomes rather simple, as all of the computational logic is now defined by the lambda passed as <code>op</code>. </p>
+
+<p>Let's now define a generic lambda function that generates a sequence. Here is a simple one, that increments <code>(by 1)</code> every number in the sequence, starting from
+  <code>
+    0
+  </code>.</p>
+
+
+<pre><code>auto increment = [res = 0](auto idx) mutable {
+   for (size_t i = 0; i &lt; idx; i++) {
+      res++;
+   }
+   return res;
+};</code></pre>
+
+<p>
+  <code>[res = 0]</code> is an <code>int</code> value initialized in the lambda capture list. As already mentioned in the introduction, C++14 allows us to not only capture variables from the outer scope, but also initialize expressions inside the lambda capture.</p>
+
+<p>As another example of what we can do with our generic sequence generator, we can provide a lambda called <code>increment_and_multiply_by_scalar</code> that demonstrates how we use our input indexes to generate more specific sequences. Furthermore, we can also capture the previously created increment generic lambda and use it to do the increment, while also avoiding copy-pasting the same code. Then, the incremented value is multiplied by the captured <code>scalar</code>.</p>
+
+
+<pre><code class="language-plaintext">auto increment_and_multiply_by_scalar = [increment, res = 0,
+                                         scalar = 10](auto idx) mutable {
+   res = increment(idx);
+   res *= scalar;
+   return res;
+};</code></pre>
+
+<p>
+  <code>auto idx</code> is the work-item id or our index derived from the input array of index values.</p>
+
+<p>Finally, to prove how flexible our SYCL generator is, and to make things a little bit more interesting, we can even provide a lambda that gives us the <code>fibonacci sequence</code>.</p>
+
+
+<pre><code>auto fibonacci = [res = 0, a = 1, b = 1](auto idx) mutable {
+   if (idx &lt;= 0) {
+      return 0;
+   }
+   if (idx &gt; 0 &amp;&amp; idx &lt; 3) {
+      return 1;
+   }
+   for (size_t i = 2; i &lt; idx; i++) {
+      res = a + b; a = b; b = res;
+   }
+   return res;
+};</code></pre>
+
+
+<p>And we could keep going with all sorts of sequence types. As we have already mentioned, the SYCL implementation, ComputeCpp, is written in modern C++ and enables application developers to create high-level software by utilizing templates and features such as generic lambdas that can be invoked directly inside the SYCL kernel code.<br>
+
+</p>
+<p>
+  <span >We have introduced lambdas, and more importantly generic lambdas, and how they can interact with SYCL kernel code to aid the design and implementation of generic interfaces. What the "generic" extension of the C++ lambda functions offer is more flexible and easier use in complex code bases.</span>
+  <span > With <code>C++14</code> support we can get a simple type deduction using <code>auto</code> in the lambda parameter list, and we finally have a way for expressing specific functionality when interacting with high-level application interfaces. <br>Thanks to the SYCL's vision for the future, we can get the best of both worlds, developing flexible, generic applications with no-tradeoffs in performance and also very importantly, minimizing development time and complexity.<br>
+  </span>
+</p>
+
+<p>
+  <span >If you are eager to read more, here is an extensive <a href="https://www.bfilipek.com/2019/02/lambdas-story-part1.html">blog post by Bartlomiej Filipek</a><span ></span> explaining what can be done with lambdas from <code>C++11</code> to <code>20</code>, providing good examples and explanations on features you may keep in mind for future language support in releases of ComputeCpp.</span>
+</p>
+
+<p>
+  <span >You can download ComputeCpp, Codeplay's implementation of SYCL on our <a href="http://developer.codeplay.com/">developer website</a>.</span>
+</p>
+

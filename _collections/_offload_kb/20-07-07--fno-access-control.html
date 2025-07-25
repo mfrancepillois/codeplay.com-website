@@ -1,0 +1,14 @@
+---
+id: 14
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-fno-access-control"
+redirect_from:
+  - /kb/14
+layout: products/offload/kb/view
+---
+<p>When getting something to run on the SPU it can be quite irksome when trying to move data local to deal with private and protected functions within classes. Offloading code to the SPU can require accessing and modifying deeply hidden class variables to achieve performance, and while a clean solution by adding in the correct methods to perform the functionality required on the hidden data would be the preferred solution, when trying to get an example to work and not be constrained by the language we have included a very useful compiler option, -fno-access-control. &ndash;fno-access-control will turn off all restrictions on accessing private and protected fields and functions of classes within the Offload compiler.
+</p>
+
+

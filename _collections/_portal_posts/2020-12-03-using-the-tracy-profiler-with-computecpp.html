@@ -1,0 +1,219 @@
+---
+title: "Using the Tracy Profiler with ComputeCpp"
+date: 2020-12-03T10:32:59.099000+00:00
+category: blogs
+layout: portal/portal-article-view
+user_id: 991
+thumbnail: /assets/images/portal/article-images/1-computecpp_profiling_tracy_ui.png
+---
+
+<p>When developing performance-sensitive applications, it is important to
+understand where are the critical parts of the code that can affect the
+performance. Good profiling support is paramount for any application aiming
+to be more efficient at solving a problem in constrained environments.
+Efficiency is context-dependant. It could mean lowering the power consumption
+of a battery in an embedded device or getting peak performance from the
+hardware in a supercomputer.</p><p>In the context of SYCL applications, there are a lot of things that can
+affect performance. How well is the application written? How well does the
+compiler understand your code? Am I using the right compiler flags? Could I be
+doing more work in parallel? Why is this kernel taking so much time to
+execute? What is my application doing while this kernel is running?</p><p>These are some of the questions that you might want to answer when developing
+your SYCL application. To help you answer these questions, we are adding
+native support for the <a href="https://github.com/wolfpld/tracy/" target="_blank">Tracy Profiler</a> to
+<a href="https://developer.codeplay.com/products/computecpp/ce/guides/computecpp-professional-edition" target="_blank">ComputeCpp Professional Edition</a>.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_ui.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/1-computecpp_profiling_tracy_ui.png' | relative_url }}"><br></a></p><p>This is a screenshot of Tracy showing details of a profiling session for the <a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/demos" target="_blank">NBody demo</a> available in the <a href="https://github.com/codeplaysoftware/computecpp-sdk/" target="_blank">ComputeCpp SDK</a>.</p><h2>
+<a href="#tracy-profiler"></a>Tracy Profiler</h2><p><a href="https://github.com/wolfpld/tracy/" target="_blank">Tracy</a> is a real-time, nanosecond resolution, remote telemetry, hybrid frame
+and sampling profiler for games and other applications. It is an open-source
+profiler that supports CPU (C, C++, Lua), GPU (OpenGL, Vulkan, OpenCL,
+Direct3D 12), memory locks, context-switches and more.</p><p>By adding native support for the Tracy profiler in ComputeCpp, you can connect
+Tracy to your application by simply enabling a configuration option. When
+connected, your application will immediately start sending data to Tracy,
+forming a nanosecond resolution execution profile that can be analyzed,
+searched and inspected.</p><p>Tracy can handle large amounts of data and it only requires RAM to be
+available in the machine running the server. Being designed as a client-server
+application, Tracy can be used to analyze remote applications, making it
+suitable to be used with embedded devices and development boards.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_diagram.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/2-computecpp_profiling_tracy_diagram.png' | relative_url }}" width="762" height="257"><br></a></p><h2>
+<a href="#enabling-tracy-profiler-in-computecpp"></a>Enabling Tracy Profiler in ComputeCpp</h2><p>In scenarios where remote profiling is not an option, due to network restrictions or lack of connectivity, it is still possible to use the <a href="https://developer.codeplay.com/products/computecpp/ce/guides/computecpp-profiler" target="_blank">ComputeCpp JSON profiler</a>. After running the application, you can load the file in Google Chrome, the new Microsoft Edge browser or even Tracy itself as it supports importing files in JSON format.</p><p>The profilers in ComputeCpp are not mutually exclusive, this means you can have both a real-time capture with Tracy and a JSON file at the end of your application execution.</p><p>To enable Tracy, just add <code>enable_tracy_profiling = true</code> in your <a href="https://developer.codeplay.com/products/computecpp/ce/guides/configuration-file" target="_blank">configuration file</a>. Note that profiling is disabled by default, so you may need to add <code>enable_profiling = true</code> in the configuration file as well. When enabling profiling support, ComputeCpp automatically activates the JSON profiler, to turn it off, you can use <code>enable_json_profiling = false</code>.</p><p>Here is an example of a configuration file that will enable Tracy and disable the JSON output:</p><pre><code>enable_profiling = true
+enable_tracy_profiling = true
+enable_json_profiling = false</code></pre><p>The ComputeCpp integration with Tracy also supports the display of performance counter data. To enable performance counters, add <code>enable_perf_counters_profiling = true</code> to your configuration file.</p><h2>
+<a href="#profiling-your-application-with-tracy"></a>Profiling your application with Tracy</h2><p>You will now find a binary called <strong>Tracy.exe</strong> on Windows or <strong>Tracy</strong> on Linux when you
+download ComputeCpp Professional Edition. This binary is the Tracy server that is guaranteed
+to be compatible with the ComputeCpp in the package. Tracy uses a custom communication
+protocol, so the protocol version used in ComputeCpp must match the protocol version in the
+server application. For this reason, you must use the Tracy server included as part of the
+ComputeCpp PE release package to avoid any compatibility issues.</p><h2>
+<a href="#example-of-a-profiling-session-with-tracy"></a>Example of a Profiling Session with Tracy</h2><p>To demonstrate the capabilities of the Tracy integration with ComputeCpp, we selected the
+<a href="https://github.com/codeplaysoftware/computecpp-sdk/tree/master/demos" target="_blank">NBody simulation</a> from the ComputeCpp SDK (see the screenshot below). This
+application is a good example because it launches many kernels every second and doesn't
+finish until it is interrupted.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_nbody.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/3-computecpp_profiling_nbody.png' | relative_url }}"><br></a></p><p>Opening Tracy will give you a configuration window. Here you can access the user manual, some
+useful links and a link to sponsor the project. For applications running on a remote machine,
+fill in the client address with the machine's IP address. You can also open a pre-recorded
+profiling session.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_connection.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/4-computecpp_profiling_tracy_connection.png' | relative_url }}"><br></a></p><p>The communication between client and server is performed using port 8086. If this port is
+already in use, it can be changed with the environment variable <code>TRACY_PORT</code>. Please refer to
+the Tracy user manual for more information on remote profiling.</p><h2>
+<a href="#improving-performance-of-the-nbody-simulation"></a>Improving Performance of the NBody Simulation</h2><p>Let's take a closer look at the timeline of events generated by the NBody simulation demo.
+This demo uses an O(N2) algorithm where the interaction between every pair of
+bodies is computed using some force. By default, the demo uses the gravity force, so the
+number of particles is the only parameter that will affect kernel times. For this
+demonstration, the simulation is running with 16384 particles.</p><p>The first place to look for useful data is the "Trace Information" window. In this window we
+can see that the majority of the frames are concentrated around 105ms. This shows consistent
+kernel times and is expected due to the nature of the simulation.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_statistics.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/5-computecpp_profiling_tracy_statistics.png' | relative_url }}"><br></a></p><p>Assuming kernel times cannot be further reduced, since the times are consistent, let's take a
+look in what is going on in between kernel executions.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_time_between_kernels.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/6-computecpp_profiling_tracy_time_between_kernels.png' | relative_url }}"><br></a></p><p>By zooming in in a region between kernels we can see a gap of 16ms. This appears to be a long
+time that the GPU spends idle. This application is mapping the buffers to update the OpenGL
+buffers so everything can be drawn to the screen. The mapping is a blocking operation which
+means that the GPU is not doing any computation, thus, idling its execution units.</p><p>ComputeCpp can better utilize a device when several pieces of work are submitted in sequence,
+without any synchronization in between. To reduce the gap in between kernels of the NBody
+application we can change the code so it performs several simulation steps before
+synchronizing the data for drawing. This can be performed by calling the step function many
+times. This will cause ComputeCpp to fast-enqueue multiple kernels at once, allowing the
+scheduler to execute them as soon as possible. Let's make the change:</p><pre><code>for (int32_t step = 0; step &lt; m_num_updates_per_frame; ++step) {
+  m_sim.step();
+}</code></pre><p>Let's analyze a profiling session when&nbsp;<code>m_num_updates_per_frame = 5</code>.</p><p>By launching several kernels in a loop like this, ComputeCpp can fast-enqueue
+the kernels. This means that all launches are going to be grouped, see how
+this looks in the following image:</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_commands_in_sequence.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/7-computecpp_profiling_tracy_commands_in_sequence.png' | relative_url }}"><br></a></p><p>Now, for the final look in the gap in between kernels:</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_new_frame_gap.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/8-computecpp_profiling_tracy_new_frame_gap.png' | relative_url }}"><br></a></p><p>A 5x reduction in idling time, not bad.</p><h2>
+<a href="#gpu-performance-counters"></a>GPU Performance Counters</h2><p>Tracy supports plotting time series data and we leverage this capability to display
+performance counter data from supported devices. To enable this feature simply add
+<code>enable_perf_counters_profiling = true</code> to your configuration file. If ComputeCpp can read
+performance counters from the device that kernels are being executed on, they will be
+displayed bellow the timeline.</p><p>A known limitation of the current implementation is that we only support one sample per
+kernel launch but we are working towards proving time-based sampling of performance counter
+data. Another limitation is that we only support Intel GPU devices, but ARM Mali support is
+coming in the near future.</p><p>So far we have assumed that kernel times cannot be reduced further, so improving the gap in
+between kernels was the only available optimization. However this is not quite true. Let's
+focus on the Gravity simulation kernel to see what we can do to improve it. The gravity
+kernel can be summarized as follows:</p><pre><code>sycl::range&lt;1&gt; range(m_n_bodies);
+cgh.parallel_for&lt;kernel&lt;num_t, 0&gt;&gt;(range, [=](cl::sycl::item&lt;1&gt; item) {
+    for (size_t i = 0; i &lt; n_bodies; i++) {
+        const vec3&lt;num_t&gt; diff = pos[i] - x;
+        const num_t r = sycl::length(diff);
+        acc += diff / (r * r * r + num_t(1e24) * num_t(i == id) + damping);
+    }
+});</code></pre><p>This will launch a kernel with 1 thread per body and each thread will iterate over all the
+bodies calculating interactions, giving this algorithm complexity of O(N²). However, due to
+the nature of the interactions, we can make use of the local memory of each work-group so
+that all threads in a work-group are able to calculate the interactions with a tile of
+bodies, thus, confining memory accesses to the work-group local memory.</p><p>Here is the tiled gravity kernel:</p><pre><code>sycl::range&lt;1&gt; global(m_n_bodies);
+sycl::range&lt;1&gt; local(m_tileSize);
+sycl::nd_range range(global, local);
+cgh.parallel_for&lt;kernel&lt;num_t, 0&gt;&gt;(range, [=](cl::sycl::nd_item&lt;1&gt; item) {
+     size_t localId = item.get_local_id()[0];
+     size_t groupId = item.get_group_linear_id();
+     size_t numGroups = item.get_local_range()[0];
+     size_t groupRange = item.get_group_range(0);
+    for (size_t i = 0, tile = 0; i &lt; n_bodies; i += tileSize, tile++) {
+        // Load a tile of data to the local memory and synchronize
+        shared[localId] = pos[((groupId + tile) % groupRange) * numGroups + localId];
+        item.barrier(sycl::access::fence_space::local_space);
+        // Calculate the interations within the tile
+        for (size_t j = 0; j &lt; tileSize; ++j) {
+            const vec3&lt;num_t&gt; diff = shared[j] - x;
+            const num_t r = sycl::length(diff);
+            acc += diff / (r * r * r + num_t{1e24} * static_cast&lt;num_t&gt;(r == num_t{0}) + damping);
+        }
+        // synchronize all threads in a work-group
+        item.barrier(sycl::access::fence_space::local_space);
+    }
+});</code></pre><p>The application was also modified to allow the tile size to be changed dynamically so we can
+see the performance counters for different tile sizes in the same image. To demonstrate that
+we can improve performance by changing the memory pattern access of a SYCL application, let's
+examine a capture of a simulation with 16k bodies.</p><table>
+<thead>
+<tr>
+<th>--</th>
+<th>Normal</th>
+<th>32</th>
+<th>64</th>
+<th>128</th>
+<th>256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Average Kernel Times</td>
+<td>81ms</td>
+<td>75ms</td>
+<td>72ms</td>
+<td><strong>71ms</strong></td>
+<td>73ms</td>
+</tr>
+</tbody>
+</table><p>The columns indicate the kernel times with different tile sizes.</p><p>Comparing the kernel times between the normal and the best tiled case we can see a 13%
+reduction in kernel execution time. Let's now take a look in the performance counters of our
+application. In the following image the different tile sizes are highlighted, showing the
+impact that it can have on the simulation. There are many counters not shown here, but these
+are the important ones to look at first.</p><p><a href="{{ '/sycl/computecpp-documentation/-/raw/master/common/images/computecpp_profiling_tracy_perf_counters.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/7-computecpp_profiling_tracy_perf_counters.png' | relative_url }}"><br></a></p><p>The <strong>GPU Busy</strong> counter shows the percentage of time that the GPU was utilized. We can see
+that our kernels can fully utilize the GPU most of the time, a good sign our application can
+saturate the GPU with work. The next counter we can look is the <strong>GPU Time Elapsed</strong> which
+basically shows how much time a kernel took to execute in the GPU. We can clearly see that by
+changing the tile size we get different averages for this counter, and the lowest average we
+get is from using a tile size of 128. Remember that the tile size is reflected in the number
+of work-items in a work-group, so by selecting a tile size with the lowest
+<strong>GPU Core Clocks</strong> value we get a kernel that can perform more with less clocks, thus
+improving efficiency. The <strong>EU Active</strong> and <strong>EU Thread Occupancy</strong> are another two counters
+that indicate efficiency. Most of the time we want a kernel that fully occupies the GPU and
+can see that by using a tile size of 128 we get almost a steady line of 93% occupancy.</p><p>It is also clear that the occupancy falls quite drastically when we use a tile size of 256.
+This means that the GPU in question is not able to process 256 work-items in a work-group
+with the same efficiency, indicating that we are trying to schedule more work than the GPU
+can handle at once.</p><h2>
+<a href="#conclusion"></a>Conclusion</h2><p>Profiling is an important part of software development and Codeplay are constantly
+working to improve out-of-the-box profiling support in ComputeCpp. By embedding
+Tracy in ComputeCpp you get a performant profiler that has many interesting
+features and can help you optimize your application to meet your targets.</p><p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</p><p>Tracy has several features now shown in this blog post and we are planning on
+writing more tips and tricks for finding potential performance problems in
+applications using ComputeCpp.</p><p><br></p><p>If you are interested in ComputeCpp Professional Edition then <a href="https://www.codeplay.com/company/contact/">get in touch with us</a> and we can tell you more about it. If you want to learn more about ComputeCpp then visit our <a href="https://developer.codeplay.com/products/computecpp/ce/guides">developer website</a>.<br></p>

@@ -1,0 +1,212 @@
+---
+id: 262
+url: 10-06-17-whats-in-cpp-20-and-cpp17-final-score-card
+user_id: 829
+date: 2017-07-10T15:48:28.7200Z
+category: news
+title: "What's in C++20 and the C++17 final score card: A report from Kona and look at the Toronto C++ meeting"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/10-06-17-whats-in-cpp-20-and-cpp17-final-score-card
+thumbnail: /assets/images/portal/article-images/7a35a61697bdb5754326a7761f89c5fc.jpg
+layout: portal/portal-article-view
+---
+
+<p>I am writing this blog long after my trip to the Kona C++ standard meeting due to unusually high business commitments post-meeting and using it as an opportunity to also look ahead to the C++20 content to be reviewed in Toronto. I will publish my usual update to the C++17 content slidedeck similar to my Dec 2016 <a href="https://www.codeplay.com/portal/12-09-16-the-view-from-nov-2016-cpp-standard-meeting-issaquah">Issaquah trip report</a>. This will contain the final score card for C++17, including all the features with links, and an evaluation scorecard of what made it in based on what Bjarne had earlier suggested in 2015 as possible content for C++17.</p>
+
+<p>The March Kona C++ Standard meeting is the last meeting where we dispose of all NB remaining comments, after which we integrate all changes from the C++17 Draft International Standard (DIS). This DIS will be voted by electronic ballot  after the meeting. 10-15 July will be the Toronto meeting, where we will not be allowed to discuss anything on C++17, instead the committee will focus on C++20 and more specifically any in progress Technical Specifications (TSes) that need more attention.</p>
+
+<p>This blog will summarize the results of the Kona meeting as well as talk about what is upcoming in Toronto using my latest keynote at the Italian<a href="http://www.italiancpp.org/"> C++ Users group meeting</a> and at Scuderia Ferrari in Maranello on the Programming Model for Self-driving cars and SYCL.  Marco Arena will be posting a <a href="http://www.italiancpp.org/2017/07/04/itcppcon17/">video </a>of that keynote and in that talk I presented on the final status of C++17 as well as discussed the status of executors, a small SG1 group I have been working with to build up the future of heterogeneous computing in ISO C++.</p>
+
+<p>
+  <img src="{{ '/assets/images/portal/article-images/7a35a61697bdb5754326a7761f89c5fc.jpg' | relative_url }}" style="max-width:776px"/>
+</p>
+
+<p>
+  <br/>
+</p>
+
+<p>At the Kona meeting, it was all about clearing the remaining National body comments, there would not be significant changes to C++17. Most will be fixes and are minor. A complete table of how each National Body comment was treated can be found at the end of this blog.</p>
+
+<p>We had hoped that the National Ballot vote result will be ready for the Toronto meeting on 10-15 July which I will be hosting, but in a last stroke twist of fate, it will be delayed until after the meeting because there are a few weeks of translation effort before the ballot can begin. As the translation effort adds an unanticipated amount of time, and there is still a 3 month ballot, the ballot unfortunately won't make it for the Toronto meeting. Previously in C++11 and C++14, ballot results were ready by the July meeting but most of this is now procedural, and the committee will focus completely on C++20 in Toronto. It will take some time for the process to be completed for publication by ISO but there is still a reasonable expectation it will be completed by end of year to make it into C++17. There is some anticipation to see if procedural delays would make this become C++18 :) but I do not think this will happen. <br/>
+  <br/>
+</p>
+
+<p>It is useful to look at the status of various projects at this point and see what has changed from the Issaquah meeting and what the status will be of what will make it into C++20. Of the Technical Specifications (TSes) heading into C++20 the following are ready to go and there is already interest at the Toronto meeting to either merge various TSes into the C++20 draft, or advance them to their next stage in the TS.</p>
+
+<p>
+  <strong>Concepts</strong>
+</p>
+
+<p>Concepts was published in November 2015 (<a href="http://www.iso.org/iso/home/store/catalogue_tc/catalogue_detail.htm?csnumber=64031">ISO Store</a>) and a final draft exists as <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4553.pdf">n4553</a> but there is only one implementation (GCC 6) and the subsequent changes from the various national bodies' feedback have slowly deviated from the original implementation, though not significantly. The clang implementation still remains far behind and in recent discussions there have been concerns about the lack of ability to future proof the design. For example there is a missing part that was in the original concept design known as separate checking as well as concern about the C++ standard library becoming conceptified. However, recent opinion is turning towards accepting this once all defects have been processed and separate concept checking is likely to be discarded as it is impeding the acceptance of a perfectly good feature. The reality for the supporters of separate concept checking is that without this part, Concepts will not provide 100% error reporting on templates. This is because it is still possible for errors in the template definition side to go undetected. Despite the lack of separate checking, I predict the current Concept will be incorporated into C++20 once all the defects are processed this year or next.</p>
+
+<p>
+  <strong>Transactional Memory</strong>
+</p>
+
+<p>This is my group and we published in September 2015 (<a href="http://www.iso.org/iso/home/store/catalogue_tc/catalogue_detail.htm?csnumber=66343">ISO Store</a>) with a final draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4514.pdf">n4514</a> published in May 2015. We continue to meet regularly and are currently discussing the effects of shared_ptr inside a transaction because of how often shared_ptr exists in real code. <br/> The central question we have been exploring is how fast can atomics and smart ptrs be outside a transaction if they have to interact with a transaction. One possible solution to make transactional shared_ptr safe to use is to make non-transactional shared_ptr (code outside of transactions) be converted into a mini-transactional section (just containing the shared_ptr). This way transactional shared_ptr knows how to interact with them. And that is why it will slow them down, especially if they do not have any interaction with transactional code as originally written (say inside a library). The potential solutions involve slowing the rest of the non-transactional code down and that feels sub-optimal to our SG and unlikely to be accepted by the rest of the C++ committee. The reason for this slow down involve the following main discussion points.</p>
+<p style="margin-left: 30.0px;">a) Could we have a special kind of transactional shared pointer?  The group said we didn’t want this if we could avoid it as it would require extra syntax.<br/> b) Could we have mini-transactions for all shared pointer operations? This would definitely slow everything down.</p>
+
+<p>A third option being explored is deferring the destruction but our group felt that the semantics are not well-defined.</p>
+
+<p>The discussion continues within SG5 but if there is a chance of C++20 having transactional memory, then it will likely be just the basic synchronized construct which offers a simple implementation for lock replacement (though it may not scale at extreme number of threads). This synchronized construct differs from the full atomic construct in that it does not rollback.</p>
+
+<p>
+  <strong>Library Fundamental 2</strong>
+</p>
+
+<p>This TS advanced to being published out of the Kona meeting in March of this year (<a href="https://www.iso.org/standard/70587.html">ISO Store</a>) with a draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4617.pdf">n4617</a> available in November 2016 containing source code information capture and various utilities. No further work will be done on this and it is a prime candidate to be advanced into C++20.</p>
+
+<p>
+  <strong>Ranges</strong>
+</p>
+
+<p>Ranges also advanced to a Preliminary Draft Technical Specification (PDTS) in Kona with draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4651.pdf">n4651</a> available in March this year. Resolution of comments on the PDTS is now in active progress and it is hoped that we can complete the ballot comment resolution in Toronto and advance this to publication. Once publication occurs then it can be a candidate for entry into C++20 but the problem is much of this will depend on Concepts advancing into the C++20 draft and without that happening, Ranges is unlikely to be able to enter C++20. However, at Codeplay, we are also working on an interesting project on the intersection of ranges with parallelSTL which we have implemented in using SYCL in cpus and gpus. Expect to hear more on that.</p>
+
+<p>
+  <strong>Networking</strong>
+</p>
+
+<p>Networking has advanced to a PDTS in Kona with Draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4656.pdf">n4656</a> (2017-03-17). It contains a sockets library that is based on Boost.ASIO. Some parts of this also contain an executor-like system that is being incorporated into the executor discussions and resolution of the comments on the PDTS is now in active progress. It is hoped that we can complete the ballot comment resolution in Toronto and advance this to publication, once that is completed then there is every reason to see this advance into the C++20 draft.</p>
+
+<p>
+  <strong>Modules</strong>
+</p>
+
+<p>This is still in development with the latest Draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4647.pdf">n4647</a> available in March this year. The first version is based mostly on Microsoft’s<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> design which puts macros in a side file and the Google<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> group has returned with comments on the design based on incorporating macros, and it is the intention of the committee to add that experience to the draft. If that works out then we will vote out a PDTS at the Toronto or subsequent meeting. This remains one of the most hotly requested features and every accommodation will be made to prioritize it.</p>
+
+<p>
+  <strong>Concurrency</strong>
+</p>
+
+<p>I am now also the editor of this TS and it was published in January last year (<a href="http://www.iso.org/iso/home/store/catalogue_tc/catalogue_detail.htm?csnumber=65242">ISO Store</a>) with a final draft available <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0159r0.html">p0159r0</a> in October 2015. It contains improvements to the future that makes it non-blocking, unlike the current std::async futures. There are also latches and barriers as well as atomic smart pointers included in this TS. It was published too close to C++17 and there was deemed to be not enough usage experience. Most of the implementation is based on MS Visual Studio and HPX and I think Anthony Williams' Just Threads! has the most complete implementation. However, two papers posted in the pre-Toronto meeting could potentially block this TS from moving ahead. The two papers in the pre-meeting mailing - <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0676r0.pdf">P0676 </a>and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r0.html">P0701 </a>are proposing a new kind of futures and these papers could have the effect of modifying the TS before it is accepted into C++20 which means it could be a few meetings before that will happen.</p>
+
+<p>
+  <strong>Coroutine</strong>
+</p>
+
+<p>A PDTS was published in Kona with draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4663.pdf">n4663</a> that contains a resumable function based on the Microsoft<span class="external-link">
+    <span class="_Tgc">
+      <span class="external-link">
+        <span class="_Tgc">™</span>
+      </span> </span>
+  </span>await design. National Body comments will be returned at the Toronto meeting for review and there are two implementations now. Microsoft<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> has always had one and Gor has recently been busy adding this to clang. This is also known as the stack-less design as it uses the heap to transfer functions. The original stack-based proposal from Linden Lab<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> (who delivers Second Life<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>) remains in competition and while there has been hope for unification of both designs, it seems increasingly unlikely. More likely is that we will have both designs as they serve different domains and assuming both will progress independently. There is every reason to expect at least one or maybe both forms to be in C++20.  </p>
+
+<p>
+  <strong>Reflection</strong>
+</p>
+
+<p>There is now an early development draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0194r2.html">p0194r2</a> from October 2015 with the rationale in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0385r2.pdf">p0385r2</a> from February this year. There is an alternative design <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0590r0.pdf">p0590r0</a> from February 2017. This TS is  based on code introspection and now also added code <a href="https://en.wikipedia.org/wiki/Reification_(computer_science)">reification </a>mechanisms. The <a href="http://wg21.link/p0194r3">Introspection proposal</a> passed core language design review and the next stop is the design review of the library components. The group are targeting a Reflection TS in one of the upcoming C++ standard meetings and it too will have every chance of making C++20. Reflection has also now added responsibility of driving metaprogramming which has become popular recently based on Boost::Hana and similar libraries. Some aspect of reflection is important for heterogeneous C++.</p>
+
+<p>
+  <strong>Contracts</strong>
+</p>
+
+<p>There is now a unified p<a href="http://wg21.link/p0542r0">roposal</a> which has passed core language design review and the next step is a design review of the library components and it could have its own TS, or target C++20 directly. This has pre and post conditions and establishes a baseline for safety critical support in C++. On the part of Safety Critical I have noticed increasing industry pressure for safe C++, especially in the automotive embedded domain but also in medicine and of course cyber security. One area I am facilitating is a safety critical SG which may join forces with SG12's Undefined Behavior possibly using the Core Guideline Libraries to define safety critical components for each domain (automotive, avaiation, medical, cybersecurity).</p>
+
+<p>
+  <strong>Concurrency</strong> <strong>2</strong>
+</p>
+
+<p>This is still in early development and contains hazard pointers and read-copy-update libraries. These are lock-free programming libraries I have been working on with Maged Michael and Paul McKenney. We recently completed the <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0566r1.pdf">wording </a>for this. Also included are atomic views as well as other forms of concurrent data structures and queues. It is under such active development that I can’t say whether it will make C++20 but I hope it does as many of the facilities in here are in demand.</p>
+
+<p>
+  <strong>Parallelism</strong> <strong>2</strong>
+</p>
+
+<p>This takes us beyond the original Parallelism TS which contains Parallel STL for cpus. At Codeplay, we have implemented it not just for CPUs but also GPUs. This current version 2  is in early development but there is a draft <a href="https://isocpp.org/files/papers/N4578.html">n4578</a> from February 2016 that contains task blocks and SIMD support in the form of data_par. It is under such active development that again I can’t say whether it will make C++20 but the features are in demand so I hope it does.</p>
+
+<p>
+  <strong>Transactional Memory 2</strong>
+</p>
+
+<p>More recently because of the emerging design for Executors which aims to have a uniform interface for all concurrency constructs, SG5 has started discussing the design for a lambda interface for transactional memory. This will enable direct plug-ins for executors and can control transaction-safety as part of the how of execution while also enabling execution context to control where transactional memory would run.</p>
+
+<p>In a recent talk at the Embedded Multi-Core conference that showcases the software system for Infineon Auric chipsets used in automotive Electronic control units, I heard a surprising requirement for transactional memory in the domain of embedded controllers for automotive because they require a scalable system that does not deadlock. This could provide the usage basis that enables it to be added to C++ 20.</p>
+
+<p>
+  <strong>Numerics</strong>
+</p>
+
+<p>This is in Early development with a draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0101r0.html">p0101</a> from September 2015. It provides many needed numeric facilities including:</p>
+<ul>
+  <li>Built-in types such as decimal floating point</li>
+  <li>Bounded types such as fixed point types</li>
+  <li>Unbounded types</li>
+  <li>Rounding and overflow</li>
+  <li>Utilities such as overflow-detection, and multiprecision arithmetic</li>
+</ul>
+
+<p>Some of this will make it into C++20 but more specifically, SG14 (Low Latency) has championed bounded types such as fixed-point integers because they help games developers have well defined precision at every interval instead of decreasing precision as they move far away from zero.</p>
+
+<p>
+  <strong>Graphics</strong>
+</p>
+
+<p>This also is in early development with a draft <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0267r0.pdf">p0267r0</a> from February 2015 supporting a 2D drawing API based on the stateful Cairo interface. SG14 has argued for a stateless interface and the latest version <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0267r5.pdf">P0267</a> aims to add the stateless interface in Toronto. This discussion will occur during the week of the 10th July 2017.</p>
+
+<p>
+  <strong>Executors</strong>
+</p>
+
+<p>Executors describe execution and is the first and possibly most important step towards supporting heterogeneous computing by acting as an interface between concurrency constructs and the agents/resources, one of which can be a GPU core, or a SIMD unit. I have led a small group of experts from Google<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>, NVidia<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>, Codeplay<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>, and NASDAQ<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> to define a specification to enable the separation of concerns in defining where, when, and how execution is done in service of the constructs that exist in the current and future C++ standard - Concurrency, Parallelism, Transactional Memory, and Networking TS.</p>
+
+<p>While originally meant as part of Concurrency TS the current thinking is to create a separate Executor TS for C++20. Work is continuing but this is one of the key cornerstones and I feel confident that it will make it into C++20. The video from the Italian C++ Users conference will describe the current state of executors, though expect that to change quickly as we iterate over the design.</p>
+
+<p>
+  <strong>Heterogeneous computing</strong>
+</p>
+
+<p>For a long time, C++ has been outpaced by other models such as CUDA<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>, OpenMP<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span>, OpenCL<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> and HSA that have offered heterogeneous computing capability to enable dispatch to GPU, DSP, FPGA and other accelerators.</p>
+
+<p>SG14 is an ISO C++ SG that works on low-latency in the areas of games, financial and embedded programming. One of their mandates is the support of heterogeneous programming in native C++ without having to drop to some other models that are needed today.</p>
+
+<p>Since a SG14 evening session in Jacksonville demonstrating <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0236r0.pdf">SYCL</a>
+  <span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0234r0.pdf">HPX</a> there was interest in supporting a mandate to drive towards a future C++ that supports distributed and heterogeneous computing. At a later meeting <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0362r0.pdf">papers</a> were submitted providing feedback on a variety of concurrency and language features from the perspective of heterogeneous devices. Since then it was decided that the best path towards it was by completing the unified <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0443r1.html">executors</a> proposal since this will provide a way forward that enables defining where, when and how work is executed. All of the current C++ standard execution functions such as std::invoke, std::async, parallel algorithms, etc assume the usage of std::thread on only CPUs. While progress is being made in a unified proposal for executors, and while it enables distributed and heterogeneous computing, executors deliberately make no attempt to support distributed and heterogeneous computing because it is simply too wide a scope.</p>
+
+<p>Since then, there have been several papers trying to address distributed and heterogeneous computing (though none have identified in a complete manner all the issues that are faced by this domain) that requires a solution in the C++ standard. More specifically, a paper on the managed <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0567r1.html">pointer</a> identifies a possible solution towards synchronizing data between different nodes. A paper on <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0361r1.pdf">asynchronous</a> algorithms adds support for asynchronous algorithms vs the current synchronous versions.</p>
+
+<p>For the Toronto meeting we are proposing a meta level paper on one of the key issues (that of data movement) for heterogeneous and distributed computing and continue discussions on the asynchronous managed pointers. Although we do not mandate a solution in the Data Movement paper, we are aiming at supporting channels in C++.</p>
+<ul>
+  <li>Data Movement in C++: <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0687r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0687r0.pdf</a>
+  </li>
+  <li>Asynchronous Managed Pointers for Heterogeneous and Distributed Computing: <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0567r1.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0567r1.html</a>
+  </li>
+</ul>
+
+<p>Both papers are in collaboration with HPX and are based on our implementation experience in SYCL and HPX.</p>
+
+<p>Finally, I would like to announce that I have been nominated to be the Chair of the <a href="https://www.khronos.org/sycl">SYCL standard</a> replacing Andrew Richards who has guided the development of SYCL within Khronos<span class="external-link">
+    <span class="_Tgc">™</span>
+  </span> to firmly establish a modern C++ style heterogeneous computing language. I will take this experience and bring it as one of the candidates to support heterogeneous ISO C++.</p>
+
+<p>Finally, <a href="{{ '/public/uploaded/public/michaelwongtable2.pdf' | relative_url }}" target="_blank">click here to view the table of National Body comments in PDF format.</a></p>
+

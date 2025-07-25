@@ -1,0 +1,10 @@
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor
+_exporter
+.idea
+JEKYLL_ENV
+node_modules
+.DS_Store

@@ -1,0 +1,348 @@
+---
+id: 365
+url: 10-29-19-debugging-sycl-applications
+user_id: 852
+date: 2019-10-29T10:32:28.3600Z
+category: blogs
+title: "Debugging SYCL Applications"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/10-29-19-debugging-sycl-applications
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>It's inevitable that you will need to debug your SYCL code at some point. While many of the techniques used are similar to the way this would be done in any C++ code, there are some things to keep in mind. It's not always easy to debug your code on the actual device you are executing on, for example a GPU, so SYCL offers a "host device" that can be used to emulate what happens on the target device, and makes it much easier to track down where things are going wrong. This post also outlines how you might go about debugging on your target device.</p>
+
+<h2>Debugging on a SYCL Host Device</h2>
+
+<p>Debugging kernels running on a device back<span>-</span>end requires support in the underlying platform, so debugging a SYCL kernel on a device such as a GPU is not possible.<br>However, developers can use standard tools such as <code>valgrind</code>, <code>gdb</code>, <code>lldb and </code>other tools to debug their SYCL applications on the <code>host_device</code> instead.</p>
+
+<p>
+  <span>The <em>host device</em> is an emulated back-end that executes code as native </span>
+  <span>C++ and emulates the SYCL execution and memory models.</span> Having a host device is a requirement for every SYCL implementation and allows developers to run a SYCL application without having the supported back-ends (e.g. OpenCL 1.2 or above for ComputeCpp) set up. The host device will not provide a fast multi-threading interface on the host but a working one that uses the core API of SYCL (excluding vendor-specific extensions) and needs only pure C++ (at least C++11) to do that.</p>
+
+<p>Having clarified what exactly the host device is, let's see the purpose of having such an implementation.</p>
+
+<ul>
+  <li>The host device exists to be used as a fallback execution target for a SYCL application rather than being an optimal solution for parallel execution, it shouldn't be used in production code</li>
+  <li>It is the perfect environment for debugging SYCL code since all of the API calls and kernel code are basically standard C++, which can be compiled using any modern compiler</li>
+  <li>When <code>SYCL parallel_for
+    </code> is invoked, the SYCL host implementation will spawn native OS threads, allowing developers to use standard multi-threaded debugging methods</li>
+</ul>
+
+<p>In order to enable debugging on the host device without having to modify the program source every time, a simple option would be to set a preprocessor macro when creating a custom debug build and use it as shown below.</p>
+
+<p>
+  Here's an example, using modified version of the <a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/samples/reduction.cpp">reduction</a> sample from the <a href="https://github.com/codeplaysoftware/computecpp-sdk">computecpp-sdk,</a> of how to use this macro to select the host device.</p>
+
+<pre><code>#if DEBUG_IN_HOST_DEVICE
+cl::sycl::queue queue(cl::sycl::host_selector{}, ...);
+#else
+cl::sycl::queue queue(cl::sycl::default_selector{}, ...);
+#endif </code></pre>
+
+
+<p>If the macro is set, the queue is initialized with a host device. Otherwise it uses the default selector which will select a GPU if one is available on the hardware.<br>The rest of the program source remains unchanged but, when generating the executable, the program has to be compiled with <code>-g</code> (for <code>gcc</code>), or <code>CMAKE_BUILD_TYPE=Debug
+  </code> in the case of using CMake to enable the use of extra debugging information on the host device.
+</p>
+
+<p>However, code modifications are not the most advisable and convenient for such tasks, which is why the ComputeCpp SYCL implementation provides an environment variable <code>COMPUTECPP_TARGET</code>. When this variable is set to <code>host,</code> the <code>default_selector</code> will be forced to select the host device, thus eliminating the need for a custom preprocessor definition and changes in your code. It is important to note that this is not part of the standard and can be used only with ComputeCpp.<br>
+
+</p>
+
+<p>Once we are sure that the host device has been selected, we can run <a href="http://www.valgrind.org/">valgrind</a> to debug our application (the <strong>reduction </strong>sample in this case).</p>
+<h4>Checking for memory leaks</h4>
+
+<p>Let's start by using <em>memcheck</em> as it is a built-in valgrind command and detects the use of uninitialized memory, out-of-bounds read/write access to memory and memory leaks.</p>
+
+<p>To run valgrind with <code>memcheck</code>, type the following command:</p>
+
+<pre><code>valgrind --leak-check=full --show-leak-kinds=all ./reduction</code></pre>
+
+<p>It's now possible to extract the leak summary, which in this case is as follows.</p>
+
+<pre><code>==10853== LEAK SUMMARY:
+==10853==    definitely lost: 6,377 bytes in 4 blocks
+==10853==    indirectly lost: 76 bytes in 2 blocks
+==10853==      possibly lost: 0 bytes in 0 blocks
+==10853==    still reachable: 138,748 bytes in 1,731 blocks
+==10853==         suppressed: 0 bytes in 0 blocks </code></pre>
+
+<p>And you can also track any uninitialized values using the <code>--track-origins=yes</code> option.</p>
+<h4>Interpreting cache utilization</h4>
+
+<p>Another tool that we can use is C
+  <em>
+    achegrind
+  </em> which simulates the first-level and last-level caches (usually the last-level cache has the most influence on runtime performance).</p>
+
+<p>The experimental host device is an Intel CPU with 3 levels of cache, where the first level has separate instructions and data cache, and the rest are unified.</p>
+
+<p>On Linux, you can check these details using the command:</p>
+
+<pre><code>lscpu | grep "cache"</code></pre>
+
+<p>The output looks something like this.</p>
+
+<pre><code>L1d cache:           32K
+L1i cache:           32K
+L2 cache:            256K
+L3 cache:            8192K </code></pre>
+
+<p>To run valgrind with <code>cachegrind</code>, we are using the following command:</p>
+
+<pre><code>valgrind --tool=cachegrind ./reduction
+</code></pre>
+
+<p>This will simulate the <code>reduction</code> program's interaction with the machine's cache hierarchy as visible in the output below.</p>
+
+
+<pre><code>==9436==
+==9436== I   refs:      299,487,394
+==9436== I1  misses:        103,329
+==9436== LLi misses:         49,491
+==9436== I1  miss rate:        0.03%
+==9436== LLi miss rate:        0.02%
+==9436==
+==9436== D   refs:      122,361,759  (74,394,550 rd   + 47,967,209 wr)
+==9436== D1  misses:      3,461,492  ( 2,527,357 rd   +    934,135 wr)
+==9436== LLd misses:      1,388,245  (   722,130 rd   +    666,115 wr)
+==9436== D1  miss rate:         2.8% (       3.4%     +        1.9%  )
+==9436== LLd miss rate:         1.1% (       1.0%     +        1.4%  )
+==9436==
+==9436== LL refs:         3,564,821  ( 2,630,686 rd   +    934,135 wr)
+==9436== LL misses:       1,437,736  (   771,621 rd   +    666,115 wr)
+==9436== LL miss rate:          0.3% (       0.2%     +        1.4%  )</code></pre>
+
+
+<p>We can interpret the results and see that we have a not so significant cache miss in the first level instruction cache <code>I1</code> with rate of 0.03%, but a more significant cache miss rate of <code>2.8%</code> in the data cache <code>D1</code>.<br>That said, the reduction program couldn't fit in the <code>L1</code> cache, therefore cache optimization approaches can be applied. However, there were hundreds of millions of instructions in <code>L1</code> so some compulsory cache misses may be unavoidable.<br>Furthermore, we can also see that there is a very small cache miss rate of <code>0.3%</code> in <code>L3</code> cache (shown as <code>LL</code>).</p>
+<h4>Detecting race conditions</h4>
+
+<p>You can also check for possible data races and observe the thread allocations by using the <em>
+    Hellgrind
+  </em> tool: <code>valgrind --tool=hellgrind ./reduction</code>
+  <br>In this case however, you need to be careful with interpreting the output as there may be warnings saying that there is a possible data race if one thread is reading a block of bytes that is written by another thread without a lock being held. <br>Hellgrind can't know if there are any other means in the program that prevent the certain condition to happen in the two threads <span style="color: rgb(36,39,41);">simultaneously</span>, thus it will flag it as a possibility.</p>
+<h4>Debugging by stepping-through the program</h4>
+
+<p>You can also use <code>gdb</code> or other source-line debuggers (e.g. <code>lldb</code>) on the host device to step through your program just as you are stepping through a standard C++ application.</p>
+<h2>Debugging on an OpenCL Device</h2>
+
+<p>While debugging on the host device works for the most part, not every situation is the same. There may be cases where developers run into problems that can be only be observed in a device.<br>If you happen to find yourself in a situation where an issue only occurs when running on an OpenCL device, you have to debug it on the device.</p>
+
+<p>Fortunately, there are existing tools that are capable of simulating an OpenCL device as well as providing validation of the OpenCL (1.2) code.</p>
+
+<p>
+  <a href="https://github.com/jrprice/Oclgrind">Oclgrind</a> is the go to tool for this purpose; it is an OpenCL <span class="st">device simulator and debugger that can interpret OpenCL SPIR (1.2). (<em>You can learn more about SPIR by having a look at its <a href="https://www.khronos.org/registry/SPIR/specs/spir_spec-1.2.pdf">specification</a> hosted by the Khronos Group</em>
+  </span>
+  <em>.)</em> <br>At its core, Oclgrind simulates how an OpenCL device executes a kernel independently from any specific architecture. This is particularly useful when facing portability issues during development.</p>
+<h3>Setting up Oclgrind</h3>
+
+<p>The easiest way to install <em>oclgrind</em> is from an OS package manager that maintains a stable version of the project.<br>For example, on Ubuntu, using the APT package manager, you can simply type the following command in the Terminal:</p>
+
+
+<pre><code>sudo apt-get install oclgrind</code></pre>
+
+<p>This will get you the latest stable version of the tool maintained for your Ubuntu version. For Ubuntu-16/17/18 this will get you <em>oclgrind</em> 15.5. To check the version you have install, simply type:</p>
+
+
+<pre><code>oclgrind --version</code></pre>
+
+<p>In case you want to install the latest version of <em>oclgrind</em> (18.3 at the time of writing) which is usually not maintained by most Linux package managers such Ubuntu's APT, it is best to install directly from the the project source files.<br>The <a href="https://github.com/jrprice/Oclgrind/wiki/Building-and-Installing">Building and Installing</a> section on their Github wiki gives a thorough explanations on how to proceed this way, even explaining how to run oclgrind with via the Khronos' OpenCL ICD loader.  As a prerequisite, you will need to CMake installed for you platform.</p>
+<h3>Using Oclgrind</h3>
+
+<p>Fortunately, <em>oclgrind</em> is not difficult to use. It implements the full OpenCL 1.2 runtime API, so developers are not required to make any manual changes to their SYCL (1.2.1) or OpenCL programs.</p>
+
+<p>Here are a few examples, simply to scratch the surface of what's possible as well as demonstrate how easy it is to do things. For example, enabling data-race detection in the kernel or collecting kernel information such as the count of instructions called during execution on the OpenCL device simulator. In addition to the above, you can do things like checking for errors in API calls, dump OpenCL SPIR and generate IR (intermediate representation) files.</p>
+
+<p>Oclgrind incorporates a simple plugin for detecting invalid memory access which is a well-known and common problem for GPU compute. It may be the case that the platform you are running on does not provide meaningful feedback about what went wrong, while <em>oclgrind </em>comes with a plugin that checks each memory access that your OpenCL kernels perform to ensure they do not access memory that they shouldn't. This option is enabled by default. If an error is encountered, the plugin will provide a diagnostic on it and feedback including the fail code with an error message.</p>
+<h4>Checking for runtime API errors</h4>
+
+<p>There’s plenty of issues that can arise when using the various runtime API functions from the host. Unfortunately, the error messages returned from these API calls can point to multiple possible causes. For detecting API errors, oclgrind provides a plugin called check-api that needs to be manually specified as a flag when running the application with oclgrind.</p>
+
+<p>Consider the following attempt to launching a kernel with NDRange where the value for the <em>local work size</em> does not divide into the <span class="st">
+    <em>global work size</em>. The <a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/samples/simple-local-barrier.cpp">simple-local-barrier</a> sample from the SDK is a handy sample for the purpose of this demonstration.<br>
+  </span>
+</p>
+
+
+<pre><code>const int size = 65;
+
+[...] // program logic.
+
+cgh.parallel_for&lt;example_kernel&gt;(nd_range&lt;1&gt;(range&lt;1&gt;(size), range&lt;1&gt;(2)), [=](nd_item&lt;1&gt; item) {
+  [...] // kernel logic.
+}</code></pre>
+
+
+<p class="auto-cursor-target">Now we can run the program by adding the <code>--check-api</code> flag to <code>oclgrind</code> and enable error checking for the underlying OpenCL API calls:</p>
+
+
+<pre><code>oclgrind --check-api ./simple-local-barrier
+</code></pre>
+
+
+<p class="auto-cursor-target">In this scenario, the result of dividing the <em>global work size</em>,which is 65, by the local work size of 2 returns a fraction (<span class="qv3Wpe">32.5)</span> and this fraction can't be used to define the number of work groups for execution. Instead what we need is a natural, whole number to specify the work group size.<br>So, the code generated from the API call doesn't return successfully due to the description of the error detected by <code>oclgrind</code> (below).</p>
+
+
+<pre><code>Oclgrind - OpenCL runtime error detected
+    Function: clEnqueueNDRangeKernel
+    Error:    CL_INVALID_WORK_GROUP_SIZE
+    Dimension 0: local_work_size (2) does not divide global_work_size (65)  </code></pre>
+
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">In addition, another case of invoking the <code>CL_INVALID_WORK_GROUP_SIZE</code> error could be having set too large a <em>local work size</em> which <code>oclgrind</code> will report with an appropriate error message.</span>
+</p>
+<h4>Detecting race conditions</h4>
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">Similarly to the valgrind <em>--memcheck</em> option, you can check for race conditions using <em>oclgrind</em>. If this behavior can only be observed when running on an OpenCL device, we can enable the data-race detection plugin in <code>oclgrind</code> by passing the <code>–data-races</code> flags.<br>
+  </span>
+</p>
+
+
+<pre><code>oclgrind --data-races ./application</code></pre>
+
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">In case of detecting a data race, the tool will output the address at which the condition has been detected, followed by the address memory space and the failing instruction alongside other useful debugging information if available.</span>
+</p>
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">An example for a race condition inside a kernel could be one where a work-item with one <code>local id</code> assigns a value to some variable and a work-item with another <code>local id</code> tries to read and use that same variable with no synchronization between the work-items in the work-group. <br>Consider the following SYCL kernel code:<br>
+  </span>
+</p>
+
+
+<pre><code>auto inAcc = bufIn.get_access&lt;access::mode::read&gt;(cgh);
+auto outAcc = bufOut.get_access&lt;access::mode::write&gt;(cgh);
+accessor&lt;int, 1, access::mode::read_write, access::target::local&gt; localAcc(range&lt;1&gt;{1}, cgh);
+
+cgh.parallel_for&lt;racy_kernel&gt;(nd_range&lt;1&gt;{globalRange, localRange}, [=](nd_item&lt;1&gt; item) {
+  const auto localId = item.get_local_id(0);
+  if (localId == 1) {
+    localAcc[0] = inAcc[localId];
+  }
+  if (localId == 0) {
+    outAcc[localId] = localAcc[0];
+  }
+});</code></pre>
+
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">This code implements a case of a race condition inside a SYCL kernel as described above. Running it through <code>oclgrind</code> with the <code>data-races</code> plugin enabled we will get the following output:</span>
+</p>
+
+
+<pre><code>Read-write data race at local memory address 0x1000000000000
+	Kernel: SYCL_class_racy_kernel
+
+	First entity:  Global(1,0,0) Local(1,0,0) Group(0,0,0)
+	  store i32 %7, i32 addrspace(3)* %0, align 4, !tbaa !11
+    Debugging information not available.
+
+
+	Second entity: Global(0,0,0) Local(0,0,0) Group(0,0,0)
+	  %9 = load i32, i32 addrspace(3)* %0, align 4, !tbaa !11
+    Debugging information not available. </code></pre>
+
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">Adding a work-group <code>barrier</code> with memory ordering on the local address space between the two lines of assignment.<br>
+  </span>
+</p>
+
+
+<pre><code>item.barrier(access::fence_space::local_space);</code></pre>
+
+<p class="auto-cursor-target">
+  <span class="st auto-cursor-target">With this the application will run without any data races being introduced. In the case of an OpenCL program, where the kernel is separated from the host source, you will get the line of where the race condition has been detected and the faulty code but this information is not available in our case. However, you can deduce where this is happening in the code by interpreting the returned SPIR instructions.</span>
+</p>
+<h4 class="auto-cursor-target">
+  <span class="st auto-cursor-target">Collecting profiling information</span>
+</h4>
+<p class="auto-cursor-target">Another interesting function, if you are familiar with the LLVM instruction set, is the <code>--inst-counts</code> option that can be passed to <em>oclgrind</em>. Even if you are not that familiar, the SPIR spec includes a <a href="https://www.khronos.org/registry/SPIR/specs/spir_spec-1.2.pdf#page=21">reference table (p. 20, 21)</a> to all LLVM instructions that may be used in SPIR. You can use this information to understand more about your program's execution.</p>
+<p class="auto-cursor-target">
+  <br>Let's go back to the reduction sample we used in the "<em>Debugging on Host Device"</em> section, and run it with <code>oclgrind</code> passing the <code>--inst-counts</code> flag.</p>
+
+
+<pre><code>oclgrind --inst-counts ./reduction </code></pre>
+
+
+
+<p>Oclgrind outputs a histogram in the terminal, which shows the collected counts of instructions (as well as the actual instructions) that were executed while running the kernel. In more detail, the counts for the memory loads and stores which are in the <span>
+    <em>Memory Access &amp; Addressing</em> LLVM</span> Instruction Family are split into the separate address spaces to show the number of bytes read or written for the correct space (e.g., <em>global</em> or <em>local</em>).</p>
+
+
+<pre><code>Device Name: Oclgrind Simulator
+Platform Name: Oclgrind
+Instructions executed for kernel 'SYCL_class_sycl_reduction_int_':
+           2,688 - br
+           2,304 - icmp
+           1,024 - call _Z7barrierj()
+           1,024 - phi
+             896 - lshr
+             512 - getelementptr
+             382 - add
+             255 - load local (1,020 bytes)
+             255 - store local (1,020 bytes)
+             128 - call _Z12get_group_idj()
+             128 - call _Z12get_local_idj()
+             128 - call _Z13get_global_idj()
+             128 - load global (512 bytes)
+             128 - ret
+             128 - sdiv
+             128 - select
+             128 - sext
+             128 - trunc
+               1 - store global (4 bytes) </code></pre>
+
+<p>This functionality is particularly helpful for optimizing kernels, involving synchronizations between the work-items in a work-group executing the kernel. For example, in the reduction sample we have 1024 <em>barrier</em> calls, which may be too many in this case but in general is a helpful indicator that can be used to profile slow kernels. The number of synchronizations (between work-items) being performed could help point towards ways to speed up the kernel execution.</p>
+<h4>Interactive-style debugging - Stepping through the kernel</h4>
+
+<p>In case you want to step through the kernel, you can do that by running <em>oclgrind</em> in interactive mode - that provides a simple <code>gdb</code>-style step-through debugger with a limited subset of the commands supported by gdb.</p>
+
+
+<pre><code>Command list:
+  backtrace    (bt)
+  break        (b)
+  continue     (c)
+  delete       (d)
+  gmem         (gm)
+  help         (h)
+  info         (i)
+  list         (l)
+  next         (n)
+  lmem         (lm)
+  pmem         (pm)
+  print        (p)
+  quit         (q)
+  step         (s)
+  workitem     (wi)</code></pre>
+
+<p>Running an application with oclgrind in interactive mode is done as follows:</p>
+
+
+<pre><code>oclgrind --interactive ./application # or just type -i for short</code></pre>
+
+
+<p>Oclgrind will automatically break at the start of each kernel invocation. Additionally, the interactive debugger plugin also interacts perfectly with the other <em>oclgrind</em> plugins, which means it can automatically break into a prompt if an error is encountered (e.g. invalid memory access).<br>You can manually set breakpoints for specific source lines just like with gdb by using the <code>break</code> command.  You can also switch between work-items. While oclgrind will do a sequential execution of the work-items, you can use the <code>workitem</code> command to do the switch manually.</p>
+
+<p>Other command features include viewing a variable and inspecting regions of memory.</p>
+<ul>
+  <li>You can't watch specific variables but you can use the <code>print</code> command to view the contents of a specific variable.</li>
+  <li>To inspect regions of memory, you can use the <code>mem</code> commands - <code>lmem</code>, <code>pmem</code> and <code>gmem</code>.</li>
+</ul>
+
+<p>Furthermore, to get a general overview of the <code>NDRange</code> of the kernel you are debugging, you can use the <code>info</code> command in the debugger.<br>Here's an example using the reduction kernel as a sample:</p>
+
+
+<pre><code>(oclgrind) info
+Running kernel 'SYCL_class_sycl_reduction_int_'
+-&gt; Global work size:   (128,1,1)
+-&gt; Global work offset: (0,0,0)
+-&gt; Local work size:    (128,1,1)</code></pre>
+
+
+<p>The SYCL host device makes debugging much easier for developers. Since SYCL is written entirely in standard C++, we can use common and robust tools to debug SYCL applications. It's also possible to use OpenCL debugging tools out of the box without any code modifications. This makes the debugging of kernel specific errors possible without vendor-dependent tools.</p>
+
+<p>If you'd like to find out about how to profile your SYCL application, read our <a href="https://www.codeplay.com/portal/08-27-19-optimizing-your-sycl-code-using-profiling">Optimizing Your SYCL Code Using Profiling</a> guide.</p>
+
+

@@ -1,0 +1,25 @@
+---
+id: 62
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "liboffload::swcache::block_invalidate"
+redirect_from:
+  - /kb/62
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>static inline void liboffload::swcache::block_invalidate( __outer void * linePtr, unsigned int size );
+</code></pre>
+<p>
+<strong>Within an Offload context:</strong>
+</p><p>
+This function invalidates the software cache line(s) which hold the address block at linePtr extending to linePtr+size. This will not writeback the line(s) if modified.
+</p><p>
+<strong>Outside of an Offload context:</strong>
+</p><p>
+This function has no effect.
+</p>
+
+

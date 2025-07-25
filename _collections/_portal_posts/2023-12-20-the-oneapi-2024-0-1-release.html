@@ -1,0 +1,26 @@
+---
+category: news
+date: '2023-12-20T17:50:08.727404'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/article-images/546bd294d88b7dc37a2a773ef3dc761d.jpg
+title: The oneAPI 2024.0.1 Release
+user_id: 1
+---
+
+
+<p>Last month, the milestone oneAPI 2024.0 was released. This major release brought with it more than 40 new features for HPC, AI and software rendering tools! You can find more detail on these additions <a href="https://www.intel.com/content/www/us/en/developer/articles/news/2024-tools-standards-perf-dependable-innovation.html" target="_blank">in this blog</a>, which also highlights the HPCwire Readers' Choice Award 2023 for Best HPC Programming Tool or Technology. Congratulations to all involved in the work that earned this award! </p>
+<p>For this blog, we will be focusing on the recently released oneAPI version 2024.0.1, which includes some significant and exciting additions, bug fixes and general improvements to our plugins for NVIDIA and AMD GPUs.  </p>
+<p>Bindless Images have been implemented in our plugin for NVIDIA GPUs. This is a SYCL extension that represents a significant overhaul of the current SYCL 2020 images API. Through the separation of image memory allocation and image handle creation, users gain more flexibility over their memory and images, for example by using USM as backing memory for images. By bypassing the accessor model and passing opaque image handles directly to the kernel, the number of images no longer needs to be known at compile time. The extension also enables hardware sampling and fetching capabilities for various image types, such as mipmaps, in addition to plain images, and new ways to copy images, like sub-region copies. In addition, Bindless Images offer interoperability features with external graphics APIs like Vulkan, namely the importation of image memory and semaphores. Whereas in the past SYCL images were insufficient in flexibility and feature support to be integrated into applications such as Blender, with the extra flexibility and features our Bindless Images provide, we are confident that they will now be a very useful addition to SYCL for developers working on Blender and any other applications requiring image manipulation.  </p>
+<p>This release has also added support for SYCL Non uniform groups in the NVIDIA plugin. Non uniform groups allow the programmer to use divergent control flow on GPUs, in a way that is mandated by the extension specification. Using non uniform groups the programmer can perform synchronization operations across some subset of the work items in a workgroup or sub-group.  </p>
+<p>SYCL peer to peer access has been enabled in this NVIDIA plugin release. In a multi-GPU system this may result in lower latency and/or better bandwidth in memory accesses across devices. </p>
+<p>We have also laid the groundwork for an experimental version of SYCL-Graph. This is a oneAPI vendor extension to SYCL that lets the user define the operations they want to submit to the accelerator ahead of time. SYCL-Graph will be particularly useful to developers who have repetitive workloads with small kernels, where the overheads of creating and submitting the kernels can impact performance. Porting such workloads to use the SYCL-Graph API will allow the overhead of creating &amp; scheduling commands to only be incurred once before the main application loop, and the resulting graph of work to be submitted to the device with low latency on each iteration, thus improving performance and saving time. For now, this feature will only work with Intel GPUs, but our team is working toward bringing support for this feature to additional vendors soon. </p>
+<p>Our AMD plugin continues on the path out of beta and toward production release, and we expect to see this version released in 2024.  </p>
+<p>For full notes, please see the <a href="https://developer.codeplay.com/products/oneapi/nvidia/2024.0.1/guides/changelog-nvidia">NVIDIA</a> and <a href="https://developer.codeplay.com/products/oneapi/amd/2024.0.1/guides/changelog-amd">AMD</a> changelogs. </p>
+<p>Our plugins are available as a download and you can try them for yourself here, </p>
+<p style="text-align: center;"><a href="https://developer.codeplay.com/products/oneapi/nvidia/home/">oneAPI for NVIDIA GPUs Plugin</a></p>
+<p style="text-align: center;"><a href="https://developer.codeplay.com/products/oneapi/amd/home/">oneAPI for AMD GPUs Plugin</a></p>
+<p>Or, as our plugins are fully open-sourced, <a href="https://github.com/intel/llvm/tree/sycl/sycl/plugins/unified_runtime/ur/adapters">you can visit the repositories</a>.</p>
+<p style="text-align: center;">And finally... from everyone at Codeplay, we hope you have a Merry Christmas! </p>
+

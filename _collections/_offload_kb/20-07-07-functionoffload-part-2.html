@@ -1,0 +1,71 @@
+---
+id: 129
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "FunctionOffload - Part 2"
+redirect_from:
+  - /kb/129
+thumbnail:
+  - /public/uploaded/public/tut_2_a_0.png
+layout: products/offload/kb/view
+---
+<p>This article was originally written by Colin Riley.
+</p><p>
+This example of using the Codeplay Offload system intends to show how it can be used to discover bottlenecks in code and then allow for SPU specific optimizations, whilst minimizing code changes.
+</p><p>
+We build upon the work done in the previous tutorial, &quot;How to offload to SPU using Codeplay Offload&quot;, and start off with a version of the Cloth 'FunctionOffload' SCE sample which uses __offload blocks in the Cloth::update() method to offload computation quickly and easily onto SPUs. I have fixed the number of SPUs the offload runtime uses to 4, so it matches the other methods of offloading to SPU in the sample. We do not use ppu fibers, and the offload runtime only spawns a single SPURS instance. Throughout the tutorial, all Tuner profiles include instrumenting the Cloth::update() and wait() methods, SPU performance counters, and SPU PC sampling.
+</p><p>
+We start with the simple version of the Cloth update method, which offloads to SPU in 16 batches. Over 4 SPUs, the time for the Cloth::update() and Cloth::wait() methods is 401us in total. From the previous example, we know that the major bottleneck of this code is its extensive use of the Software Cache, which we can discover by sampling the SPU PC in SN Tuner. If you add the Visual Studio build folder to the SPU Elf search directory list, and 'Add sub-directories containing elf files', the automatically generated SPU elfs will be detected and used.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_0.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+&quot;cpCacheMiss&quot; is the cache miss function of the software cache Codeplay Offload uses on SPU. The hit method can be inlined, so will not present itself in most results. The cache is used by default as the way PPU pointers are accessed from SPU. It allows for fast local access when few reads from PPU are present, but can pose a performance drain when large PPU reads are required, or many small reads from discontinuous memory locations. Writing via the cache is worse, as to keep in synchronization with the PPU, the cache must track what individual bytes in a cache line have been modified, not only the cache line itself.
+</p><p>
+The Codeplay Offload compiler is very smart. Call Graph Duplication aims to lower barriers for entry to SPU programming, and increase the amount of code that can be put on SPU. One of the features is the ability to change the __outer modifier of a pointer depending on its initializer. If you have read the Offload Language Specification, you will know what this means, but if not, an '__outer' pointer, inside an __offload context such as an offload block or a duplicated function, is a pointer to global memory. In this sense, PPU memory is global, and SPU LS is local. You want to have as few __outer pointers as possible, as these go through the software cache. When a pointer variable is defined in an offload block, if its initializer is __outer, it will change the variable type so it too is outer. This means the programmer does not need to edit various areas of general purpose (and usually cross platform) code to specialize it for the Offload Compiler.
+</p><p>
+The compiler forcing one of these pointer variables to be __outer is usually a good indication of an area where you could bring data local to the SPU, and increase performance dramatically. Bringing data local means reducing Software Cache use, and being able to exploit the SPUs fast Local Store. Because of this, the compiler has an option to issue a performance warning when a pointer is forced to be __outer from its initializer. It can be found under the &quot;Performance Tuning&quot; section of the General Codeplay Offload Property Pages for cloth.cpp.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_1.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+Compiling with this option on yields warnings about pNextPos and pCurrentPos being forced to be __outer pointers due to mParticles being in PPU memory. What we will attempt to do is bring the whole batch of data from which we are reading from, through pCurrentPos, over to SPU. In this instance it is several kilobytes of data, so will fit into Local Store. In other situations other methods may be required.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_2.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+We will use a class that is provided within liboffload, liboffload::data::ReadArray, to bring the mParticles[mFlip] array local.
+</p>
+<pre><code>liboffload::data::ReadArray&lt;Particle, PARTICLE_COUNT, 14&gt; lParticles(mParticles[mFlip]);
+</code></pre><p>The first template argument is the type of elements in the array, the second is the size of the array, and the last item is the DMA tag to use. Adding the above line of code to the top of the __offload block, and then replacing all references to mParticles[mFlip] to lParticles, will make these accesses very quick using the SPU Local Store. However when you try to compile this code, you get an error along the lines of this:
+</p>
+<pre><code>.calculateNextPosition.cpp(134): error: (Offload1101) Cannot convert  from 'const struct Particle *' into 'const struct Particle __outer*' while compiling duplicated function 'void calculateNextPosition(struct Particle *, int , int , const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *)'
+</code></pre><p>On inspection of line 134 of calculateNextPosition.cpp, you will see that it is trying to statically initialize a structure with a pointer. This is an example where the type system protects you from accidentally mixing outer with inner pointers. Since the structure type is defined outside an __offload scope, the compiler assumes all pointer declarations inside that struct to be outer.
+</p><p>
+There are various ways to get automatic inner pointers within struct declarations - in this case, as the struct is simply a helper and used only within the calculateNextPosition function, moving the typedef local into the function will mean current function context is taken into account, and when the function is duplicated for SPU the pointers within will point to SPU local store. If the struct was used elsewhere and so bringing the typedef into the function was not an option, you could use Struct Duplication to tell the compiler that in this instance the mpParticle member was an __inner pointer.
+</p><p>
+Trying to build the project now should complete without error.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_3.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+This change vastly speeds up the Cloth::update and wait functions. They now take a combined 162.747us. Running again in SN Tuner, we can see that cpCacheMiss is now not our bottleneck, however, cpCacheWriteback shows up quite a bit - this is due to the fact the writes of data back to PPU are going through our cache. As said before, writes through the cache are expensive.
+</p><p>
+We can do the same thing to the output of the functions that we did to the input by bringing mParticles[mFlip^1] local. A liboffload::data::WriteArray simply acts as a local array, and its destructor will DMA the data back to PPU. As the output is simply OFFLOAD_GRANULARITY number of consecutive particle objects, we just make the local array large enough for those instead of the whole array like what we did for reading.
+</p>
+<pre><code>libofflosd::data::WriteArray&lt;Particle, OFFLOAD_GRANULARITY, 14&gt; lOutBuffer(&amp;mParticles[mFlip^1][(x) + (y) * IN_SIZE]);
+
+Particle *pNextPos = &amp;lOutBuffer[0];
+</code></pre><p>This further reduces the time for combined update and wait to 143.396us.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_4.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+We can go further still. In the SPU samples window we can see that the calculateSpringForces function is not being inlined. We can change the inline limit in the cloth.cpp Property Pages. Making it high (a value of 50 is good) will allow everything inside calculateNextPosition to be inlined, giving another performance boost (at the cost of binary size). The time is now down to 131.34us. In addition, modifying the input DMA size so instead of DMAing the whole particle data array over we only transfer what is needed takes another 10us off that to 122.688us.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_5.png' | relative_url }}" alt="Untitled"/>
+</p><p>
+Now we are firmly in the realms of raw SPU performance tuning, so I will stop now. Using various other methods, like modifying offload runtime options so that the PPU does not yield/sleep on a call to offloadThreadJoin, can bring the execution time down to 115us - and thats even before adding ppu fibers, which should lower deployment costs. Another thing to note, is that by applying the same templated Array classes, and inlining more, the serial version on 1 SPU achieves 252us, making it 2.5 times faster than PPU. The liboffload::data templates are being updated regularly, and aim to be compile regardless of __offload context, and even compile in GCC for efficient standard memory accesses on other platforms.
+</p><p>
+Below, a graph covering all kinds of offloading to SPU method covered in the SCE FunctionOffloadToSPU sample, and the Codeplay Offload timings for reference. Note that the offload_1spu_local version achieves the same as all other SPU offloaded examples, yet with only a single SPU instead of four. Of course the other samples could probably be optimized further - and they waste time on PPU preparing many job descriptors - but Codeplay &lt;offload&gt; allows for a faster, more reliable offloading process; and does not restrict experienced SPU programmers from exploiting performance opportunities when they arise.
+</p><p>
+<img src="{{ '/public/uploaded/public/tut_2_a_6.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+

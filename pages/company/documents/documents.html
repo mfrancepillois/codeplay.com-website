@@ -1,0 +1,81 @@
+---
+layout: page
+nav_style: alt
+title: Old Technology Documents
+permalink: /company/documents/
+stylesheets:
+  - /assets/css/pages/company/documents/documents.css
+redirect_from:
+  - /articles/
+  - /articles/categories/
+---
+
+<!-- Section: Documents -->
+<section id="documents" class="reduce-top-header">
+    <div class="wrapper">
+        <div class="side-bar">
+            <header>
+                <h1>Technology Document Archive</h1>
+            </header>
+
+            <div class="recruitment-notice">
+                <h1>Old Content Alert</h1>
+                <p>Please note that this is a old document archive and the will most likely be out dated or superseded
+                    by various other products and is purely here for historical purposes.</p>
+            </div>
+
+            <div class="columns two">
+                <div>
+                    <h2>Sieve Compiler</h2>
+                    <ol>
+                        {%- assign documents = site.old_documents | where: "category", "sieve" -%}
+                        {%- for document in documents -%}
+                        <li>
+                            <a href="{{document.url}}">
+                                <h3>{{document.title}}</h3>
+                            </a>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>General</h2>
+                    <ol>
+                        {%- assign documents = site.old_documents | where: "category", "general" -%}
+                        {%- for document in documents -%}
+                        <li>
+                            <a href="{{document.url}}">
+                                <h3>{{document.title}}</h3>
+                            </a>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+                </div>
+                <div>
+                    <h2>Offload Compiler</h2>
+                    <ol>
+                        {%- assign documents = site.old_documents | where: "category", "offload" -%}
+                        {%- for document in documents -%}
+                        <li>
+                            <a href="{{document.url}}">
+                                <h3>{{document.title}}</h3>
+                            </a>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+
+                    <h2>VectorC</h2>
+                    <ol>
+                        {%- assign documents = site.old_documents | where: "category", "vectorc" -%}
+                        {%- for document in documents -%}
+                        <li>
+                            <a href="{{document.url}}">
+                                <h3>{{document.title}}</h3>
+                            </a>
+                        </li>
+                        {%- endfor -%}
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

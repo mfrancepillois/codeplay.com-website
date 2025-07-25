@@ -1,0 +1,55 @@
+---
+id: 75
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "class ReadWriteArray<>"
+redirect_from:
+  - /kb/75
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p><p>
+The ReadWriteArray class template is instantiated within Offload contexts. It will DMA the data into local store on construction and also DMAs it back to main memory on destruction.
+</p>
+
+<p>
+<strong>Usage:</strong>
+</p>
+<pre><code>#include &lt;liboffload&gt;
+#define SIZE 128
+
+class ParamsBlock
+{
+	int param1, param2, param3, param4;
+};
+
+ParamsBlock gParams[SIZE] __ALIGN16;
+
+int DoSomeWork()
+{
+	int ret = 0;
+	liboffload::data::ReadWriteArray&lt;ParamsBlock, SIZE&gt; localParams(&amp;gParams[0]);
+	for(int i = 0; i &lt; SIZE; i++)
+	{
+		ret += localParams[i].param1;
+	}
+
+	for(int i = 0; i &lt; SIZE; i++)
+	{
+		localParams[i].param2 = ret;
+	}
+	return ret;
+}
+</code></pre>
+<p>
+<strong>Limitations:</strong>
+</p><p>
+The __outer PPU pointer passed to the constructor must be aligned to 16 bytes, or naturally aligned if size is &lt; 16.Reference types are not supported.
+</p><p>
+The size of the local array must be a compile-time constant.
+</p><p>
+<strong/>
+</p>
+
+

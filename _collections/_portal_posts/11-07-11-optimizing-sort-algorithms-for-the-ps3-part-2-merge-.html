@@ -1,0 +1,295 @@
+---
+id: 10
+url: optimizing-sort-algorithms-for-the-ps3-part-2-merge
+user_id: 391
+date: 2011-07-11T19:03:24.7200Z
+category: news
+title: "Optimizing Sort Algorithms for the PS3 Part 2 (Merge)"
+showOnFrontPage: 0
+views: 347
+tags:
+redirect_from:
+  - /portal/optimizing-sort-algorithms-for-the-ps3-part-2-merge
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Sorting is a simple but important concept for implementing games. For example, sorting transparent objects before rendering or sorting objects by state attribute (e.g. texture) to improve batching. Because of the way most algorithms work (comparing and swapping pairs of items) sorting often takes precious time. With multi-core architectures like the PS3 it makes sense to parallelize this operation to maximize the use of these cores.
+</p>
+<p>
+In the <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort' | relative_url }}">first part</a> we have implemented a simple quicksort and compared its performance to the STL sort. In this part we will implement and optimize merging two sorted arrays.
+</p>
+<p>
+Quick Links ==
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort' | relative_url }}">Part 1 (Quicksort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-2-merge' | relative_url }}">Part 2 (Merge)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort' | relative_url }}">Part 3 (Merge Sort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-4-offloading-on-1-spu' | relative_url }}">Part 4 (Offloading on 1 SPU)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-5-parallel-sort-on-2-spus' | relative_url }}">Part 5 (Parallel Sort on 2 SPUs)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-6-final-optimizations' | relative_url }}">Part 6 (Final Optimizations)</a>
+</p>
+<p>
+The entire series is also available as a <a href="{{ '/public/uploaded/filehost/Optimizing_Sort_Algorithms_for_the_PS3.pdf' | relative_url }}">single PDF document</a>.
+</p>
+<p>
+Merge ==
+While not a sorting algorithm in itself, this algorithm is the basis for merge sort and parallel sorts that we will see later. Given two sorted arrays left and right of size N and M, the merge function returns a sorted array of length (N + M) that contains all items from both arrays.
+</p>
+<p>
+It works by comparing the first item from left and right. The smallest item is removed from either array and then copied to the destination array. The code for a straightforward implementation of this algorithm can be found below.
+</p>
+<pre>template&lt;typename T&gt;
+void merge(T *dst, const T *left, size_t leftStart, size_t leftEnd, const T
+     *right, size_t rightStart, size_t rightEnd)
+{
+    size_t lPos = leftStart, rPos = rightStart;
+    while((lPos &lt;= leftEnd) &amp;&amp; (rPos &lt;= rightEnd))
+    {
+        // compare the first item from each array and pop the lowest
+        if(left[lPos] &lt;= right[rPos])
+            *dst++ = left[lPos++];
+        else
+            *dst++ = right[rPos++];
+    }
+
+    // copy all remaining (not merged yet) items from the left array
+    while(lPos &lt;= leftEnd)
+        *dst++ = left[lPos++];
+    // copy all remaining (not merged yet) items from the right array
+    while(rPos &lt;= rightEnd)
+        *dst++ = right[rPos++];
+    // only one loop above ever runs
+}
+</pre>
+<p>Some optimizations (such as using memcpy to copy the remaining items or to copy all items in case either array is empty) have been tried but they did not significantly change the performance on sorted arrays. Thus they were left out to keep the code as simple as possible.
+</p>
+<p>
+Vectorizing ==
+Our implementation so far processes items one at a time and has a lot of branching. The latter can have a big impact on performance with the PPU and even more so with the SPU. Merge is a serious offender is this respect: there is a branch for every processed item. Worse, since we are sorting randomized arrays, there is a roughly 50% chance for either branch to be taken which seriously hinders branch prediction.
+</p>
+<p>
+Both PPU and SPU support SIMD instructions which can process 4 32-bit floats or integers in one instruction. SIMD instructions such as min/max, compare and permute can be used to remove branches from a piece of code. For example, the following function (slightly adapted from [1]) takes two vectors and merges them without branching:
+</p>
+<pre>// T is either vec_float4 (4 float vector) or vec_int4 (4 int vector)
+template&lt;typename T&gt;
+inline void mergeVec4(T &amp;a, T &amp;b)
+{
+    T A = vec_min(a,b);
+    T B = vec_max(a,b);
+    B = vec_perm(A,B,PERM(VC,VD,VA,VB));
+    T min2 = vec_min(A,B);
+    T max2 = vec_max(A,B);
+    A = vec_perm(min2,max2,PERM(VX,VY,VW,VD));
+    B = vec_perm(min2,max2,PERM(VB,VZ,VC,VA));
+    T min3 = vec_min(A,B);
+    T max3 = vec_max(A,B);
+    a = vec_perm(min3,max3,PERM(VX,VY,VB,VZ));
+    b = vec_perm(min3,max3,PERM(VC,VW,VD,VA));
+}
+</pre>
+<p>To get more performance we clearly need to vectorize merge. But the problem is, our current implementation isn't in a suitable form for that. With mergeVec4 we can merge the first four items of each array, but we have to do something with the other four before fetching the next four. Maybe the items are interleaved: let's say that the other four items are called a, b, c,d and that the next two items in the left arrays are e and f. What happens if e &lt; a &lt; f &lt; b &lt; all items &lt; d?
+</p>
+<p>
+Clearly we need another approach which allows the largest items to &ldquo;bubble up&rdquo; the final array without branching, that is, without special cases. Here is one such approach:
+</p>
+<pre>template&lt;typename T&gt;
+void merge2(T *dst, const T *left, size_t leftStart, size_t leftEnd,
+    const T *right, size_t rightStart, size_t rightEnd)
+{
+    size_t lPos = leftStart, rPos = rightStart;
+    // pop the first item from both arrays
+    T vMin = left[lPos++];
+    T vMax = right[rPos++];
+    while(true)
+    {
+        // order them and output the lowest
+        mergeItem(vMin, vMax);
+        *dst++ = vMin;
+        // is either array emptied yet?
+        if((lPos &gt; leftEnd) || (rPos &gt; rightEnd))
+            break;
+        // pop the next lowest item
+        else if(left[lPos] &lt;= right[rPos])
+            vMin = left[lPos++];
+        else
+            vMin = right[rPos++];
+    }
+    // merge all remaining items from the left array with vMax
+    while(lPos &lt;= leftEnd)
+    {
+        vMin = left[lPos++];
+        mergeItem(vMin, vMax);
+        *dst++ = vMin;
+    }
+    //  merge all remaining items from the right array with vMax
+    while(rPos &lt;= rightEnd)
+    {
+        vMin = right[rPos++];
+        mergeItem(vMin, vMax);
+        *dst++ = vMin;
+    }
+    // finally output vMax, the largest item in both arrays
+    *dst = vMax;
+}
+
+template&lt;typename T&gt;
+void mergeItem(T &amp;a, T &amp;b)
+{
+    if(a &gt; b)
+        swap(a, b);
+}
+</pre>
+<p>With this approach, we can just replace mergeItem by mergeVec4 and T by either vec_float4 or vec_int4. This way we can process four items at a time. There are however quite a few corner cases to address, but they all come up outside of the inner loop:
+</p>
+<pre>template&lt;&gt;
+void merge2(float *dst, const float *left, size_t leftStart, size_t leftEnd,
+		const float *right, size_t rightStart, size_t rightEnd)
+{
+    // we need at least four items in both arrays
+    size_t leftCount = (leftEnd - leftStart + 1);
+    size_t rightCount = (rightEnd - rightStart + 1);
+    if((leftCount &lt; 4) || (rightCount &lt; 4))
+    {
+        merge(dst, left, leftStart, leftEnd, right, rightStart, rightEnd);
+        return;
+    }
+
+    // count the trailing items that make the array not divisible by 4
+    leftCount = leftCount % 4;
+    rightCount = rightCount % 4;
+
+    // first merge 4 * N items from left and right
+    vec_float4 *vLeft = (vec_float4 *)(left + leftStart);
+    vec_float4 *vLeftEnd = (vec_float4 *)(left + leftEnd - leftCount);
+    vec_float4 *vRight = (vec_float4 *)(right + rightStart);
+    vec_float4 *vRightEnd = (vec_float4 *)(right + rightEnd - rightCount );
+    vec_float4 *vDst = (vec_float4 *)dst;
+    // pop the first 4 items from each array
+    vec_float4 vMin = *vLeft++;
+    vec_float4 vMax = *vRight++;
+    while(true)
+    {
+        // reorder vMin and vMax: both will be sorted and vMin[3] &lt;= vMax[0]
+        mergeVec4(vMin, vMax);
+        // output the smaller 4 items to the destination array
+        *vDst++ = vMin;
+        // stop if either array has reached the end of its 4 * N items
+        if((vLeft &gt; vLeftEnd) || (vRight &gt; vRightEnd))
+            break;
+        // fetch the next 4 items from the array with the lowest first item
+        else if(*(float *)vLeft &lt;= *(float *)vRight)
+            vMin = *vLeft++;
+        else
+            vMin = *vRight++;
+    }
+
+    // one of the array has non multiple of 4 length
+    if((leftCount &gt; 0) || (rightCount &gt; 0))
+    {
+        // need to merge vMax and what remains of left and right
+        // instead of three-way merge, we merge vMax with the smallest array
+        size_t leftPos = (float *)vLeft - left;
+        size_t rightPos = (float *)vRight &ndash; right;
+        // one array will have at most 3 items + 4 from vMax
+        float temp[7];
+        if(vLeft &gt; vLeftEnd)
+        {
+            mergePlain(temp, left, leftPos, leftEnd, (float *)&amp;vMax, 0, 3);
+            mergePlain((float *)vDst,
+                (float *)temp, 0, leftEnd - leftPos + 4,
+                right, rightPos, rightEnd);
+        }
+        else
+        {
+            mergePlain(temp, (float *)&amp;vMax, 0, 3, right, rightPos, rightEnd);
+            mergePlain((float *)vDst,
+                left, leftPos, leftEnd,
+                (float *)temp, 0, rightEnd - rightPos + 4);
+        }
+    }
+    else
+    {
+        // copy all remaining (not merged yet) items from the left array
+        while(vLeft &lt; vLeftEnd)
+        {
+            vMin = *vLeft++;
+            mergeVec4(vMin, vMax);
+            *vDst++ = vMin;
+        }
+        // copy all remaining (not merged yet) items from the right array
+        while(vRight &lt; vRightEnd)
+        {
+            vMin = *vRight++;
+            mergeVec4(vMin, vMax);
+            *vDst++ = vMin;
+        }
+        // output vMax (the four largest items from both arrays)
+        *vDst++ = vMax;
+    }
+}
+</pre>
+<p>The downside is that now the implementation is much more complicated as it went from 22 lines of code to 86 lines.
+</p>
+<p>
+When it comes to mergeVec4, some could be concerned with the use of references for function parameters, as GCC has a tendency to generate code with many loads and stores instead of using registers. However, Looking at the PPU assembly code reveals that the function is properly inlined and uses vector registers.
+</p>
+<p>
+Results ==
+As we can see in the table below, with this vectorized version of merge we get a 1.45x speed-up for merging two 64K float arrays and 0.84x slowdown for merging integer arrays. This approach doesn't give us the kind of performance improvements that we expected, but keep in mind that this is on the PPU. The goal of this blog post series is to do as much of the sorting and merging as possible on the SPUs. As we will see later, this vectorized implementation will bring significant speed-ups on SPUs.
+</p>
+
+
+<p>
+2x64K floats
+</p>
+<p>
+2x64K integers
+</p>
+<p>
+std::merge (PPU)
+</p>
+<p>
+2.53 ms
+</p>
+<p>
+1.17 ms
+</p>
+<p>
+Plain merge (PPU)
+</p>
+<p>
+2.69 ms
+</p>
+<p>
+1.30 ms
+</p>
+<p>
+Vectorized merge (PPU)
+</p>
+<p>
+1.85 ms
+</p>
+<p>
+1.55 ms
+</p>
+<p>
+In the <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort' | relative_url }}">next part of the series</a> we will have a look at the merge sort algorithm which will build on the vectorized merge implementation we have presented in this part.
+</p>
+<p>
+References ==
+[1] http://seven-degrees-of-freedom.blogspot.com/2010/07/question-of-sorts.html
+</p>
+
+
+
+

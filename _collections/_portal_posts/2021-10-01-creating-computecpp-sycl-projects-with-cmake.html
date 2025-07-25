@@ -1,0 +1,119 @@
+---
+title: "Creating ComputeCpp™ (SYCL™) Projects with CMake"
+date: 2021-10-05T08:01:00.760000+00:00
+category: blogs
+layout: portal/portal-article-view
+user_id: 2821
+thumbnail: /assets/images/portal/article-images/cmake-projects.jpg
+---
+
+<h2>Introduction</h2>
+<p>While interning at Codeplay®, I was tasked with writing two programs that demonstrated using SYCL in practical projects.
+    At that point, I had not been exposed to build automation tools such as CMake and struggled to create my own SYCL projects without it.
+    CMake is a powerful tool for developers to generate build files for their projects quickly and across multiple platforms.
+    This blog aims to provide a beginner’s step-by-step guide on setting up a basic SYCL project using CMake.
+    I will be using Windows 10 for this blog, however CMake should work on the most common operating systems and generate project files for whichever IDE the user chooses to use.
+    At the end of this blog, the reader should be able to use CMake to automate the building of basic SYCL applications.
+    SYCL knowledge is only required in order to test the build system (resources to help you write a simple SYCL program are included at the bottom of this blog). </p>
+<h2>Step 1. Setting up</h2>
+<p>In order to follow along with this blog, the reader must download the following prerequisites:</p>
+<ul>
+    <li>A C++ compiler such as GCC, Microsoft® Visual C++®, or Clang.</li>
+    <li><a href="https://cmake.org/download/"
+              target="_blank"
+              rel="noreferrer"><strong>CMake</strong></a> <strong>(3.4.3 or newer)</strong>
+        (Make sure to add it to <code>PATH</code> when installing for easy use in the terminal).
+    </li>
+    <li><a href="https://developer.codeplay.com/products/computecpp/ce/download"
+              target="_blank"
+              rel="noreferrer"><strong>ComputeCpp</strong></a> <strong>(any version)</strong> is a SYCL implementation which will be used to compile SYCL source files. (A simple registration is required to download the latest Community Edition installer for free. On Windows, extract and run the installer which will install ComputeCpp).
+    </li>
+    <li><a href="https://software.intel.com/content/www/us/en/develop/tools/opencl-sdk/choose-download.html"
+              target="_blank"
+              rel="noreferrer"><strong>OpenCL</strong></a> <strong>(latest version)</strong>
+        (Get Intel® SDK for OpenCL™ Applications for the desired operating system. This will also require quickly creating an account to access the download link. Once the installer has finished, a computer restart may be required for OpenCL to be detected properly. This step may be skipped by users with CUDA installed as it includes OpenCL).
+    </li>
+</ul>
+<h2>Step 2. Creating a basic CMake project</h2>
+<p>Navigate into the root directory containing the C++ project and create a file called <code>CMakeLists.txt</code>. This file will be recognized by CMake as the entry point to the CMake project and will contain important information about how the project needs to be linked. Once this file is created, open it in a text editor and we will begin writing some CMake code.</p>
+<p>First the user must declare the minimum version of CMake required for the project, in this particular case we will use 3.4.3 which is the minimum version that ComputeCpp supports.</p>
+<pre><code class="lang-cmake"><span class="hljs-function"><span class="hljs-title">cmake_minimum_required</span><span class="hljs-params">(VERSION <span class="hljs-number">3.4</span>.<span class="hljs-number">3</span>)</span></span>
+</code></pre>
+<p>Next the user must give the CMake project a name, such as</p>
+<pre><code class="lang-cmake"><span class="hljs-function"><span class="hljs-title">project</span><span class="hljs-params">(test_application)</span></span>
+</code></pre>
+<p>Every C++ project consists of source (<code>.cpp</code>) files used for generating object files that allow the compiler to create the executable / library file for an application. These source files need to be linked to the executable which is often done by creating a CMake variable which contains a list of paths to all the source files in the project relative to the <code>CMakeLists.txt</code> file&#39;s root directory. For example:</p>
+<pre><code class="lang-cmake">set(<span class="hljs-name">SRC_FILES</span>
+    <span class="hljs-string">"src/main.cpp"</span>
+    <span class="hljs-string">"src/program.cpp"</span>)
+</code></pre>
+<p>Where <code>SRC_FILES</code> will be the name of a variable which will encompass the <code>main.cpp</code> and <code>program.cpp</code> source files.</p>
+<p>The same can be done for SYCL source files (<code>.cpp</code> files containing SYCL code) and regular C++ header files.</p>
+<pre><code class="lang-cmake">set(<span class="hljs-name">SYCL_FILES</span>
+    <span class="hljs-string">"src/main.cpp"</span>)
+
+set(<span class="hljs-name">HEADER_FILES</span>
+    <span class="hljs-string">"src/program.h"</span>)
+</code></pre>
+<p>While not required, creating variables to represent groups of files makes the CMake file easier to read and may avoid repetition in the future.</p>
+<p>After this, we must inform CMake where it can find what is called a <code>Find-module</code> package file for ComputeCpp. In essence, this is a CMake file which handles configuring variables and creating functions to simplify interaction with an external library. Usually, these files are placed in a folder called <code>cmake</code> in the root of the project (where the <code>CMakeLists.txt</code> is located). ComputeCpp provides such a file <a href="https://raw.githubusercontent.com/codeplaysoftware/computecpp-sdk/master/cmake/Modules/FindComputeCpp.cmake" target="_blank" rel="noreferrer"><strong>here</strong></a> to simplify the build process (right click anywhere on the page and save the file as a <code>.cmake</code> file into a known directory). The following line will let CMake know the directory of this file:</p>
+<pre><code class="lang-cmake">list(<span class="hljs-name">APPEND</span> CMAKE_MODULE_PATH
+    <span class="hljs-string">"${CMAKE_SOURCE_DIR}/cmake/"</span>)
+</code></pre>
+<p>Where <code>CMAKE_SOURCE_DIR</code> is an intrinsic variable which points to the root directory of the CMake project (the location of the <code>CMakeLists.txt</code> file). <code>CMAKE_MODULE_PATH</code> is a variable which contains a list of paths that CMake will check for <code>FindNameOfPackage.cmake</code> files.</p>
+<p>In order to use ComputeCpp, the user must provide CMake with a variable called <code>ComputeCpp_DIR</code> corresponding to the location of the ComputeCpp installation (usually something like <code>C:/Program Files/Codeplay/ComputeCpp</code> on Windows). This variable is often provided to CMake as an argument in the terminal with the <code>-D</code> flag</p>
+<pre><code class="lang-cmake"><span class="hljs-function"><span class="hljs-title">cmake</span></span> .. -DComputeCpp_DIR=<span class="hljs-string">"C:/Program Files/Codeplay/ComputeCpp"</span>
+</code></pre>
+<p>However, this can get tedious to write out each time. In order to avoid having to retype this, the user can specify</p>
+<pre><code class="lang-cmake"><span class="hljs-built_in">set</span>(ComputeCpp_DIR <span class="hljs-keyword">CACHE</span> <span class="hljs-built_in">STRING</span> <span class="hljs-string">"NOT-FOUND"</span>)
+</code></pre>
+<p>Within their CMake project to cache the variable between running CMake. If the path changes simply set the <code>-DComputeCpp_DIR</code> flag again.</p>
+<p>Optionally, it is useful to add a warning for the user if the variable is not defined, something such as</p>
+<pre><code class="lang-cmake">if (<span class="hljs-name">NOT</span> ComputeCpp_DIR)
+    message(<span class="hljs-name">FATAL_ERROR</span> <span class="hljs-string">"SYCL implementation root not provided, please specify "</span>
+    <span class="hljs-string">"the path to the root of the chosen SYCL implementation using "</span>
+    <span class="hljs-string">"ComputeCpp_DIR=&lt;path/to/install/root&gt;."</span>)
+endif()
+</code></pre>
+<p>Now the user will be able to add</p>
+<pre><code class="lang-cmake"><span class="hljs-function"><span class="hljs-title">find_package</span><span class="hljs-params">(ComputeCpp REQUIRED)</span></span>
+</code></pre>
+<p>And CMake will automatically run the <code>FindComputeCpp.cmake</code> file to create some functions and variables for easily linking ComputeCpp to the project.</p>
+<p>The user can generate a C++ executable for their source files using</p>
+<pre><code class="lang-cmake"><span class="hljs-keyword">add_executable</span>(<span class="hljs-variable">${PROJECT_NAME}</span> <span class="hljs-variable">${SRC_FILES}</span> <span class="hljs-variable">${HEADER_FILES}</span>)
+</code></pre>
+<p>where <code>PROJECT_NAME</code> is simply a CMake intrinsic variable containing the project name defined at the very beginning.</p>
+<p>Now that the executable (also known as a target in CMake) has been created, the user must specify the include directories for the target with</p>
+<pre><code class="lang-cmake">target_include_directories(<span class="hljs-variable">${PROJECT_NAME}</span> PRIVATE 
+                          <span class="hljs-string">"<span class="hljs-variable">${ComputeCpp_INCLUDE_DIRS}</span>"</span>
+                          <span class="hljs-string">"<span class="hljs-variable">${CMAKE_SOURCE_DIR}</span>/src"</span>)
+</code></pre>
+<p>This informs CMake that the directories defined in the <code>ComputeCpp_INCLUDE_DIRS</code> variable, which was generated by <code>FindComputeCpp.cmake</code>, should be included in the project, alongside any files in the source directory. </p>
+<p>Lastly, we must inform the executable which of the source files will contain SYCL code as the SYCL implementation will generate .sycl files for each of them. This can be done using the <code>add_sycl_to_target</code> function which was defined by the <code>FindComputeCpp.cmake</code> file. If, for example, main.cpp is the only file with SYCL code in it, the following CMake code can be added after creating the executable</p>
+<pre><code class="lang-cmake">add_sycl_to_target(<span class="hljs-name">TARGET</span> ${PROJECT_NAME}
+                   SOURCES <span class="hljs-string">"src/main.cpp"</span>)
+</code></pre>
+<p>Which will link SYCL to the desired target with the desired source files. </p>
+<p>Once complete, the <code>CMakeLists.txt</code> file should look something like <a href="https://github.com/codeplaysoftware/computecpp-cmake-template/blob/main/CMakeLists.txt" target="_blank" rel="noreferrer"><strong>this</strong></a>.</p>
+<h2>Step 3. Generating project files</h2>
+<p>It is highly advisable that before attempting to generate build files for their C++ compiler, the user first creates a build directory in the root of their project. This makes it easier to clean the project and keep the built binaries separate. First open the terminal in (or navigate into) the project’s root directory and call</p>
+<pre><code class="lang-sh"><span class="hljs-built_in">mkdir</span> build
+</code></pre>
+<p>which will create a directory called build. Afterward, the user should navigate into this directory using</p>
+<pre><code class="lang-sh"><span class="hljs-built_in">cd</span> build
+</code></pre>
+<p>and finally call CMake to generate the build files in the build directory using (replacing the path with the location of their ComputeCpp installation)</p>
+<pre><code class="lang-sh"><span class="hljs-function"><span class="hljs-title">cmake</span></span> .. -DComputeCpp_DIR=<span class="hljs-string">"C:/Program Files/Codeplay/ComputeCpp"</span>
+</code></pre>
+<p>The two dots simply tell CMake that the location of the <code>CMakeLists.txt</code> file is in the outer directory and <code>-D</code> is a CMake flag for defining variables in the terminal. This should produce some terminal messages and generate build / project files for the appropriate user installed compiler automatically in the build directory. Note that if using an NVIDIA GPU, PTX instructions are required, and the user should add <code>-DCOMPUTECPP_BITCODE=ptx64</code> to the end of the above CMake command. </p>
+<p><a href="https://github.com/codeplaysoftware/computecpp-cmake-template" target="_blank" rel="noreferrer"><strong>Here</strong></a> is a link to a repository containing a basic SYCL project template following along this blog. </p>
+<p>Please see resources such as</p>
+<ul>
+    <li><a href="https://github.com/codeplaysoftware/syclacademy"
+           target="_blank" rel="noreferrer"><strong>SYCL Academy</strong></a></li>
+    <li><a href="https://developer.codeplay.com/products/computecpp/ce/guides/sycl-guide"
+           target="_blank" rel="noreferrer"><strong>SYCL Guide</strong></a></li>
+    <li><a href="https://github.com/codeplaysoftware/computecpp-sdk/"
+           target="_blank" rel="noreferrer"><strong>ComputeCpp-SDK</strong></a></li>
+</ul>
+<p>for guides on how to write basic SYCL code or applications.</p>

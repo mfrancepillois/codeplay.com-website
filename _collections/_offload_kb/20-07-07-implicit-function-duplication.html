@@ -1,0 +1,64 @@
+---
+id: 123
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Implicit Function Duplication"
+redirect_from:
+  - /kb/123
+layout: products/offload/kb/view
+---
+<p>The essential and integral feature of Codeplay Offload to offload code to other processor cores (SPUs) is implicit function duplication. Whereas code outside an offload block is compiled for the PPU, the code inside offload blocks is compiled separately for the SPU. This means that calls inside offload blocks to normal PPU functions are compiled by automatically duplicating the called functions (including the entire call graph) to be offload functions for SPU. In the source code below, for example, the offload block calls a function with different combinations of outer and local references as parameters and the compiler will automatically generate a duplicate for each used combination.
+</p>
+<pre><code>int func(int &amp; a, int &amp; b)
+{
+	return a * b;
+}
+
+int main()
+{
+	int a = 2;
+	int result = func(a, a); // PPU func(int&amp;,int&amp;);
+	__blockingoffload()
+	{
+		int b = 3;
+		b = func(a, b); // duplicated func(__outer int &amp;, int &amp;)
+		b = func(b, a); // duplicated func(int &amp; ,__outer int &amp;)
+		result += func(b, b); // duplicated func(int &amp;, int &amp;)
+	};
+}
+</code></pre><p>Function duplication is performed by recompiling the source of the function (after preprocessing has been performed) using the new pointer and reference types and adding the offload attribute to the function definition. For example, when calling;
+</p>
+<pre><code>b = func(a, b); // duplicated func(__outer int &amp;, int &amp;)
+</code></pre><p>the compiler internally generates and calls the following function;
+</p>
+<pre><code>__offload int func(__outer int &amp; a, int &amp; b)
+{
+	return a * b;
+}
+</code></pre><h2>Duplicating functions that return pointer types</h2><p>If a function to be duplicated returns a pointer/reference type the compiler will attempt to determine the outer property of the return pointer type if that function has already been defined. If that function has not been defined yet the compiler will assume a local pointer type for the return value.
+</p><p>
+Function duplication has an impact on overload resolution.
+</p>
+<pre><code>int * func(void *);
+__offload float * func(int *);
+
+int * optr;
+int main()
+{
+	int * ivar = func(optr); // calls int * func(__outer void *)
+	__blockingoffload()
+	{
+		int * ptr;
+		void * vptr;
+		float * fl = func(ptr);  // calls offload float * func(int *)
+		int * ivar = func(optr); // calls duplicated int * func(__outer void *)
+		int * fl = func(vptr); // calls duplicated int * func(void *)
+	};
+}
+</code></pre><p>Without function duplication, only the second function would be viable for calls from inside a offload scope. With function duplication, the first (non-offload) function or more specifically its duplicates (because they would be compiled for SPU) become viable, too. The compiler then applies normal overload resolution (extended  match outer pointers) to select the appropriate function.
+</p><p>
+Another blog on call-graph duplication can be found <a href="{{ '/articles/193-Automatic+separate+compilation+-+aka+Call-Graph+Duplication' | relative_url }}">here</a>
+</p>
+
+

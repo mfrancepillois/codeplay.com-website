@@ -1,0 +1,412 @@
+---
+id: 351
+url: 08-27-19-optimizing-your-sycl-code-using-profiling
+user_id: 852
+date: 2019-08-27T18:30:32.7200Z
+category: blogs
+title: "Optimizing Your SYCL Code Using Profiling"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/08-27-19-optimizing-your-sycl-code-using-profiling
+thumbnail: /assets/images/portal/article-images/1fbf8aaa79307a1a3a2a722f804b075d.png
+layout: portal/portal-article-view
+---
+
+<p>Profiling is an important activity when optimizing any application, it can help to pinpoint where the most time is being spent and identify where improvements can be made that will have the biggest impact on performance. This article will provide guidance on how to profile SYCL applications using both ComputeCpp Community Edition and ComputeCpp Professsional Edition.</p>
+
+<p><a href="https://developer.codeplay.com/products/computecpp/pe/">ComputeCpp Professional Edition</a> includes built-in profiling support that automates the whole process by using hardware counters, and provides readable profiling data for you as a developer. The ComputeCpp run-time takes the responsibility of injecting SYCL events in the source code for each SYCL related function call and writes the profiling data gathered from the hardware counters in a <code>JSON</code> format which can be viewed in a nice web GUI inside a chromium based browser's built-in tracing tool. This includes the ability to view the state of each buffer object as well as the different stages of SYCL queue from initialization to the end of kernel execution.</p>
+
+<p>By the end of this article you will be equipped with the skills to optimize your own SYCL code and increase the performance of your applications.</p>
+<h2>ComputeCpp Community Edition Profiling: Manual profiling using SYCL events</h2>
+
+<p>The performance of SYCL code can be profiled via event objects that can synchronize API calls on the device and provide time points for each of them on queue submission. This is possible because the SYCL events contain OpenCL event objects that can be used to obtain accurate profiling information to measure the execution time of a command using the hardware counter for the device.</p>
+
+<p>In SYCL we can return event objects from the submit method of a queue which makes it easy to get all information from submission to end of execution. However, in order to get the profiling data we need to enable profiling with events when initializing the queue by adding <code>sycl::property::queue::enable_profiling()</code> as a <code>property_list</code> argument. This will enable profiling for memory and kernel objects.</p>
+
+<p>The code below demonstrates how to manually profile a simple SYCL program. We are using the <a href="https://github.com/codeplaysoftware/computecpp-sdk/blob/master/samples/simple-vector-add.cpp">simple-vector-addition.cpp</a> sample from the <a href="https://github.com/codeplaysoftware/computecpp-sdk"></a><a href="https://github.com/codeplaysoftware/computecpp-sdk">ComputeCpp samples</a>.</p>
+
+<pre><code>void simple_vadd(const std::array&lt;T, N&gt;&amp; VA,
+                 const std::array&lt;T, N&gt;&amp; VB,
+                 std::array&lt;T, N&gt;&amp; VC) {
+  // Choose device to run the kernels on
+  cl::sycl::default_selector deviceSelector{};
+
+  // Initialize property list with profiling information
+  cl::sycl::property_list propList{cl::sycl::property::queue::enable_profiling()};
+
+  // Build the command queue (constructed to handle event profling)
+  cl::sycl::queue deviceQueue(deviceSelector, propList);
+
+  // set up profiling data containers
+  using wall_clock_t = std::chrono::high_resolution_clock;
+  using time_point_t = std::chrono::time_point;
+  std::vector eventList(profiling_iters);
+  std::vector startTimeList(profiling_iters);
+  // Submit a kernel to the queue, returns a SYCL event
+  for (size_t i = 0; i &lt; profiling_iters; ++i) {
+    startTimeList.at(i) = wall_clock_t::now();
+    eventList.at(i) = deviceQueue.submit([&amp;](cl::sycl::handler&amp; cgh) {
+      auto accessorA = bufferA.template get_access(cgh);
+      auto accessorB = bufferB.template get_access(cgh);
+      auto accessorC = bufferC.template get_access(cgh);
+
+      auto kern = [=](sycl::handler&amp; cgh) {
+        accessorC[wiID] = accessorA[wiID] + accessorB[wiID];
+      };
+      cgh.parallel_for&gt;(numOfItems, kern);
+    });
+  }
+
+  /*use the event data to compute submission and execution times*/
+}</code></pre>
+
+<p>When using events to profile the time taken for a command to execute on the device, we have to consider the following four states that are valid for that command.</p>
+<ul>
+  <li>
+    <code>QUEUED</code>
+  </li>
+  <li>
+    <code>SUBMITTED</code>
+  </li>
+  <li>
+    <code>RUNNING</code>
+  </li>
+  <li>
+    <code>COMPLETE</code>
+  </li>
+</ul>
+
+<p>We can get a time point for each state to calculate the submission and kernel execution time, as well as the overhead and total elapsed time <code>(real / wall_clock_time)</code>.<br>Creating a generic wrapper for the profiling features using events will require parsing and exporting the information gathered from the underlying <code>cl_events</code> and some sort of graphical user interface front-end that interprets the data and displays it in a meaningful way to the end user for analyses.</p>
+
+<p>The wrapper class should be able to automatically handle the profiling results computation.</p>
+
+<p>For example:</p>
+
+<pre><code>[...] // after the command group submission scope
+
+sycl_profiler profiler(eventList, startList);
+cout &lt;&lt; &quot;Kernel exection:t&quot; &lt;&lt; profiler.get_kernel_execution_time() &lt;&lt; endl;</code></pre>
+
+<p>The complete implementation of such wrapper, referenced at /*<code>use the event data to compute submission and execution times*/</code>, is not going to be fully discussed here, but a simple example can be seen in the following GitHub <strong>
+    <a href="https://gist.github.com/GeorgeWeb/ff908516bfe57f107bc36822dbdfe145"></a><a href="https://gist.github.com/GeorgeWeb/ff908516bfe57f107bc36822dbdfe145">gist</a></strong>.</p>
+
+<p>
+  This is a very good example to get you started in building your SYCL profiling wrapper class or utility, however, ComputeCpp addresses the need for a more complete profiler that is both powerful and requires no code modifications through features in the Professional Edition that are explained below. It is also important to note that this profiling strategy only works when running on an OpenCL devices, whereas if running on the host device, the ComputeCpp implementation cannot provide us with any profiling information from the SYCL events (use standard host timer for that purpose instead).<br>
+
+</p>
+<h2>ComputeCpp Professional Edition: Automatic Profiling</h2>
+
+<p>ComputeCpp PE provides an automatic profiling feature that contains information about the run-time and the underlying OpenCL implementation. This means it will not only enable the profiling property in the queue and inject events for us, but also give us a detailed overview of the entire SYCL program configuration. This information is conveniently provided in a single <code>JSON</code> file that can be viewed in the Chromium tracer (<code>chrome://tracing</code>), allowing us to see a graphical representation of the profiling data.</p>
+<h3>Setup</h3>
+
+<p>The ComputeCpp PE profiler is configurable, meaning that you have to define a configuration file for the run-time to know it needs to provide profiling data. This also enables some flexibility as to what event information you can capture.</p>
+
+<div class="table-wrapper">
+    <table class="wrapped">
+        <tbody><tr>
+            <td style="width: 10%" align="center">
+                Option</td>
+            <td style="width: 10%" align="center">
+                Type</td>
+            <td style="width: 10%" align="center">
+                Default</td>
+            <td style="width: 70%">
+                Description
+            </td>
+        </tr>
+        <tr>
+            <td>profiling_collapse_transactions</td>
+            <td>boolean</td>
+            <td>false</td>
+            <td align="left">
+                <p>Enabling this will cause all states of a transaction to be collapsed  into a single entry. For long running applications this can be useful to  reduce the size of the JSON file</p></td>
+        </tr>
+        <tr>
+            <td>enable_profiling</td>
+            <td>boolean</td>
+            <td>false</td>
+            <td align="left">
+                <p>Enables or disables profiling. Not specific to the ComputeCpp JSON profiler; supported by all profiling backends</p></td>
+        </tr>
+        <tr>
+            <td>enable_kernel_profiling</td>
+            <td>boolean</td>
+            <td>true</td>
+            <td align="left">
+                <p>Enables or disables profiling kernels running on a device. It will prevent injection of the `cl::sycl::property::queue::enable_profiling` which could be useful when profiling some platforms</p></td>
+        </tr>
+        <tr>
+            <td>enable_buffer_profiling</td>
+            <td>boolean</td>
+            <td>true</td>
+            <td align="left">
+                <p>Disabling this will prevent the JSON profiler capturing  events on buffers. This can be useful when the application creates a  large number of buffers and does not reuse them. It simplifies the JSON and allows it to be loaded more quickly</p></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<p>
+  <span class="line" lang="markdown">In order to enable the <code>JSON</code> profiler, we need to set up the following environment variable - <code>COMPUTECPP_CONFIGURATION_FILE</code> and point this to the configuration file that was created. </span>
+  <span class="line" lang="markdown">Inside the configuration file we can define the profiler options described in the table above.</span>
+</p>
+
+<p>
+  <span class="line" lang="markdown">After the profiler behavior is set up, just run your application and the <code>JSON</code> file that contains the profiling data will be generated at the end of the program execution.<br>
+  </span>
+  <span class="line" lang="markdown">By default, when the application finishes, the run-time will write the <code>JSON</code> file in the current working directory. This is usually in the same directory as the binary of the application in the following format:</span>
+</p>
+
+<p>
+  <code>
+    <span class="line" lang="markdown">
+      <span class="sb">[executable_name]_[current_date].json</span>
+    </span>
+</code>
+</p>
+
+<p>You can also re-write the default output file via the <code>COMPUTECPP_PROFILING_OUTPUT</code> environment variable (the file doesn't need to exist but must have read-write permissions).</p>
+<h3>Profiling Information</h3>
+
+<p>Based on the selected option for profiling, the chrome tracing view will display information about the memory objects (buffers) and the queue activity.<br>
+  All times are measured in nanoseconds and converted to microseconds for the JSON, this is then shown in the Chrome interface in milliseconds, and Start Time is also provided alongside the Wall Time.</p>
+
+<p>Below is a table that shows the meaning of the different categories in the <em>Buffers</em> and <em>Queue</em> views.</p>
+
+<div class="table-wrapper">
+    <table class="wrapped">
+        <tbody><tr>
+            <td style="width: 20%" align="center">
+                Buffers View</td>
+            <td style="width: 80%" align="center">
+                Queue View</td>
+        </tr>
+        <tr>
+            <td>Count of the elements</td>
+            <td><b>CREATED:</b><br> Initialization of the kernel function object (includes setting the buffer arguments).</td>
+        </tr>
+        <tr>
+            <td>Size in bytes for the type of object stored in the buffer</td>
+            <td><b>RUNNING:</b><br> Transaction that indicates the kernel execution on the device. Memory transfer are included here as well under the Requisites section</td>
+        </tr>
+        <tr>
+            <td>Range of the buffer (1, 2, or 3 dimensions)</td>
+            <td><b>COMMAND:</b><br> Shows the type of SYCL command (e.g., "kernel enqueue" - Enqueues a command to execute a kernel on a device)</td>
+        </tr>
+        <tr>
+            <td>Size in bytes for the entire buffer</td>
+            <td><b>COMMAND:</b><br> Shows the type of SYCL command (e.g., "kernel enqueue" - Enqueues a command to execute a kernel on a device)</td>
+        </tr>
+        <tr>
+            <td></td><td><b>kernels:</b><br> Snapshot of the kernels that are executed by the command group handler</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<p>There are several more states represented by the Queue view that describe all of the states a transaction can go through in order to be resolved. <br>Here is a screenshot of the complete transactions state machine including brief overview of each state:</p>
+<p><img src="{{ '/assets/images/portal/article-images/1fbf8aaa79307a1a3a2a722f804b075d.png' | relative_url }}"></p>
+
+<p>
+
+
+
+</p>
+
+<p>Now, let's re-visit the vector addition sample again. In this experiment we will try to optimize it by using the full mode of the automated <code>JSON</code> profiler to see the performance impact of our changes.</p>
+
+<p>First we have to set up the profiler:</p>
+
+<pre><code># in the sdk root
+cd build &amp;&amp; mkdir config
+touch config/sycl_config.txt &amp;&amp; echo &quot;enable_profiling = true&quot; &gt;&gt; config/sycl_config.txt
+export COMPUTECPP_CONFIGURATION_FILE=config/sycl_config.txt</code></pre>
+
+
+<p class="auto-cursor-target">and set desired output files for the original and optimized versions of the program.</p>
+
+
+<pre><code># in the sdk root
+cd build &amp;&amp; mkdir profiling
+touch profiling/vadd_orig.json
+export COMPUTECPP_PROFILING_OUTPUT=profiling/vadd_orig.json</code></pre>
+
+<p>Now we only have to compile and run the SYCL vector addition program and the ComputeCpp run-time will generate the file with all the profiling data.</p>
+
+<p>Let's have a look at the visual output by starting with buffer information first:</p>
+<p><img src="{{ '/assets/images/portal/article-images/e60665de01b95a6f791c6607e3c37fb9.png' | relative_url }}"></p>
+
+
+<p>These are all buffer objects for the six vectors we use for the <code>vadd</code> operation - <code>3 int</code> and <code>3 float</code>, where <code>2</code> of each are input vectors and <code>1</code> is the output.<br>Clicking on the green circle for Buffer 1 allows us to inspect the object that includes information on the time it was created and the arguments that define it, which were explained in the table for Buffer View.<br>Here is the selection output:</p>
+
+<pre><code>args:   {Count: "8",
+         Element Size: "4",
+         Range: "(8)",
+         Size in Bytes: "32"}</code></pre>
+
+<p>
+  <span>It can be interpreted as follows:</span>
+</p>
+<ul>
+  <li>
+    <span>The buffer object holds an array of eight elements</span>
+  </li>
+  <li>
+    <span>Each element of the array is <code>4 bytes</code>
+    </span>
+  </li>
+  <li>
+    <span>
+      The buffer range is with 8 elements in the first dimension
+    </span>
+  </li>
+  <li>
+    <span>The total size of the buffer object is <code>32 bytes</code>
+    </span>
+    <span>
+      <br>
+    </span>
+  </li>
+</ul>
+
+<p>
+  <span>Additionally, if we were to use the two and three dimensional <em>buffer</em> counterparts, they will be represented almost identically with with the only difference being the range of the elements in the corresponding dimension(s).</span>
+</p>
+
+<p>
+  <strong>2 Dimensional buffer:</strong></p>
+
+<pre><code>args:   {Count: "8",
+         Element Size: "4",
+         Range: "(2, 4)",
+         Size in Bytes: "32"}</code></pre>
+<p class="auto-cursor-target">
+  <strong>3 Dimensional buffer:</strong></p>
+
+<pre><code>args:   {Count: "8",
+         Element Size: "4",
+         Range: "(2, 2, 2)",
+         Size in Bytes: "32"}</code></pre>
+
+<p>
+  <span>Next up is the "Queue" view where we can inspect the performance of the kernel-related commands.</span></p><img src="{{ '/assets/images/portal/article-images/859cfdbc8c6bd0ec7a5eece23361111f.png' | relative_url }}"><span><br></span><span>
+
+
+
+  </span>
+
+
+
+
+
+<p>We can also see the access mode and the address space for the buffer (device) data accessors. Clicking on the blue circle for Buffer 1 gives:</p>
+
+<pre><code>args:   {Mode: "Read",
+         Space: "Global"}</code></pre>
+
+<p class="auto-cursor-target">In order to see how long it takes to enqueue the kernel, we click on the only "COMMAND" in the Req. &amp; Cmds. category, which is shortened to <strong>C</strong> there. Y<em>ou can zoom in on the tracer window if you wish to focus on a particular item in the trace.</em>
+</p>
+<p class="auto-cursor-target">This says that the enqueue took <code>1.879 ms</code>. Here are the more important details from the selection:</p>
+
+<pre><code>Title             COMMAND
+Category          command
+Start	          52.766 ms
+Wall Duration	  1.879 ms
+Args:
+    Type          "Enqueue Kernel"</code></pre>
+
+<p class="auto-cursor-target">The overall device run-time (submission + kernel execution) can be viewed in the "RUNNING" category by clicking on the purple <strong>R</strong> there. This shows Wall Duration of <code>2.041 ms</code>.</p>
+<p class="auto-cursor-target">Again, here are the important bits of the selection output:</p>
+
+
+<pre><code>Title             RUNNING
+Category          transaction
+Start	            52.729 ms
+Wall Duration	    2.041 ms
+Args:
+    Buffer 0      Snapshot of Buffer 0 object @ 52.729 ms
+    Buffer 1      Snapshot of Buffer 1 object @ 52.756 ms
+    Buffer 2      Snapshot of Buffer 2 object @ 52.761 ms
+    kernel        "SYCL_class_SimpleVadd_int_"</code></pre>
+
+<p class="auto-cursor-target">The <em>
+    <strong>RUNNING</strong>
+  </em> transaction starts at <code>52.729 ms</code> while the enqueue kernel command we discussed above was fired at <code>52.766 ms</code>. This is because of the access acquisition to the data in buffers <code>0, 1,</code> and <code>2</code>.</p>
+<p class="auto-cursor-target">And now let's look at the actual kernel execution time by clicking on the kernel slice in the kernels category. In the image below you can see that the slice is really small but you can select it by using the free selection tool of the tracer.</p><p class="auto-cursor-target"><img src="{{ '/assets/images/portal/article-images/430229b54d81c838beadee03f1c98147.png' | relative_url }}"></p>
+<p class="auto-cursor-target">
+
+
+
+</p>
+<p class="auto-cursor-target">As you can see, you can track every start and duration of a command on the device. The same can be done for Queue (pid 1) which is the second reference of the queue with the <code>SimpleVadd</code> kernel for vectors of type <code>float</code>.</p>
+<p class="auto-cursor-target">If you are looking for more summarized information of the execution rather than inspecting the timeline, you can make use of another great feature - the "<em>Metadata for Trace"</em> interface. You can click the <strong>M</strong> button in the top right of the tracer UI and a window that contains information about the <em>Application</em>, the <em>Device</em> it was ran on, the <em>Queue</em> instances and their properties, and <em>Kernel Execution Statistics</em>, will pop out. Here is an example from the same application that we profiled until now.</p><p class="auto-cursor-target"><img src="{{ '/assets/images/portal/article-images/53c694acf43bcb7fb2067156f1ec4549.png' | relative_url }}"></p>
+<p class="auto-cursor-target">
+
+
+
+</p>
+<p class="auto-cursor-target">Having profiled the current version of the vector addition kernel, let's attempt an optimization to the vector addition kernel.</p>
+<p class="auto-cursor-target">First, we need to change the profiling output destination:</p>
+
+<pre><code># in the sdk build/
+export COMPUTECPP_PROFILING_OUTPUT=profiling/vadd_optimized.json</code></pre>
+
+<p>There isn't much that can be done for such a simple kernel, but we can try to do memory coalescing for global memory and run the kernel on a <strong>single</strong> work-group. <br>Here is how the kernel code looks like after the modification:</p>
+
+
+<pre><code>auto kern = [=](cl::sycl::nd_item&lt;1&gt; wi) {
+  size_t wiID = wi.get_global_id(0);
+  size_t groupSize = wi.get_global_range(0);
+  size_t elementsCount = N;
+  for (auto i = wiID; i &lt; elementsCount; i += groupSize) {
+    accessorC[wiID] = accessorA[wiID] + accessorB[wiID];
+  }
+};</code></pre>
+
+<p>Briefly, what hopefully happens with this modification is that as each work-item reads its next elements, the reads are combined by the hardware so that we are able to get <code>64 bytes</code> for each read. This is very specific for the device used to execute this kernel which in this case is an Intel integrated GPU with <code>64 bytes</code> Global Memory cache line size. This should work equally well for both <code>int</code> and <code>float</code> type elements that are used to test the program.</p>
+
+<p>Now let's have a look at the profiling output in the chrome tracer.</p>
+
+<p>The <em>
+    <strong>RUNNING</strong>
+  </em> transaction starts at <code>1.832 ms</code> as opposed to the <code>2.041 ms</code> with the non-optimized version.</p>
+
+<p>
+
+
+
+</p>
+
+  <img src="{{ '/assets/images/portal/article-images/144ed2417aca024549e799610653b065.png' | relative_url }}">
+
+
+<p>As for the kernel execution time, which was <code>0.009 ms</code> for both the int and float type kernel instances it is now <code>0.008 ms</code>.</p>
+<p><img src="{{ '/assets/images/portal/article-images/b5b855bf3ad3cebf309ef700fe3e0735.png' | relative_url }}"></p>
+
+<p>
+
+
+
+</p>
+
+<p>What is more interesting, however, is that the memory bandwidth is <code>1mb</code> higher as well - <code>21 mb</code> in the optimized version versus <code>20 mb</code> in the original version for int types.</p>
+<p><img src="{{ '/assets/images/portal/article-images/84f82cc897829b0221ecb08209765e7b.png' | relative_url }}"></p>
+
+<p>
+
+
+
+</p>
+
+<p>The purpose of this demonstration was not to necessarily optimize the vector addition sample but to demonstrate how handy it is to use the visual representation of the profiling data through the ComputeCpp Professional Edition built-in <code>JSON</code> profiler. It can also benefit the process of optimization when working on SYCL code enabling developers to examine every bit of performance information.</p>
+
+<p>
+  We are adding new features to the profiler, for example, there will be a merging python tool that can merge two profiling output
+  <code>
+    JSON
+  </code>
+   files into a single one to better analyze differences in performance and the impact of varying approaches.</p>
+<p>You can get in touch to find out more about the ComputeCpp Professional Edition <a href="https://developer.codeplay.com/products/computecpp/pe/">on our developer website</a>.<br>
+</p>

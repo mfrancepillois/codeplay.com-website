@@ -1,0 +1,205 @@
+---
+id: 85
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Type Safe PPU and SPU pointers"
+redirect_from:
+  - /kb/85
+layout: products/offload/kb/view
+---
+<p>Inside offload scopes there are two types of addresses &ndash; local addresses and outer addresses. All addresses of data defined outside the offload scope become outer addresses. Addresses of data defined inside an offload block point to local SPU memory whereas outer addresses point to PPU memory. In order to be able to process outer addresses on the SPU, the __outer pointer keyword has been added to allow pointer declarations for outer addresses.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+int gx;
+int * gptr;
+int main()
+{
+	__blockingoffload
+	{
+		int lx;
+		int * lptr; // pointer to local data
+		lptr = gptr; // incompatible types: int * = __outer int *
+		gptr = &amp; lx; // incompatible types: __outer int * = int *
+		gptr = &amp; gx; // ok, both are outer
+		lptr = &amp; lx; // ok, both are local
+		__outer int * optr; // pointer to hold outer address
+		optr = &amp; gx; // ok, outer pointer gets outer address
+		optr = gptr; // ok, outer pointer initialised with outer address
+	}
+}
+</code></pre>
+<p>
+This __outer keyword is used as a pointer modifier (just as const and volatile are in C/C++) and only required in an offload context, which includes pointer declarations inside offload blocks and in offload functions. In all other contexts it will be ignored.
+</p><p>
+As with the const and volatile qualifiers in C++, the __outer modifier can appear anywhere in the base type for a pointer declaration. For example __outer int *  is equivalent to int __outer * , but not to int * __outer as the latter declares a local pointer type that is __outer qualified.
+</p><p>
+Inside offload contexts pointers declared with __outer (i.e. point to PPU memory) are incompatible with those declared without __outer (i.e. point to SPU memory) which has implications for conversions, overload resolution and name mangling.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+T * x;
+
+__blockingoffload
+{
+	// in this scope the PPU pointer x automatically becomes an __outer int *
+	__outer T * z = x; // outer pointer variable on the SPU
+	T y = * z; // dereferencing z causes an SPU software cache read
+	* z = y; // writing SPU value to PPU variable
+}
+</code></pre><p>The __outer qualifier allows the programmer to distinguish between two types of pointers within an offload scope: pointers to PPU memory and pointers to SPU memory:
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+__blockingoffload
+{
+	int * p; // pointer to local store (SPU memory)
+	__outer int * k; // pointer to PPU memory
+	int v1 = * p; // dereferencing SPU pointer
+	int v2 = * k; // dereferencing PPU pointer &ndash; DMA into SPU
+	p = k; // illegal &ndash; SPU and PPU pointers are incompatible
+}
+</code></pre>
+<p>
+In the above example, variable p has type int *.  Since this declaration appears in an offload scope, and since the __outer qualifier has not been used, the pointer p is restricted to point to memory on the local store of the SPU on which the enclosing offload block runs.
+</p><p>
+On the other hand, variable k has type __outer int *.  The use of the __outer qualifier restricts k to point to shared PPU memory &ndash; memory outside the local store of the SPU on which the enclosing offload block runs.
+</p><p>
+Inside the offload block, trying to assign p to k (or vice versa) results in a compiler error. This strong type checking prevents dereferencing a PPU address in SPU memory (and vice versa).  Of course, it is legal to dereference p and assign the result to the memory location pointed to by k (and vice-versa).  Codeplay Offload automatically transforms this into appropriate DMA and/or software cache operations.
+</p><p>
+A pointer declared outside an offload scope always points to data in PPU shared memory. Such pointers are automatically given the __outer qualifier.
+</p><p>
+It is desirable to reduce the number of places in the source code where the __outer keyword has to be used. The two contexts where __outer may be omitted is in initializations and casts. This language feature is designed to avoid having to explicitly type __outer in front of declarations and in casts, and is especially useful when refactoring existing source code for Codeplay Offload, and during function duplication. Function duplication also allows __outer to be omitted from parameter and return pointer/reference types.
+</p><p>
+Pointer and reference types declared without the __outer modifier in offload contexts are local pointer/reference types (pointing to SPU data). However, if a pointer variable declared without __outer is initialized with an outer pointer type, the compiler will automatically deduce this property and make the variable an outer pointer.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+T * x;
+__blockingoffload
+{
+	__outer T * z = x; // explicitly declared __outer
+	T * z2 = x; // silently deduces __outer from x
+	// z and z2 have the same type: __outer T *
+}
+</code></pre>
+<p>
+The following example lists legal cases where __outer is deduced for references and pointers from different source types.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+int * a = new int(3);
+static int b = 4;
+static int c[10] = {5};
+
+__blockingoffload
+{
+	int * d = a; // __outer int *
+	int &amp; e = b; // __outer int &amp;
+	int * f = c; // __outer int * from PPU array
+	int * g = &amp; b; // __outer
+	int &amp; h = * a; // __outer int &amp;
+	int &amp; i = * c;  // __outer int &amp;
+}
+</code></pre><p>Inside an offload context, when casting a value of pointer type __outer T * to another destination pointer type which does not declare __outer, then the destination pointer type of that cast automatically receives the __outer property.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+T1 * global;
+
+int main()
+{
+	__blockingoffload
+	{
+		__outer T2 * var;
+		var = (T2 * )global;
+		// T2 * inside the bracket is automatically changed to __outer T2 *
+	}
+}
+</code></pre><p>Valid uses of pointers in an offload block are illustrated by the following example.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+float f_PPU;
+float * ptr_PPU;
+
+int main()
+{
+	__blockingoffload
+	{
+		float f_SPU;
+		float * ptr_SPU;
+		__outer float * outer_ptr_SPU;
+
+		ptr_PPU = &amp; f_PPU; // PPU address to PPU variable
+		outer_ptr_SPU = &amp; f_PPU; // PPU address to SPU outer pointer
+		outer_ptr_SPU = ptr_PPU + 1;
+		ptr_PPU = outer_ptr_SPU + 1;
+
+		* ptr_SPU = * ptr_PPU; // dma into SPU
+		* ptr_SPU = * outer_ptr_SPU; // dma into SPU
+		* ptr_PPU = * outer_ptr_SPU; // outer memory assignment
+		* ptr_PPU = * ptr_SPU; // dma from SPU into PPU
+		* outer_ptr_SPU = * ptr_PPU; // outer memory assignment
+		* outer_ptr_SPU = * ptr_SPU;
+	}
+}
+</code></pre><p>These are cases that the compiler will not accept.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+float f_PPU;
+float * ptr_PPU;
+
+int main()
+{
+	__blockingoffload
+	{
+		float  f_SPU;
+		float * ptr_SPU;
+		__outer float * outer_ptr_SPU;
+
+		ptr_PPU = &amp; f_SPU; // illegal to
+		outer_ptr_SPU = &amp; f_SPU; // assign SPU
+		ptr_PPU = ptr_SPU; // address to PPU
+		outer_ptr_SPU = ptr_SPU; // pointer
+		ptr_SPU = &amp; f_PPU; // illegal to assign
+		ptr_SPU = ptr_PPU; // PPU address to
+		ptr_SPU = outer_ptr_SPU; // SPU pointer
+	}
+}
+</code></pre><p>Pointer types can be declared using __declspec(__setoffloadlevel__(level)), where level is the offload block level which can have the value one for local pointer and zero for outer pointers. In fact __declspec(__setoffloadlevel__(0)) is equivalent to __outer and __declspec(__setoffloadlevel__(1)) is equivalent to __inner. This declspec allows declaring SPU local pointer types outside an offload block which may be useful inside structure declarations to explicitly declare structure members with local pointer types.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+const int OUTER_DEPTH = 0;
+const int INNER_DEPTH = 1;
+
+template &lt;class T, int DEPTH = OUTER_DEPTH&gt; struct struct_with_pointer
+{
+	__declspec(__setoffloadlevel__(DEPTH))
+	T * ptr; // depending on DEPTH either a local or outer pointer
+};
+
+struct_with_pointer&lt;int&gt; var_outer_ptr;
+int outer_int;
+
+void f()
+{
+	__blockingoffload
+	{
+		struct_with_pointer&lt;int&gt; var1_outer_ptr;
+		struct_with_pointer&lt;int, __OFFLOAD_DEPTH__&gt; offload_local;
+		int offload_int;
+		int * localptr;
+		offload_local.ptr = &amp; offload_int; // ok, local address to local pointer
+		localptr = offload_local.ptr;
+		var_outer_ptr.ptr = &amp; outer_int; // ok, outer address to outer pointer
+		var_outer_ptr = var1_outer_ptr; // ok, same struct types
+	}
+}
+</code></pre>
+
+
+

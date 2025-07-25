@@ -1,0 +1,26 @@
+---
+id: 84
+category: vectorc
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "Malloc and Scalability"
+url: malloc-and-scalability
+description:
+redirect_from:
+  - /company/documents/malloc-and-scalability
+layout: company/documents/view
+---
+<p>The naive approach to a malloc implementation is to wrap a single global heap area with a lock, and have all concurrent attempts to allocate and deallocate memory contend for that lock. Obviously, scalability cannot be high under such a system.
+</p><p>
+ Issues with the efficiency of dynamic memory management are not new. Doug Lea's venerable <a href="http://gee.cs.oswego.edu/dl/html/malloc.html">dlmalloc</a> was written in response to such concerns over a decade ago; However, programmers rely increasingly heavily on such systems, and now they pose a new challenge as multiprocessors become ubiquitous and affordable. Applications that use modern C++ features, such as the STL, may be performing a significant amount of dynamic memory management behind the scenes. Not only do programmers need to be aware of the concurrency issues within their own code, they must also be aware of those issues within each 3rd party library used within a project. The memory allocation behaviour of such libraries is often far from obvious.
+</p><p>
+ Fortunately, C++ allows for the overriding of the global new and delete operators (plus the equivalents for arrays) so that memory allocations can be performed by a scalable and concurrent allocator used as a drop in replacement for the system allocator. This process is explained in Bruce Eckel's <a href="http://mindview.net/Books/TICPP/ThinkingInCPP2e.html#HTMLFormat">Thinking in C++</a>.
+</p><p>
+ If memory management is becoming a bottleneck for your concurrent application, it is relatively easy to obtain a significant performance increase. In one of our in house applications, simply replacing the default malloc with a 3rd party malloc has increased performance by up to 80% on an eight core x86 system.
+</p><p>
+ Links to further resources:
+</p><p>
+ <a href="http://www.nedprod.com/programs/portable/nedmalloc/index.html">NedMalloc - A Scalable Malloc</a> <a href="http://www.malloc.de/en/">PT Malloc</a> <a href="http://goog-perftools.sourceforge.net/doc/tcmalloc.html">Googles Thread Caching Malloc</a> <a href="http://developers.sun.com/solaris/articles/multiproc/multiproc.html">Multiprocessor Malloc Comparison</a>
+</p>
+
+

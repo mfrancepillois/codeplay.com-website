@@ -1,0 +1,108 @@
+---
+id: 130
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Structure Type Duplication"
+redirect_from:
+  - /kb/130
+layout: products/offload/kb/view
+---
+<h2>Pointer types inside structs</h2><p>By default pointer types of members inside structure definitions are __outer pointers. This is required to ensure structure type compatibility between PPU and SPU data.
+</p>
+<pre><code>struct T1
+{
+	void * ptr;
+	T1()
+	{
+		ptr = 0;
+	}
+};
+
+T1 ppudata;
+
+void func()
+{
+	__blockingoffload()
+	{
+		T1 spudata = ppudata; // spudata and ppudata have the same type - member ptr is an __outer ptr.
+	};
+}
+</code></pre><h2>Structure type duplication with local pointers</h2><p>Any reference to 'struct' in this document can also be applied to 'class' types as well.
+</p><p>
+For performance reasons it is often desirable to use the same structure declaration on the SPU so that fields with pointer types are now local pointers pointing to local fast SPU data.
+</p>
+
+<p>
+Codeplay Offload therefore allows structure type duplication with pointer type substitution. Note that duplicated structure types will be incompatible with the original structure type (see example below).
+</p><p>
+Initialising a pointer field of a structure used in offload context with a local pointer value may substitute the default (outer) pointer type of a field with a local type. This substitution will create a new structure type.
+</p>
+<pre><code>struct T2
+{
+	void * ptr;
+};
+
+T2 global;
+__blockingoffload
+{
+	T2 var; // original type; T2::ptr is an outer pointer
+	var.ptr = &amp; var; // var is of type 'T2 __attribute__((local(ptr)))'
+	var = global;  // error incompatible types 'T2 __attribute__((local(ptr)))' = T2
+}
+</code></pre>
+<p>
+This has various consequences for function duplication (i.e. the methods for this newly duplicated structure type will be separately compiled automatically).
+</p><p>
+Type substitution will happen in duplicated constructors (and also in other duplicated functions), so  functions may return duplicated struct types. Once a non-duplicated field is used in an expression it cannot be duplicated with a local pointer.
+</p>
+<pre><code>struct T3
+{
+	T3();
+	T3(int * arg): ptr (arg) {}
+	int * ptr;
+};
+
+void func()
+{
+	__blockingoffload()
+	{
+		T3 var2 = T3(); // normal T3 because constructor definition not known yet
+		int localvar;
+		T3 var1 = T3(&amp; localvar) // T3 __attribute__((local(ptr)))
+	};
+}
+
+T3::T3()
+{
+	ptr = 0;
+}
+</code></pre>
+
+
+
+
+
+
+<p>
+If required, duplicated structure types may be specified using the GNU attribute syntax which has been extended with the attribute: __local(field1, ... ,fieldn). This attribute can only follow a  typename denoting a defined struct type. The identifiers field1..fieldn are the names of the pointer fields to be substituted for with local pointer types.
+</p>
+<pre><code>struct T4
+{
+	int * ptr;
+	int * buffer;
+	void do_something();
+};
+
+int main()
+{
+	__offload
+	{
+		T4 __attribute__((__local(ptr))) var; // declares var of type T4 with ptr as __inner, buffer as __outer
+		var.do_something();//calling do_something on var with duplicated type
+	}
+}
+</code></pre><p>Duplicated structure types contain local pointers and therefore can only be instantiated inside an offload context. Instantiations outside offload contexts will result in a compile error.
+</p>
+
+

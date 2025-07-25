@@ -1,0 +1,14 @@
+{% if page.series %}
+<ol class="in-this-series">
+    {%- for series_item in page.series -%}
+    <li {% if series_item.current %} class="selected" {% endif %}>
+        <a href="{{series_item.url | relative_url }}">
+            Guide {{series_item.guide}} {%- if series_item.part -%}<span>(Part {{series_item.part}})</span>{%- endif -%}
+            <span>- {{series_item.title}}</span>
+        </a>
+    </li>
+
+    {% if series_item.current %} {% break %} {% endif %}
+    {%- endfor -%}
+</ol>
+{% endif %}

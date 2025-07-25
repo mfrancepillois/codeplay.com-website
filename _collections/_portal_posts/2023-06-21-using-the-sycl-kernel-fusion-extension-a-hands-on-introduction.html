@@ -1,0 +1,274 @@
+---
+title: "Using the SYCL Kernel Fusion Extension - A Hands-On Introduction"
+date: 2023-06-21T08:40:29.598000+00:00
+layout: portal/portal-article-view
+user_id: 8218
+category: blogs
+thumbnail: /assets/images/portal/article-images/kernelfuse.jpg
+---
+
+<p>In a <a href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank"></a><a
+        href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank">previous blog</a>
+    post, we introduced the SYCL extension for user-driven kernel fusion developed by Codeplay, and how it can improve
+    SYCL application performance.</p><p>In this post, we will take a more hands-on approach to show how to set up DPC++
+    with kernel fusion support and compile and run a SYCL application. Using that knowledge will allow you to apply the
+    kernel fusion extension to your own SYCL applications.</p><p>We will also get a glimpse into SYCL application
+    performance analysis with <a
+            href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/vtune-profiler.html" target="_blank">Intel
+        VTune</a>, investigating the reason for performance improvement through kernel fusion.</p><p>So, let's get
+    started!</p> <h2>Prerequisites</h2><p>Throughout this tutorial, we will be assuming a Linux system with at least one
+    SYCL device compatible with the kernel fusion extension. Concretely, this would need to be a device that is
+    compatible with a SPIR-V compatible SYCL backend. This would for example be the OpenCL backend with an Intel CPU or
+    GPU (also integrated), or the Intel LevelZero backend with an Intel GPU (also integrated).</p><p>The installation of
+    the necessary drivers and device backends is out-of-scope for this blog post, consult the corresponding manuals for
+    <a href="https://www.intel.com/content/www/us/en/developer/articles/tool/opencl-drivers.html"
+       target="_blank">OpenCL</a> and <a href="https://dgpu-docs.intel.com/installation-guides/index.html"
+                                         target="_blank">LevelZero</a> for installation instructions.</p><p>For the
+    section on VTune performance analysis, we will assume an OpenCL CPU, suited for the selection of metrics that we
+    will investigate. Intel VTune supports performance analysis across a wide range of different platforms and devices,
+    for example, SYCL application performance analysis via a <a
+            href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2023-1/profiling-dpc-application.html"
+            target="_blank">graphical user interface</a> or via the <a
+            href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2023-1/profiling-gpu-from-cli.html"
+            target="_blank">command-line</a>.</p><p>The installation of VTune itself is out-of-scope for this blog post,
+    see the <a
+            href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/installation-guide/2023-1/overview.html"
+            target="_blank">installation manual</a> for instructions.</p><p>As an example, the system used throughout
+    this blog post uses an Intel i7 6700K CPU with the OpenCL backend, Ubuntu 20.04 LTS and Intel VTune 2023.1.0
+    preview.</p> <h2>Setup of DPC++ with kernel fusion support</h2><p>If you were hoping for a long setup procedure now
+    (who isn't ? 😉), I'll have to disappoint you: Current DPC++ daily releases already support kernel fusion by
+    default.</p><p>So all we need to do is download a daily release, unpack it and setup up some environment
+    variables.</p><p>First, go to some directory of your choosing (you should have write permissions) and then execute
+    the following command to download a daily release:</p>
+<pre><code>wget https://github.com/intel/llvm/releases/download/sycl-nightly%2F20230408/dpcpp-compiler.tar.gz</code></pre>
+<p>Note that newer daily releases found <a href="https://github.com/intel/llvm/releases" target="_blank">here</a> might
+    also work.</p><p>In the next step, we'll unpack the DPC++ release and eventually remove the TAR file we
+    downloaded:</p>
+<pre><code>tar xfz dpcpp-compiler.tar.gz
+rm dpcpp-compiler.tar.gz</code></pre>The last step of the setup is to setup some environment variables:
+<pre><code>export PATH=$(pwd)/dpcpp_compiler/bin:$PATH
+export LD_LIBRARY_PATH=$(pwd)/dpcpp_compiler/lib:$LD_LIBRARY_PATH</code></pre>
+<p>Note that this step needs to be repeated each time you re-open the terminal and assumes your current working
+    directory matches the directory you choose for setup.</p><p>To verify that the setup worked, use the following
+    commands:</p>
+<pre><code>which clang++
+which sycl-ls</code></pre><p>In both cases, the output should point to an executable in the dpcpp_compiler/bin
+    subdirectory of the setup directory you chose.</p><p></p><p>Also, the following command should show at least one
+    device for either the OpenCL or LevelZero backend:</p>
+<pre><code>sycl-ls</code></pre><p>An example output would be:</p>
+<pre><code>[opencl:cpu:0] Intel(R) OpenCL, Intel(R) Core(TM) i7-6700K CPU @ 4.00GHz OpenCL 3.0</code></pre><p>In case
+    this command does not print a device, see the OpenCL or LevelZero installation manual for instructions.<br/></p>
+<h2>Example application</h2><p>For demonstration purposes, we will be using the example application from the <a
+        href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank">original
+    blog-post</a>.</p><p>You can download the complete source for the example application <a
+        href="{{ '/assets/files/portal/2023/kernel-fusion/no-fusion.cpp' | relative_url }}" target="_blank">here</a>.
+</p><p>After completing the setup above, we can compile the example application, still without kernel fusion:</p>
+<pre><code>clang++ -fsycl no-fusion.cpp -o no-fusion</code></pre><p>After that, we can execute the application:<br/></p>
+<pre><code>./no-fusion</code></pre><p>The output should be similar to this, the exact runtime is of course dependent on
+    your hardware configuration*:<br/></p>
+<pre><code>Elapsed time in microseconds: 298080
+Elapsed time in microseconds: 235596
+Elapsed time in microseconds: 235771
+Elapsed time in microseconds: 235865
+Elapsed time in microseconds: 235926
+Elapsed time in microseconds: 235780
+Elapsed time in microseconds: 235566
+Elapsed time in microseconds: 235890
+Elapsed time in microseconds: 235718
+Elapsed time in microseconds: 235786</code></pre>The application performs ten timed iterations of the main workload. Due to the necessary translation from SPIR-V to device binary format and the caching of that translation, explained in the
+<a href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank">first
+    blog-post</a>, the first iteration takes a little longer than the remaining ones*<br/><p></p> <h2>Fusion</h2><p>In
+    the next step, we can enable kernel fusion for the application, but still without dataflow internalization. To that
+    end, a few modifications to the source-code are necessary; you can download the resulting source file <a
+            href="{{ '/assets/files/portal/2023/kernel-fusion/fusion.cpp' | relative_url }}" target="_blank">here</a>.
+</p><p>We can compare the previous source file with the new one:</p>
+<pre><code>git diff --no-index no-fusion.cpp fusion.cpp</code></pre><p>From the output, we can see that only minimal
+    code changes are necesary to enable kernel fusion in the application:<br/></p>
+<pre><code>diff --git a/no-fusion.cpp b/fusion.cpp
+index 08595a0..4cd0702 100644
+--- a/no-fusion.cpp
++++ b/fusion.cpp
+@@ -28,7 +28,7 @@ int main() {
+   auto in4 = get_random_data();
+   std::vector&lt;float&gt; out(dataSize, -1.0);
+-  queue q{};
++  queue q{ext::codeplay::experimental::property::queue::enable_fusion{}};
+   {
+     buffer&lt;float&gt; bIn1{in1.data(), range{dataSize}};
+@@ -40,10 +40,14 @@ int main() {
+     buffer&lt;float&gt; bTmp2{range{dataSize}};
+     buffer&lt;float&gt; bTmp3{range{dataSize}};
++    ext::codeplay::experimental::fusion_wrapper fw{q};
++
+     for (size_t i = 0; i &lt; 10; ++i) {
+       auto start = std::chrono::high_resolution_clock::now();
++      fw.start_fusion();
++
+       // tmp1 = in1 * in2
+       q.submit([&amp;](handler &amp;cgh) {
+         auto accIn1 = bIn1.get_access(cgh);
+@@ -80,6 +84,8 @@ int main() {
+             dataSize, [=](id&lt;1&gt; i) { accOut[i] = accTmp1[i] - accTmp3[i]; });
+       });
++      fw.complete_fusion();
++
+       q.wait();
+       auto stop = std::chrono::high_resolution_clock::now();
+</code></pre>The new source file can be compiled with this command:
+<pre><code>clang++ -fsycl fusion.cpp -o fusion</code></pre><p></p><p>As you can see, there are no additional compilation
+    flags needed for kernel fusion.</p><p></p><p>There are also no additional flags needed for kernel fusion when
+    executing the application:</p>
+<pre><code>./fusion</code></pre><p>This should result in output similar to the following*:<br/></p>
+<pre><code>Elapsed time in microseconds: 337596
+Elapsed time in microseconds: 184143
+Elapsed time in microseconds: 184681
+Elapsed time in microseconds: 184205
+Elapsed time in microseconds: 184065
+Elapsed time in microseconds: 184574
+Elapsed time in microseconds: 184253
+Elapsed time in microseconds: 184524
+Elapsed time in microseconds: 184426
+Elapsed time in microseconds: 184191
+</code></pre>As numbers show, the first iteration is slightly slower than in the case without fusion, due to the additional overhead for
+<a href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank">JIT compiling for
+    fusion</a>. <p>On the other hand, the remaining iterations are faster than in the non-fused case*. In the later
+    section on VTune analysis, we will explore the reason for that more.</p> <h2>Dataflow Internalization</h2><p>As
+    discussed in the <a href="https://codeplay.com/portal/blogs/2023/03/20/user-driven-kernel-fusion" target="_blank">first
+        blog-post</a>, internalization of dataflow in the fused kernel can be an important optimization technique.</p>
+<p></p><p>We can apply dataflow internalization to the buffers <code>bTmp1</code>, <code>bTmp2</code> and
+    <code>bTmp3</code> in our application, resulting in the modified source code that you can download from <a
+            href="{{ '/assets/files/portal/2023/kernel-fusion/internalization.cpp' | relative_url }}" target="_blank">here</a>.
+</p><p>Using the following command, we can make the necessary code changes for internalization visible:</p>
+<pre><code>git diff --no-index fusion.cpp internalization.cpp</code></pre><p>The output shows that we mainly need to
+    pass an additional property to the buffer definition. As an additional optimization, we have disabled the insertion
+    of extra work-group barriers by the fusion JIT compiler by passing a property to
+    <code>complete_fusion()</code>:<br/></p>
+<pre><code>diff --git a/fusion.cpp b/internalization.cpp
+index 4cd0702..430c020 100644
+--- a/fusion.cpp
++++ b/internalization.cpp
+@@ -36,9 +36,15 @@ int main() {
+     buffer&lt;float&gt; bIn3{in3.data(), range{dataSize}};
+     buffer&lt;float&gt; bIn4{in4.data(), range{dataSize}};
+     buffer&lt;float&gt; bOut{out.data(), range{dataSize}};
+-    buffer&lt;float&gt; bTmp1{range{dataSize}};
+-    buffer&lt;float&gt; bTmp2{range{dataSize}};
+-    buffer&lt;float&gt; bTmp3{range{dataSize}};
++    buffer&lt;float&gt; bTmp1{
++        range{dataSize},
++        {sycl::ext::codeplay::experimental::property::promote_private{}}};
++    buffer&lt;float&gt; bTmp2{
++        range{dataSize},
++        {sycl::ext::codeplay::experimental::property::promote_private{}}};
++    buffer&lt;float&gt; bTmp3{
++        range{dataSize},
++        {sycl::ext::codeplay::experimental::property::promote_private{}}};
+     ext::codeplay::experimental::fusion_wrapper fw{q};
+@@ -84,7 +90,7 @@ int main() {
+             dataSize, [=](id&lt;1&gt; i) { accOut[i] = accTmp1[i] - accTmp3[i]; });
+       });
+-      fw.complete_fusion();
++      fw.complete_fusion(ext::codeplay::experimental::property::no_barriers{});
+       q.wait();
+</code></pre>We can compile and run the application with the following commands:<br/>
+<pre><code><pre><code>clang++ -fsycl internalization.cpp -o internalization </code><code>./internalization</code></pre></code></pre>
+<p>Again, no additional flags are needed for compilation or execution to enable fusion and dataflow internalization.</p>
+<p>The output shows the performance improvement we can get from fusion with dataflow internalization*:</p>
+<pre><code>Elapsed time in microseconds: 266811
+Elapsed time in microseconds: 89876
+Elapsed time in microseconds: 89861
+Elapsed time in microseconds: 89939
+Elapsed time in microseconds: 89904
+Elapsed time in microseconds: 89844
+Elapsed time in microseconds: 90018
+Elapsed time in microseconds: 89887
+Elapsed time in microseconds: 89891
+Elapsed time in microseconds: 89831
+</code></pre>As in both versions above, the JIT and SPIR-V compilation overhead makes the first iteration slower than the following ones. However, the performance benefit from fusion with dataflow internalization is so notable that even the first iteration is faster than the first iteration in the case without fusion. In the remaining iterations, the version with fusion and internalization outperforms the non-fused version by more than 2x.
+<p>In the next section, we will use VTune to get a glimpse into why performance improves so significantly with
+    fusion.</p> <p></p><h2>VTune Performance Analysis</h2><p>The Intel VTune profiler can provide great insight into the
+    performance of applications (not only for SYCL), allowing users to identify hotspots, analyze bottlenecks and
+    guiding optimizations.</p><p>We will be using it, or, more specifically, its command-line interface, to get some
+    insight into performance differences between the three different versions of our application.</p><h3>Fusion
+    Performance</h3><p>First, in the attempt to determine the reason fusion, even without dataflow internalization,
+    improves application performance, we will investigate the cache performance of both version.</p><p><a
+        href="#fusion-performance"></a></p><p></p><p>To analyze applications, we first need to collect some metrics with
+    VTune. For the non-fused version, this can be achieved with this command, limiting execution to the OpenCL CPU
+    device:</p>
+<pre><code>ONEAPI_DEVICE_SELECTOR=opencl:cpu vtune -collect memory-access -r report-no-fusion ./no-fusion</code></pre>
+<p>We can do the same for the fused version with no dataflow internalization:<br/></p>
+<pre><code>ONEAPI_DEVICE_SELECTOR=opencl:cpu vtune -collect memory-access -r report-fusion ./fusion</code></pre><p>Now
+    that we have collected the metrics, we can generate reports for both versions, specifically focusing on the actual
+    kernel functions. As the application performs only few arithmetic operations for each item of data loaded, i.e., it
+    is memory-bound, we will investigate memory metrics in particular**. For this first step of fusion, the most
+    relevant metric will be the cache metric, as fusion, even without internalization, can improve cache hit rate*.</p>
+<p></p> <p>For the version without fusion, this works with the following command:</p>
+<pre><code>vtune -report hw-events -r report-no-fusion --column="stalls_l1d_miss,stalls_l2_miss,stalls_l3_miss"\
+  --filter function="main::{lambda(sycl::_V1::handler&amp;)#1}::operator()(sycl::_V1::handler&amp;) const::KernelOne"\
+  --filter function="main::{lambda(sycl::_V1::handler&amp;)#2}::operator()(sycl::_V1::handler&amp;) const::KernelTwo"\
+  --filter function="main::{lambda(sycl::_V1::handler&amp;)#3}::operator()(sycl::_V1::handler&amp;) const::KernelThree"\
+  --filter function="main::{lambda(sycl::_V1::handler&amp;)#4}::operator()(sycl::_V1::handler&amp;) const::KernelFour"
+</code></pre>The output of this command should be similar to the following, while the exact numbers can deviate based on hardware configuration*:
+<br/>
+<pre><code>Function                                                                               Hardware Event Count:CYCLE_ACTIVITY.STALLS_L1D_MISS (M)  Hardware Event Count:CYCLE_ACTIVITY.STALLS_L2_MISS (M)  Hardware Event Count:CYCLE_ACTIVITY.STALLS_L3_MISS (M)
+-----------------------------------------------------------------------------------------  -------------------------------------------------------  ------------------------------------------------------ ---------------------------------------
+main::{lambda(sycl::_V1::handler&amp;)#1}::operator()(sycl::_V1::handler&amp;) const::KernelOne                                                     14,352                                                  13,858                                13,286
+main::{lambda(sycl::_V1::handler&amp;)#3}::operator()(sycl::_V1::handler&amp;) const::KernelThree                                                   14,196                                                  13,598                                13,208
+main::{lambda(sycl::_V1::handler&amp;)#2}::operator()(sycl::_V1::handler&amp;) const::KernelTwo                                                     14,716                                                  13,832                                13,494
+main::{lambda(sycl::_V1::handler&amp;)#4}::operator()(sycl::_V1::handler&amp;) const::KernelFour                                                    16,016                                                  15,262                                15,002</code></pre>For the non-fused version, we only have to specify the name of the fused kernel function. The fused functions use the
+<span style="color: rgb(239, 239, 239); background-color: rgb(34, 34, 34); white-space: pre-wrap;">fused_</span>  prefix and are consecutively numbered. As the application only contains a single fusion, the name will be
+<code>fused_0</code>
+<pre><code>vtune -report hw-events -r report-fusion --column="stalls_l1d_miss,stalls_l2_miss,stalls_l3_miss" --filter function=fused_0</code></pre>
+<p>In this case, the output should be similar to the following*:<br/></p>
+<pre><code>Function  Hardware Event Count:CYCLE_ACTIVITY.STALLS_L1D_MISS (M)  Hardware Event Count:CYCLE_ACTIVITY.STALLS_L2_MISS (M)  Hardware Event Count:CYCLE_ACTIVITY.STALLS_L3_MISS (M)
+--------  -------------------------------------------------------  ------------------------------------------------------  ------------------------------------------------------
+fused_0                                                    40,586                                                  38,532                                                  37,232
+</code></pre>When comparing the sum of the L1 cache misses observed by the four kernels in the case without fusion (ca. 59 billion stall cycles) with the number of L1 caches misses for the fused version (ca. 40 billion stall cycles), we can see that the fused version observes significantly fewer L1 cache misses. As the fused kernel executes all operations for each work-item in a sequence in a single kernel, the temporal locality is better, leading to a reduction in cache misses*.
+<p></p> <h3>Effect of dataflow internalization</h3><p>When comparing the fused version with and without internalization
+    above, we have seen that major performance improvements can result from dataflow internalization.</p><p>To analyze
+    this improvement, we will investigate another VTune metric.</p><p>For the fused case, we can reuse the existing
+    report. For the version with internalization, we can generate the report using the following command:</p>
+<pre><code>ONEAPI_DEVICE_SELECTOR=opencl:cpu vtune -collect memory-access -r report-internalization ./internalization</code></pre>
+<p>After that, we can compare the number of memory loads and stores performed by the two different versions of the fused
+    kernel.<br/></p><p>For the version without dataflow internalization:</p><p></p><p></p>
+<pre><code>vtune -report hw-events -r report-fusion --column=all_load,all_store --filter function=fused_0</code></pre>
+<p>This yields an output similar to the following*:<br/></p>
+<pre><code>Function  Hardware Event Count:MEM_INST_RETIRED.ALL_LOADS_PS (M)  Hardware Event Count:MEM_INST_RETIRED.ALL_STORES_PS (M)
+--------  ------------------------------------------------------  -------------------------------------------------------
+fused_0                                                      995                                                      501
+</code></pre>We can do the same for the version with dataflow internalization:
+<pre><code>vtune -report hw-events -r report-internalization --column=all_load,all_store --filterfunction=fused_0</code></pre>
+<p></p><p></p><p></p><p>The resulting output will be similar to the following*:<br/></p>
+<pre><code>Function  Hardware Event Count:MEM_INST_RETIRED.ALL_LOADS_PS (M)  Hardware Event Count:MEM_INST_RETIRED.ALL_STORES_PS (M)
+--------  ------------------------------------------------------  -------------------------------------------------------
+fused_0                                                      499                                                      124
+</code></pre><p></p><p>Comparing the output, we can see that dataflow internalization reduces the number of loads by
+    almost 500 million and the number of stores by close to 380 million, resulting in performance
+    improvements*.</p>This analysis of course only scratches the surface of performance analysis and what Intel VTune supports. If you want to learn more about these topics, have a look at the Intel VTune
+<a href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2023-1/overview.html" target="_blank">cookbook</a> (in particular the SYCL sections) or the
+<a href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/get-started-guide/2023-1/overview.html"
+   target="_blank">getting started guide</a> Intel VTune.<br/><h2><a href="#outlook"></a></h2> <h2>Outlook</h2><p>The
+    SYCL extension for kernel fusion is currently an experimental feature, allowing users to experiment with the feature
+    and us to gather early user feedback on the API and functionality.</p><p>At the same time, there is a larger effort
+    to define a graph API for SYCL. <a href="https://github.com/intel/llvm/pull/5626" target="_blank">SYCL graphs</a>
+    allows users to define a directed acyclic graph of dependent SYCL commands ahead of execution and is meant to open
+    new optimization opportunities for SYCL applications, for example for workloads that repeatedly submit a similar
+    sequence of kernels.</p><p>Fusing the kernels in a graph into a single kernel is one of those potential
+    optimizations. Codeplay have therefore started work on a SYCL extension for graph fusion, building on top of the
+    SYCL graph API. The sequence of kernels to fuse is defined through the graph API, which offers two different
+    mechanisms: one recording mode very similar to the existing kernel fusion extension, and one API for explicitly
+    constructing a graph from the kernel and dependencies. Using fusion on top of graphs provides a number of
+    advantages, for example a more fine-grained control over when the JIT compilation for fusion actually takes
+    place.</p><p><h4><a href="#disclaimer"></a></h4></p><p>If you want to follow the development of the new extension,
+    you can do so <a href="https://github.com/intel/llvm/pull/8678" target="_blank">here</a>.</p> <h3>Disclaimer*</h3>
+<p>Experiments performed on 10/04/2023 by Codeplay, with Intel Core i7-6700K, Ubuntu 20.04.5 LTS, Linux kernel 5.15,
+    Intel VTune Profiler 2023.1.0 pre-release (build 625246), and OpenCL driver version
+    2022.14.10.0.20_160000.xmain-hotfix.</p><p>DPC++ nightly version 2023-04-08 (git commit <code>3d6917f</code>) was
+    used for measurements.</p><p>Performance varies by use, configuration and other factors. Performance results are
+    based on testing as of dates shown in configurations and may not reflect all publicly available updates. See backup
+    for configuration details. No product or component can be absolutely secure. Your costs and results may vary. Intel
+    technologies may require enabled hardware, software or service activation. Intel, the Intel logo, Codeplay and other
+    Intel marks are trademarks of Intel Corporation or its subsidiaries. Other names and brands may be claimed as the
+    property of others.</p><h3>Metrics**</h3><p>Availability and naming of hardware events are CPU-specific. To obtain a
+    full list of available metrics for a report, a command similar to the following can be used:<br/></p>
+<pre><code>vtune -report hw-events --column="?" -r ./report-internalization</code></pre>

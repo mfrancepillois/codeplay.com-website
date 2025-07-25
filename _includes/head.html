@@ -1,0 +1,94 @@
+<head>
+    <meta charset="utf-8" />
+
+    {% if page.title %}
+    <title>{{page.title}} - {{site.title}}</title>
+    {%- else -%}
+    <title>{{site.title}}</title>
+    {% endif %}
+
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="{{site.description}}" />
+    {% include _includes/og-meta.html %}
+
+    <link rel="shortcut icon" type="image/png" href="{{ '/assets/images/favicon.ico' | relative_url }}" />
+    <link href="{{'/assets/css/navigation.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+    <link href="{{'/assets/css/responsive.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+    <link href="{{'/assets/css/cookie-policy-prompt.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+    <link href="{{'/assets/css/index.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+    <link href="{{'/assets/images/global/apple-touch-icon.png' | relative_url}}" rel="apple-touch-icon" />
+
+    <!-- Fonts -->
+    <link href="{{'/assets/css/material.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+    <link href="{{'/assets/css/roboto.css' | relative_url}}?v={{'site.version_cache_hash}}" rel="stylesheet" />
+
+    {%- if page.stylesheets -%}
+    {%- assign stylesheets = page.stylesheets -%}
+    {%- endif -%}
+    {%- if layout.stylesheets -%}
+    {%- assign stylesheets = layout.stylesheets -%}
+    {%- endif -%}
+
+    {%- if stylesheets -%}
+    {%- for stylesheet in stylesheets -%}
+    {%- if stylesheet contains "//" or stylesheet contains "assets/" -%}
+    <link href="{{stylesheet | relative_url}}?v={{site.version_cache_hash}}" rel="stylesheet" />
+    {% else %}
+    {%- capture style -%}
+    {% assign full_style = "_sass/" | append: stylesheet %}
+    {%- include {{full_style}} -%}
+    {%- endcapture -%}
+    <style>
+        {{ style | scssify }}
+    </style>
+    {%- endif -%}
+    {%- endfor -%}
+    {%- endif -%}
+
+    <!-- Local -->
+    <script src="{{'/assets/js/jquery-3.7.1.min.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.cookiepolicymanager.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+
+    <script src="{{'/assets/js/jquery.tabs.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.fadeinview.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.copyright.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.popup.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.simpleformvalidator.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+    <script src="{{'/assets/js/jquery.alertbanner.js' | relative_url}}?v={{'site.version_cache_hash}}"></script>
+
+    <script src="{{'/assets/js/index.js' | relative_url}}?v={{'site.version_cache_hash}}"
+            data-recaptchaSiteKey="{{'site.recaptcha_site_key}}"></script>
+    
+    {%- if page.cookie_enabled_scripts -%}
+    {%- assign cookie_enabled_scripts = page.cookie_enabled_scripts -%}
+    {%- endif -%}
+    {%- if layout.cookie_enabled_scripts -%}
+    {%- assign cookie_enabled_scripts = layout.cookie_enabled_scripts -%}
+    {%- endif -%}
+    {%- if cookie_enabled_scripts -%}
+    {%- for script in cookie_enabled_scripts -%}
+    <script>
+        $(function() {
+            if(cookiePolicyManager.isCookiePolicyAccepted()) {
+                $.getScript("{{script}}");
+            }
+        });
+    </script>
+    {%- endfor -%}
+    {%- endif -%}
+
+    {%- if page.scripts -%}
+    {%- assign scripts = page.scripts -%}
+    {%- endif -%}
+    {%- if layout.scripts -%}
+    {%- assign scripts = layout.scripts -%}
+    {%- endif -%}
+    {%- if scripts -%}
+    {%- for script in scripts -%}
+    <script src="{{script}}?v={{site.version_cache_hash}}"></script>
+    {%- endfor -%}
+    {%- endif -%}
+
+    <link rel="alternate" type="application/atom+json" href="{{ '/feed.json' | relative_url }}" />
+</head>

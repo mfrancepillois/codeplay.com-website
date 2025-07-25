@@ -1,0 +1,103 @@
+---
+id: 78
+category: faq
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP"
+redirect_from:
+  - /kb/78
+layout: products/offload/kb/view
+---
+<p>&quot;Help! I try to run an __offload block but at runtime I get DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP printed to the TTY!&quot;Any runtime error that prints DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP from the SPU means there is a problem with a virtual function within your code - specifically that a specific Offload&trade; duplication of a function is not present in the virtual domain.
+</p>
+<pre><code>struct Foo
+{
+	virtual int bar(int * pointer)
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	int temp1 = 53;
+	__blockingoffload[Foo::bar]()
+	{
+		int temp2 = 42;
+		foo1.bar(&amp;temp1); // will fail at runtime with a DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP error
+		foo1.bar(&amp;temp2); // will succeed at runtime
+	};
+}
+</code></pre><p>So why is this the case? For virtual domain functions specified in the domain, Offload&trade; defaults all pointer arguments to be local SPU pointers. Attempting to call the virtual function with an outer PPU memory pointer therefore fails. To get around this, two definitions must be placed in the virtual domain.
+</p>
+<pre><code>struct Foo
+{
+	virtual int bar(int * pointer)
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	int temp1 = 53;
+	__blockingoffload[Foo::bar, (int (Foo::*)(__outer int * ))&amp;Foo::bar]()
+	{
+		int temp2 = 42;
+		foo1.bar(&amp;temp1); // will succeed at runtime&lt;em&gt;
+		foo1.bar(&amp;temp2); // will succeed at runtime
+	};
+}
+</code></pre><p>In the above example, the domain has an extra item - (int (Foo::*)(__outer int * ))&amp;Foo::bar.Another example where you may get a DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP error is the following.
+</p>
+<pre><code>struct Foo
+{
+	virtual int bar()
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	__blockingoffload[Foo::bar]()
+	{
+		foo1.bar(); // will succeed at runtime
+		Foo foo2;
+		foo2.bar(); // will fail at runtime with a DOMAIN_ENTRY_NOT_FOUND_CALLED_DUP error
+	};
+}
+
+</code></pre><p>The reason this example fails to run is that virtual domain functions assume outer PPU memory this pointers. To correct the problem we add another function to the virtual domain.
+</p>
+<pre><code>struct Foo
+{
+	virtual int bar()
+	{
+		return 13;
+	}
+};
+
+static void func()
+{
+	Foo foo1;
+	__blockingoffload[Foo::bar, Foo::bar this]()
+	{
+		foo1.bar(); // will succeed at runtime
+		Foo foo2;
+		foo2.bar(); // will succeed at runtime
+	};
+}
+</code></pre>
+<p>
+<div class="ps3"></p><p>
+Content has been removed.
+</div>
+</p><p>
+A helpful command line option that will show all the virtual functions called from within an offload block can be found <a href="{{ '/kb/25' | relative_url }}">/kb/25.html</a>.
+</p>
+
+

@@ -1,0 +1,36 @@
+---
+id: 35
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Using SPU Instrinsics"
+redirect_from:
+  - /kb/35
+layout: products/offload/kb/view
+---
+<p>Offload allows the use of SPU intrinsics from an offload context.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+__offload static vector unsigned int zeros_si()
+{
+	return (vector unsigned int )si_fmsbi(0);
+}
+
+__offload static vector unsigned int zeros_spu()
+{
+	return (vector unsigned int) spu_splats(0);
+}
+
+static void func()
+{
+	__blockingoffload()
+	{
+		vector unsigned int bar1 = zeros_si();
+		vector unsigned int bar2 = zeros_spu();
+	};
+}
+</code></pre><p>The above example compiles and works fine, and allows the use of both the si and spu intrinsics that GCC supports. the &lt;liboffload&gt; header must be included though, as it contains the required definitions for the offload functions.Any attempt to call an SPU method from outwith an offload context will result in a compile time error.
+</p>
+
+

@@ -1,0 +1,108 @@
+---
+title: "Kernel Timeout Proof of Concept Internship"
+date: 2022-12-21T17:20:32.975000+00:00
+layout: company/careers/view
+type: internship
+description: During this internship you will create proof-of-concept implementations of different mechanisms to report an error in case a kernel's computation has exceeded its time limit. Codeplay is known for implementing OpenCL™ and SYCL™ runtimes and compilers for their customers' acceleration platforms. Now we aim to target customers in the automotive sector, who want to run highly complex AI algorithms on their accelerators, which will provide advanced driving assistance (ADAS) and autonomous driving (AD) features to make our roads safer.
+closed: true
+redirect_from: 
+apply_redirect: 
+---
+
+<p>Codeplay
+ is known for implementing OpenCL™ and SYCL™ runtimes and compilers for
+their customers' acceleration platforms. Now we aim to target customers
+in the automotive sector, who want to run highly complex AI algorithms
+on their accelerators, which will provide advanced driving assistance
+(ADAS) and autonomous driving (AD) features to make our roads safer.</p><p>Software in the safety-critical domain is highly time-critical. For example in vision applications, each scene must be
+ processed within a set time limit, otherwise a collision may happen
+before an object is detected. On the other hand, it is accepted that all
+ software fails occasionally, whether due to bugs remaining in the
+software or malfunction of hardware. In safety-critical software it is
+therefore important to detect errors reliably and quickly. An OpenCL or
+SYCL kernel that exceeds its time limit, whether due to an infinite loop
+ or a delay in processing, is an error for which there is currently no
+reporting mechanism.</p><p>The successful candidate will create proof-of-concept implementations of different mechanisms to report an error in case a kernel's computation has exceeded its time limit.</p><p>This
+ internship is on offer for a duration of 3-12 months. Although we
+usually offer internships for the summer, we are delighted to accept
+applications for longer or shorter internships and many of our interns
+have stayed with us to do university placement years or have become
+permanent members of our team.</p><p>The
+ position is temporary and will be based at our head office in central
+Edinburgh. The successful candidate must, by the start of their
+employment, have successfully obtained the right to work in the UK.&nbsp;</p><p>Starting salary - Competitive &amp; Negotiable <br></p><h2>Responsibilities</h2><ul><li>You will investigate different approaches to restricting the execution time of a kernel.</li></ul><ol><li>A thread within the application that tracks time</li><li>A mechanism within the OpenCL runtime<ul><li>Investigate existing timeout extensions, for OpenCL and other standard</li><li>Modify
+ Codeplay's OpenCL runtime to set the timer threshold and catch the
+timeout error when it occurs, passing that error on to the user. At this
+ stage it would be acceptable to hard-code the timer threshold and
+report a generic (existing) error back to the user.</li><li>Develop an OpenCL extension that allows OpenCL users to specify an upper limit on the execution time of a kernel</li>
+</ul></li></ol><ul><li>You will develop an example test case with an infinite kernel and demonstrate the effectiveness of each approach.</li><li>If
+ possible (the HW can be reset), you will additionally write an OpenCL
+application that handles a stream of "frames", where processing of some
+frames times out, which are then skipped to continue with the rest.</li><li>If
+ time remains, you will translate the sample applications into SYCL and
+investigate options for an analogous kernel timeout extension for SYCL.</li></ul><h2>What We Offer</h2><p>Codeplay
+ is internationally recognized as being at the forefront of software
+development technology. Working at Codeplay offers unique opportunities
+and challenges to learn new technologies and to get involved in shaping
+the software industry. Codeplay's projects range from: creating tools
+and tool sets (optimizing compilers, debuggers, profilers, programming
+models &amp; APIs, test systems/suites, etc.) for brand-new unannounced
+next-generation hardware; developing and optimizing current machine
+learning (<a href="https://www.tensorflow.org/">TensorFlow™</a>)
+ and computer vision applications; research and development into
+lowering the power consumption of mobile devices; and contributing to
+new programming models and software standards (e.g. C++, <a href="https://www.khronos.org/sycl/">SYCL™</a>, <a href="https://www.khronos.org/opencl/">OpenCL™</a>, <a href="https://www.khronos.org/vulkan/">Vulkan®</a> and <a href="https://www.khronos.org/spir/">SPIR™-V</a>).</p><p>Codeplay
+ Software is a world pioneer in enabling acceleration technologies used
+in AI, HPC and automotive. Codeplay was established in 2002 in
+Edinburgh, Scotland and developed some of the first tools enabling
+complex software to be accelerated using graphics processors. Today,
+most AI software is developed using graphics processors designed for
+video games, and more recently specialised AI and computer vision
+accelerators. Codeplay continues to work with global technology leaders
+to make the latest complex AI systems programmable using open-standards
+based programming languages and allows application developers to quickly
+ bring software to the market.&nbsp; Codeplay is also deeply involved with
+the definition of open&nbsp;standards, especially&nbsp;OpenCL™, SPIR™, SYCL™, and
+Vulkan™ through The Khronos Group, and MISRA C++ for automotive.</p><ul><li>A friendly and relaxed working environment where colleagues respect and support each other.</li><li>Learn
+ from experienced colleagues: our staff frequently give company-wide
+knowledge-sharing presentations on new software and technology trends,
+personal projects and other relevant subjects.</li><li>Great career prospects within a growing company</li><li>Newstart mentoring scheme</li><li>Flexible working hours</li><li>Frequent company social events (social nights, pot luck lunches, gaming, karting, outdoor adventures, and more) (Post-COVID!)</li></ul><h2>Required Skills</h2><p>The
+ ideal candidate is a self-motivated individual who can work through a
+problem from start to finish, meet deadlines as required to support
+software projects, and has the ability to work under pressure. You will
+be working on technology that is seldom announced to the public and
+could be several years away from public release, so confidentiality is
+critical. You should be able to work both independently and
+collaboratively within teams of varying skill sets and expertise. You
+should be welcoming towards, and able to adapt to, the introduction of
+new technologies, responsibilities and projects, as Codeplay works with
+cutting-edge technology and takes on a diverse range of projects.</p><ul><li>Experience with OpenCL</li><li>Experience with modern C++</li><li>Experience with multi-threading in C++</li></ul><h2>Beneficial Skills</h2><p>Knowledge
+ and/or experience of any of the following would be useful for the role,
+ but are not essential. You must be able to learn new skills, but will
+be given support from Codeplay's team to get you up to speed.</p><ul><li>Experience with SYCL</li></ul><h2>Application Guidance</h2><p>Any
+ application which results in a job offer is conditional upon the
+candidate already having or successfully applying for the right to work
+in the UK. Codeplay is proud to be an Equal Opportunities employer. We
+celebrate and value diversity. We are committed to creating an inclusive
+ environment for all employees, regardless of race, colour, gender,
+religion, national origin, ancestry, citizenship, disability, age,
+sexual orientation or any other characteristic protected by law. All
+employment is decided on the basis of qualifications, merit and business
+ need and we strongly encourage applicants from all backgrounds and
+walks of life. If you have a disability or additional need that requires
+ accommodation, just let us know.</p><p>The
+ Cover Note/Letter is just as important as your CV/Resume, so please
+include one, stating why you believe you are a good fit for the
+position. If you have examples of relevant work or projects, we would
+love to see them, so please include links to them in your
+application.You should be studying towards a degree in a relevant
+subject; however, if you can prove skills and knowledge through
+portfolio work, projects or previous employment, then a degree is not
+essential.If
+ you have C++ Code Samples (where relevant) please put the link to these
+ on your application; our system will only accept links to personal
+projects/GitHub accounts or PDF documents. <br></p><p><b>We aim to close this advert on the 28th April 2023, so please look
+ to get your application in prior to this date. We anticipate a high
+level of applications for this role and so reserve the right to close
+this vacancy prior to the closing date given.</b>&nbsp; 
+</p>

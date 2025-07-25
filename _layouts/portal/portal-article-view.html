@@ -1,0 +1,166 @@
+---
+layout: page
+nav_style: alt
+scripts:
+  - /assets/js/highlight/highlight.min.js
+  - /assets/js/highlight/languages/cpp.js
+  - /assets/js/highlight/languages/python.js
+  - /assets/js/highlight/languages/shell.js
+  - /assets/js/pages/portal/view.js
+stylesheets:
+  - /assets/js/highlight/styles/vs2015.css
+  - /assets/css/pages/portal/view.css
+---
+
+{%- if page.category == 'news' -%}
+{%- assign go_back_suffix = 'portal/news' -%}
+{%- endif -%}
+{%- if page.category == 'blogs' -%}
+{%- assign go_back_suffix = 'portal/blogs' -%}
+{%- endif -%}
+{%- if page.category == 'events' -%}
+{%- assign go_back_suffix = 'portal/events' -%}
+{%- endif -%}
+{%- if page.category == 'press-releases' -%}
+{%- assign go_back_suffix = 'portal/press-releases' -%}
+{%- endif -%}
+{%- if page.category == 'videos' -%}
+{%- assign go_back_suffix = 'portal/videos' -%}
+{%- endif -%}
+
+<!-- Search panel -->
+<div id="search-panel">
+    <div class="wrapper">
+        <div>
+            <ul>
+                <li>
+                    <a href="{{go_back_suffix | relative_url}}/">
+                        <i class="material-icons">arrow_back</i>Back to {{go_back_suffix | capitalize}}</a>
+                </li>
+                <li>
+                    <a id="full-view" href="#">
+                        <i class="material-icons">fullscreen</i>View Full Screen</a>
+                </li>
+                <li>
+                    <a href="{{ '/company/contact/' | relative_url }}">
+                        <i class="material-icons">flag</i>Report Inaccuracy</a>
+                </li>
+            </ul>
+        </div>
+        <div>
+        </div>
+    </div>
+</div>
+
+
+<section id="news" class="minimal-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <header>
+                    {%- if page.series -%}
+                    {%- for series_item in page.series -%}
+                    {%- if series_item.current -%}
+                    <div class="tag">
+                        <div>Guide {{series_item.guide}}</div>
+                        {%- if series_item.part -%}
+                        <div>Part {{series_item.part}}</div>
+                        {%- endif -%}
+                    </div>
+                    {%- endif -%}
+                    {%- endfor -%}
+                    {%- endif -%}
+
+                    <h1>{{ page.title }}</h1>
+                    <h2>{{ page.date | date_to_long_string }}</h2>
+                </header>
+
+                <div id="content" class="formatted-content">
+                    {{ content }}
+
+                    <div id="disclaimer">
+                        Codeplay Software Ltd has published this article only as an opinion piece. Although every
+                        effort has been made to ensure the information contained in this post is accurate and
+                        reliable, Codeplay cannot and does not guarantee the accuracy, validity or
+                        completeness of this information. The information contained within this blog
+                        is provided "as is" without any representations or warranties, expressed or implied.
+                        Codeplay Sofware Ltd makes no representations or warranties in relation to
+                        the information in this post.
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div>
+                    {%- for author in site.authors -%}
+                    {%- assign current_author_id = author.user_id | times:1 -%}
+                    {%- assign article_author_id = page.user_id | times:1 -%}
+                    {%- if current_author_id == article_author_id -%}
+                    <div class="profile">
+                        <img src="{{author.avatar | relative_url}}" alt="{{author.title}}'s Avatar" />
+                        <h1>{{author.title}}</h1>
+                        <h2>{{author.position}}</h2>
+
+                        <ul class="social-icons">
+                            {%- for social_media_item in author.social_media -%}
+                            {%- if social_media_item contains 'facebook' -%}
+                            <li>
+                                <a class="social-icon-facebook"
+                                   href="{{social_media_item}}"
+                                   target="_blank"
+                                   rel="noopener"
+                                   aria-label="Visit Facebook"></a>
+                            </li>
+                            {%- endif -%}
+                            {%- if social_media_item contains 'linkedin' -%}
+                            <li>
+                                <a class="social-icon-linkedin"
+                                   href="{{social_media_item}}"
+                                   target="_blank"
+                                   rel="noopener"
+                                   aria-label="Visit Linkedin"></a>
+                            </li>
+                            {%- endif -%}
+                            {%- if social_media_item contains 'twitter' -%}
+                            <li>
+                                <a class="social-icon-twitter"
+                                   href="{{social_media_item}}"
+                                   target="_blank"
+                                   rel="noopener"
+                                   aria-label="Visit Twitter"></a>
+                            </li>
+                            {%- endif -%}
+                            {%- endfor -%}
+                        </ul>
+                    </div>
+                    {%- endif -%}
+                    {%- endfor -%}
+                    <div>
+                        {%- include _includes/share-buttons.html -%}
+                    </div>
+
+                    {% if page.series %}
+                    <div id="series-list">
+                        <h2>In This Series</h2>
+                        <p>This article is part of a series, please use links below to jump to different parts.</p>
+                        <ol>
+                            {%- for series_item in page.series -%}
+                            <li {% if series_item.current %} class="selected" {% endif %}>
+                                <a href="{{series_item.url | relative_url}}">
+                                    <div class="tag">
+                                        <div>Guide {{series_item.guide}}</div>
+                                        {%- if series_item.part -%}
+                                        <div>Part {{series_item.part}}</div>
+                                        {%- endif -%}
+                                    </div>
+                                    <div>{{series_item.title}}</div>
+                                </a>
+                            </li>
+                            {%- endfor -%}
+                        </ol>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

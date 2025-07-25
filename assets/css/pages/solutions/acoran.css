@@ -1,0 +1,10 @@
+section#splash img {
+    max-height: 500px;
+    max-width: 500px;
+}
+section#standard-based-platform {
+    background-image: linear-gradient(90deg, rgba(33, 11, 78, 1) 0%, rgba(124, 13, 13, 1) 100%);
+    background-color: #210b4e;
+    color: #efefef;
+}
+

@@ -1,0 +1,32 @@
+---
+id: 370
+url: 12-16-19-bringing-nvidia-gpu-support-to-sycl-developers
+user_id: 840
+date: 2019-12-16T15:23:23.3600Z
+category: news
+title: "Bringing Nvidia GPU support to SYCL developers"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/12-16-19-bringing-nvidia-gpu-support-to-sycl-developers
+thumbnail: /assets/images/portal/article-images/df0f156d53b38534115d5cf008ce2629.png
+layout: portal/portal-article-view
+---
+<p class="auto-cursor-target">There was a lot of <a href="https://www.codeplay.com/portal/11-07-19-sycl-strongly-supported-by-codeplay-software-at-supercomputing-2019">SYCL activity during SuperComputing 2019</a>, and if you missed it, we also provided a sneak preview of a project we have been working on to enable Nvidia® hardware support for SYCL developers.</p>
+
+
+<p>Codeplay currently provides "experimental" support for Nvidia devices with ComputeCpp using CUDA. This exposes Nvidia GPUs as data-parallel computing devices and ComputeCpp uses this to target Nvidia GPUs.</p>
+
+<p>We are excited to announce that in 2020 we will be releasing a project that <strong>brings full support for Nvidia devices to SYCL developers</strong>. This project will be fully open source and initially includes integration with Intel's oneAPI, however it could be integrated with other SYCL implementations. <span>During this project our engineers have been working in conjunction with Intel's engineers to implement a back-end for SYCL that uses CUDA to dispatch kernels in PTX format enabling parallel execution on Nvidia GPUs.</span>
+</p>
+
+<p><img src="{{ '/assets/images/portal/article-images/df0f156d53b38534115d5cf008ce2629.png' | relative_url }}"></p>
+
+<p>Software developers will be able to use this implementation with Intel's® oneAPI framework to target Nvidia GPUs using any SYCL code, without any porting or special tricks required. If you have existing SYCL code, or if you are writing new SYCL code, you will be able to compile it and target Nvidia GPUs.</p>
+
+<p>Codeplay will be releasing this as an open source module during H1 2020, and in the future the intention is to upstream this effort to the open source Clang LLVM project, which would make it fully integrated into the Clang toolchain.</p>
+<p><a href="http://eepurl.com/c5KTlD">Sign up to our newsletter</a> to be the first to find out when this project is available.<br></p>
+
+
+

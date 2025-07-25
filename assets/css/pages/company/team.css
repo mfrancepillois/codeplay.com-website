@@ -1,0 +1,56 @@
+#management-team .avatar {
+    margin-bottom: 2rem;
+    transition: 0.3s all;
+    cursor: pointer;
+}
+#management-team .avatar:hover {
+    transform: scale(1.17);
+}
+#management-team h3 {
+    font-size: 1rem;
+    color: #666;
+}
+
+
+@media screen and (min-width: 600px) {
+    .cs .popup-container .popup {
+        height: 450px;
+        max-width: 800px;
+    }
+
+    .cs .popup-container .popup > div {
+        display: grid;
+        grid-template-columns: 40% 60%;
+        height: 100%;
+    }
+
+    .cs .popup-container .popup > div > div:nth-of-type(1) {
+        background-color: #111;
+        color: #efefef;
+        text-align: center;
+    }
+
+    .cs .popup-container .popup > div > div:nth-of-type(1) .avatar {
+        margin-top: 5rem;
+        margin-bottom: 2rem;
+    }
+
+    .cs .popup-container .popup h3 {
+        font-size: 1rem;
+        color: #666;
+    }
+
+    .cs .popup-container .popup > div > div:nth-of-type(2) {
+        padding: 4rem;
+        overflow: auto;
+    }
+}
+
+section#management-team .columns.four {
+    text-align: center
+}
+
+
+section#management-team .bio {
+    display: none;
+}

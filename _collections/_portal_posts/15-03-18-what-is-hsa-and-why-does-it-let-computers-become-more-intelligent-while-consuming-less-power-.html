@@ -1,0 +1,81 @@
+---
+id: 134
+url: what-is-hsa-and-why-does-it-let-computers-become-more-intelligent-while-consuming-less-power
+user_id: 838
+date: 2015-03-18T16:27:24.3600Z
+category: news
+title: "What is HSA and Why Does it Let Computers Become More Intelligent While Consuming Less Power?"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/what-is-hsa-and-why-does-it-let-computers-become-more-intelligent-while-consuming-less-power
+thumbnail: /assets/images/portal/article-images/99012f12a7805998db373189b5262c62.png
+layout: portal/portal-article-view
+---
+
+<p> <img src="{{ '/assets/images/portal/article-images/99012f12a7805998db373189b5262c62.png' | relative_url }}" alt="HSA Foundation logo"/>
+</p><h2>A New Era of Intelligent Computers</h2>
+<p>For decades, the computer industry was all about running the same software faster and faster. We had the megahertz race and then the gigahertz race. Intel still likes to describe the CPU as the “brain” of a computer. Yet we are now in an era where computers are starting to behave more like brains, but most of the work is not being done on the CPU, but instead on new types of “processing cores”. It is to enable a revolution in more intelligent machines, available everywhere, that HSA has been released as a core building-block.
+</p>
+<p>
+To understand why HSA is important, we need to think clearly about what we want our computers (or data centres, or smart phones, or smart devices) to actually do. We need to design systems that integrate everything we need, the software and hardware, and deliver the right kind of performance too.
+</p>
+<p>
+If you take a look at a lot of the hot new areas in computing, you will see computers being adapted for situations where we might want access to knowledge, some help understanding information, or communication with the rest of the world. Our smartphones are with us all the time and let us not only speak to people verbally, but also communicate visually, in writing, or access the vast wealth of data stored on the internet. We can even speak to smartphones and expect an answer. To make this work, we need huge warehouses of computers (“data-centres”) providing the central storage and processing of the vast amounts of data we produce and consume.
+</p>
+<p>
+But these are not the only new computing devices. We are now seeing computing technology appearing everywhere. Cars are starting to be fitted with intelligent driving aids, that can help us park, check we aren’t falling asleep, or spot if we are driving too close to a pedestrian. We are seeing new health devices that track our exercise, diet, and heart rate. These health devices are moving from the consumer fitness trackers into medical devices, so that doctors can track their patient’s health at critical times.
+</p>
+<p>
+These technological revolutions are relying on computers being not only more intelligent, but also able to operate with very low power-consumption. For portable devices, this means that we can run our smartphones or wearable technology on batteries for reasonable periods of time. While for the massive data-centres, the sheer quantity of data requires huge amounts of power to keep the systems going. To achieve this, we need to design hardware that can process massive amounts of data with the minimum usage of power. Unfortunately, using just a CPU on its own is not able to deliver this.
+</p><h2>Understanding Computer Performance: <em>Throughput vs Latency</em></h2>
+<p>The core concept of whether a computer can solve a problem was formalized by Alan Turing, with his definition that we now call “Turing completeness”, as well as the “halting problem”. Turing completeness means that a machine can compute an answer, while the “halting problem” is about whether a computer program finishes in a finite amount of time. But neither promises to give an answer in a reasonable amount of time. As users, we not only want answers, we want answers quickly.
+</p>
+<p>
+When using a device ourselves, we want a rapid answer to our question. But, when running a massive data-centre (such as a search engine) we not only want each user to get a rapid answer, we also want to answer a large number of questions from large numbers of different users. This is a simple way of looking at what in computers is called <em>latency</em>  (the time to answer a question) and <em>throughput</em>  (the number of questions we can answer at once). This is important, because we design devices differently for throughput or latency.
+</p>
+<p>
+The most surprising thing we need to think about with computers is the cost of access to data. As computer processors have become increasingly faster, the energy required to get the vast amounts of data into the processors to be processed has increased by incredible amounts. It now requires tens to thousands of times more energy to move data into a processor than to actually process it. This huge power cost of data movement is massively limiting our ability to design efficient computing devices. Just like with processors, data movement suffers from problems of <em>throughput</em>  and <em>latency</em> , but to a far greater degree.
+</p>
+<p>
+One of the main issues HSA aims to address is this issue of throughput vs latency.
+</p><h2>Delivering Performance and Processing Efficiency: Heterogeneous Systems</h2>
+<p>Today’s computing devices are based on what is called a “System-on-Chip”. These are single chips with different kinds of processing cores for different tasks. Typically, these chips have CPUs (central processing units, which control the rest of the chip); GPUs (graphics processors, which not only deliver 3D graphics for video games, but also the user interface and photo processing); ISPs (special image processors for the camera), and DSPs (signal processors, for handling audio, 2G, 3G, 4G, WiFi and Bluetooth radios). Increasingly, we are seeing more special-purpose processors for things like image-processing, speech recognition and detecting movement of the device. We are even seeing people use FPGAs, which are like “soft chips”: hardware that can be redesigned and adapted using software instead of manufacturing a new chip. We call these systems with lots of different processor cores <em>heterogeneous</em> systems.
+</p>
+<p>
+All these devices are specially designed for different use cases. But how can a software developer design new software for new processor cores without access to standard languages and programming tools? Another main issue that HSA aims to address is the issue of enabling software developers to use normal software development tools to target lots of different processing cores on a chip.
+</p><h2>What is HSA and How is it Different from All Other Heterogeneous Systems Standards?</h2>
+<p>If you look into all the ways of writing software for these heterogeneous systems of CPUs, GPUs, DSPs and FPGAs, you will find a vast proliferation of different standards and commercial solutions. Do we really need another one?
+</p>
+<p>
+There are three reasons why we need HSA:</p><ol>
+<li> HSA is actually <em>underneath</em>  these other standards. HSA enables OpenCL, OpenMP, SYCL, C++ AMP, C++ 17, OpenAcc, Java, Hadoop and a whole range of other programming models. It is the low-level layer on top of which all the other solutions can be delivered and work together.</li>
+<li> HSA solves the problem of both latency and throughput, by enabling code to run on high-throughput devices, while also providing low-latency communication.</li>
+<li> HSA enables integration between different processor cores from different vendors. Not only can you offload work to one processor core, you can combine processor cores together efficiently.</li>
+</ol>
+<p>
+HSA is actually part of a larger effort to enable heterogeneous systems to be as easy to develop software for as CPUs. We want to enable all the languages that CPUs support (such as C++ and Java) to work equally well on all the cores in a system-on-chip. It can be odd seeing HSA for the first time and thinking, “How do I write software for this?” The answer is: the same way you write software for CPUs, but (just as with CPUs) someone has to develop a compiler, debugger and profiler for your programming language.
+</p>
+<p>
+So, yesterday’s release of the v1.0 HSA specification is a huge first step, but it is just a first step. There is a lot more work to do. Without the HSA specification release yesterday, it would be very difficult for us to work on a full range of easy-to-use development tools for heterogeneous systems.
+</p><h2>Where Does Codeplay Fit In?</h2>
+<p>Following this week's <a href="http://www.hsafoundation.com/hsa-foundation-launches-new-era-of-pervasive-energy-efficient-computing-with-hsa-1-0-specification-release/">announcement of the v1.0 specification</a>, Codeplay is pleased to announce that it is working within The HSA Foundation to provide software tools that support the platform. I chair the System Runtime working group, which specifies the API to allow compute kernels to be launched on heterogeneous devices. One of our expert engineers, Simon Brand, is the editor of the specification that is being developed by the Tools working group, which is providing an interface for debuggers, profilers, and other software tools to interact with the runtime, providing an enhanced development workflow.
+</p>
+<p>
+Our work within The HSA Foundation continues Codeplay's involvement in ground-breaking new standards that contribute to enhanced programmability of platforms with multiple processors of different types, including CPUs, GPUs, DSPs, and FPGAs. In addition to The HSA Foundation, Codeplay's engineers already contribute to the working groups of several Khronos standards in this area, many of which are capable of integrating with HSA.
+</p>
+<p>
+HSA is a standardized platform design supported by more than 40 technology companies and 17 universities that unlocks the performance and power efficiency of the parallel computing engines found in most modern electronic devices. It has been a huge collaborative effort. The collaboration continues.
+</p><h2>What are the Components of HSA?</h2>
+<p>The newly-approved specification comprises the key elements that improve the programmability of heterogeneous processors, the portability of programming code and interoperability across different vendor devices. These include:
+</p><ol>
+<li> The HSA System Architecture Specification, which defines how the hardware operates;</li>
+<li> The HSA Programmers Reference Manual (PRM), which targets the software ecosystem, tool and compiler developers;</li>
+<li> The HSA Runtime Specification, which defines how applications interact with HSA platforms.</li>
+</ol><h2>What Next?</h2>
+<p>HSA will enable computing systems, from smartphones to massive data centres, to run highly demanding software. We expect that software to be about enabling computers to “think”, “see” and help humans make complex decisions. Computer vision is a major area of growth. The human senses and brain are incredible in their ability to understand the world. Delivering that kind of ability in computers requires huge processing power. That is where we expect HSA to deliver the greatest benefit.
+</p>
+<p>
+Expect to see a proliferation of new programming languages, tools and devices, all working together in an easy-to-use way to deliver high performance for low power consumption. This is a bold step in delivering a new future of always-available intelligent machines.</p>
+

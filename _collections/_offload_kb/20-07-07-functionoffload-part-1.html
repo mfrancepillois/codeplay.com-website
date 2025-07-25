@@ -1,0 +1,166 @@
+---
+id: 128
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "FunctionOffload  - Part 1"
+redirect_from:
+  - /kb/128
+thumbnail:
+  - /public/uploaded/public/tut_1_a_1.png
+layout: products/offload/kb/view
+---
+<p>This article was originally written by Colin Riley.
+</p><p>
+ This example of using the Codeplay Offload system intends to show how quickly code can be offloaded to SPU with performance quite adequate considering the time taken. Performance, however, is not the main focus of this example - that topic will be discussed further in Part 2 of the tutorial.
+</p><p>
+The 'Function Offload' example of the PS3SDK contains code that updates a simple cloth mesh and renders it. There are various methods used to offload the code, including the 'FunctionOffload' macros, and Job Description Lanugage(JDL). It also expands into how to offload code containing classes and virtual methods.
+</p><p>
+Codeplay Offload is designed to get the maximum possible amount of code 'offloaded' onto the SPUS, quickly and easily. From then, we can profile with SN Tuner and decide, if need be, what areas need manual optimization. Being able to have the code on SPU before changing data structures and code paths allows to keep logically similar code together, increase maintainability, and due to the type checking across the PPU-SPU architectural boundary, keep type safety and allow for more compile-time error checking instead of more unreliable runtime bugs.
+</p><p>
+The sample used can be found in cell/samples/tutorial/FunctionOffloadToSpu. Our sample will all be based along the '1_ppu_single_thread' version to minimise code changes. Before we begin, you should download and install the latest Codeplay Offload toolit, including the Visual Studio plugin. You must also have ProDG, and at minimum the PS3 SDK version which the &lt;offload&gt; installer requests. You can quite easily perform all of the actions outlined in this tutorial outwith of Visual Studio if you wish.
+</p><p>
+Codeplay Offload, applied to this simple PPU case, should allow for the whole Cloth::update method to be offloaded onto SPU. Again, performance at the time is not important. The aim is to get as much code as possible onto SPU. There is no point in optimizing before we know our bottlenecks.
+</p><p>
+So, make a copy of the '1_ppu_single_thread' folder, and call it something different. Load up the Visual Studio solution within it, set the configuration to &quot;PS3 Release&quot;, and navigate in Solution Explorer to cloth.cpp (it's inside the cloth1_simulation source Files project). Cloth::update is towards the end of the file. We want the whole of this method on SPU.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_1.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+First, simply select all code in the method, right click, and select 'Wrap in an offload block'.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/filehost/tut_1_a_2.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+That's the main source code edit done. Now we must tell Visual Studio to use the Offload compiler for cloth.cpp. Right click cloth.cpp, and click 'Activate Offload' - you may get a prompt about the file being modified outside of the editor, click no (The file contents have not actually changed). If you are not using the plugin, you would change this file to use a <a href="{{ '/kb/42/' | relative_url }}">custom build step</a>.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/filehost/tut_1_a_3.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+Try to Build the solution. It will fail to compile using the Offload build step, and give quite a nasty error message along the lines of:
+</p>
+
+<p>
+unity_sources.c:(.text+0x184): undefined reference to `_Z21calculateNextPositionPU7__outer8ParticleiiPU7__outerKS_S2_S2_S2_S2_S2_S2_S2_S2_S2_S2_S2_S2_EU3_SL1'
+</p>
+
+
+
+<p>
+The Offload compiler has many warning and error options to help diagnose problems, one of these is to not allow undefined methods on SPU - which is what this is. This option will be refined in a future build so that more information is output by default, but for now you can switch it on by right clicking on cloth.cpp, and making &quot;Undefined duplicated method error&quot; read 'Yes (-noundefdupmethods)' in Properties.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_4.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+When you try to compile again, you will get a more informative error message:
+</p>
+
+<p>
+2 Error.  The following functions (total 1) require duplication but have not been defined
+</p><p>
+2 void calculateNextPosition(struct Particle *, int , int , const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *, const struct Particle *) declared at .calculateNextPosition.h(12)
+</p>
+
+<p>
+This is in fact a very simple error to get around. The Offload Compiler uses technology Codeplay have developed called <a href="{{ '/kb/123/' | relative_url }}">Call Graph Duplication</a>. Basically, the compiler takes PPU functions and duplicates them, including any stub C++ functionality in the call graph, and recompiles them targeted for SPU. This also takes into account any differences in pointer memory space (PPU or SPU Local Store). For this to work automatically, the compiler needs to see the definition of the functions called in the offload block. At the moment, the calculateNextPosition function is inside 'calculateNextPosition.cpp'.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_6.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+A simple way to get around this, which works in a surprising number of cases, is to simply exclude 'calculateNextPosition.cpp' from the build and just include it at the top of cloth.cpp, creating a unity file.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_7.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+Once this is done, set the Properties of cloth.cpp again; making &quot;Undefined duplicated method error&quot; read 'No'. This is currently required as all calls to c runtime library functions (which are not defined explicitly in the header files) on SPU raise this error incorrectly. If you do not do this, you will get an error about sqrtf. This issue is due to be fixed in a later release.
+</p><p>
+At this point, we should also add the Offload and SPURS libraries to our linker options. Navigate to the Property pages for the startup project (by default it is 'sample_fiber_function_offload_1') and in the Linker-Input page add &quot;$(SCE_PS3_ROOT)/offload-sdk/lib/liboffload.a&quot; to 'Additional Dependencies. In addition to that, add -lfiber_stub, -lspurs_stub and -lspurs_jq_stub. The Offload Runtime uses SPURS Job Queues and internally.
+</p><p>
+The sample should now compile correctly. <strong>Congratulations, you have just offloaded 42 functions to SPU!</strong> The Vectormath and other helper functions are all transformed to run on SPU, and the Offload compiler has a very efficient vmx2spu system built-in, so calling VMX intrinsics inside of an offload block as demonstrated here results in SPU intrinsics.
+</p><p>
+The PPU only version takes an average of 665us per frame to execute the Cloth::update method. Offloaded to SPU, this method takes 1219us, meaning the SPU version is running at a speed around 55% of PPU. If you add the build directory of the configuration and 'Add sub-directories containing elf files' to the SPU Elf search directory options in Tuner and run with SPU PC Sampling enabled you will see the bottleneck is Cache Misses from the software cache.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_8.png' | relative_url }}" alt="Untitled"/>
+</p>
+
+<p>
+In the Offload Runtime on SPU, a Software Cache is used to ensure the largest amount of code can be offloaded, but software cache accesses, and especially misses, can have a large performance hit as demonstrated. The main point to draw from this is that we are only running on 1 SPU, and as the code is a simple loop that can be parallelized easily (due to the separate In/Out particle buffers). The next step should be to get this code split up and running on multiple SPUs, something that you can apply standard multithreading practices to - as you do not need to worry about the fact this will be running on SPU.
+</p><p>
+Results for running on 4 SPUs reduce the time of the update method to 401us.
+</p>
+
+<p>
+<img src="{{ '/public/uploaded/public/tut_1_a_9.png' | relative_url }}" alt="Untitled"/>Note - the current version of &lt;offload&gt; uses the 'Offload' prefix, not Sieve as indicated above.
+</p>
+
+<p>
+For comparison, the 'offload to SPU' SCE sample which uses FunctionOffload macros to offload single function calls make the update method take 805us. A version which offloads batches of function calls, along the same lines as the parallel Codeplay Offload version, takes 350us, however, both of these use multiple fibers to populate the SPURS job lists, while the Codeplay Offload version does not. In addition to this, functions must be able to compile on SPU, so you need to manually separate out any incompatibilities, and also markup your code with various macros to describe function arguments to the system - more complex changes which take longer to do than the simple edits required for Codeplay Offload.
+</p><p>
+Part 2 of the tutorial will deal with optimization methods to further increase performance by modifying code to keep data in SPU Local store. Most of the tips that will be discussed in that second part could also be used on PPU and other architectures to better make use of hardware cache locality, and compiler optimization.
+</p><h3>List of Automatically Duplicated functions.</h3><p>Below is a list of functions that, in addition to the main body of the __offload block, were duplicated and compiled for use on SPU automatically.
+</p>
+<p>
+
+inline Vector3  &amp; Vectormath::Aos::Vector3 ::operator=(class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(523)
+inline Vector3  __outer&amp; Vectormath::Aos::Vector3 ::operator=(class Vectormath::Aos::Vector3 ) __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(523)
+inline Vector3  &amp; Vectormath::Aos::Vector3 ::operator+=(class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludev2&gt; ectormathcppvec_aos.h(632)
+void calculateNextPosition(struct Particle __outer*, int , int , const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*, const struct Particle __outer*), .calculateNextPosition.cpp(80)
+inline Vectormath::Aos::Vector3 ::Vector3 (void), C:usrlocalcelltargetppuincludevectormathcppvectormath_aos.h(46)
+inline Point3  __outer&amp; Vectormath::Aos::Point3 ::operator=(class Vectormath::Aos::Point3 ) __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1500)
+inline Vectormath::Aos::Vector3 ::Vector3 (float , float , float ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(313)
+static inline Vector3  Vectormath::Aos::Vector3 ::zAxis(void), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(361)
+inline Vector3  Vectormath::Aos::Vector3 ::operator-(void) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(678)
+inline Vectormath::Aos::Vector3 ::Vector3 (float ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(336)
+Vector3  calculateSpringForces(const struct DynamicParticle __outer*, const struct DynamicParticle __outer*, float , float , float ), .calculateNextPosition.cpp(26)
+inline Vector3  Vectormath::Aos::Vector3 ::operator*(float ) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(622)
+inline Vector3  Vectormath::Aos::Vector3 ::operator+(class Vectormath::Aos::Vector3 ) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(607)
+Vector3  calculateWindForces(const struct DynamicParticle __outer*, const struct DynamicParticle __outer*, const struct DynamicParticle __outer*, class Vectormath::Aos::Vector3 , class Vectormath::Aos::Vector3 ), .calculateNextPosition.cpp(9)
+inline Point3  &amp; Vectormath::Aos::Point3 ::operator=(class Vectormath::Aos::Point3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1500)
+DynamicParticle  stepParticles(const struct DynamicParticle __outer*, const struct StaticParticle __outer*, float , const class Vectormath::Aos::Vector3 *, class Vectormath::Aos::Vector3 ), .calculateNextPosition.cpp(56)
+inline Vectormath::Aos::Vector3 ::Vector3 (vector float), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(346)
+inline vector float std::negatef4(vector float), C:usrlocalcelltargetppuincludebitsnegatef4.h(12)
+inline Vectormath::floatInVec ::floatInVec (float ), C:usrlocalcelltargetppuincludevectormathcppfloatInVec.h(189)
+inline vector float Vectormath::floatInVec ::get128(void) const, C:usrlocalcelltargetppuincludevectormathcppfloatInVec.h(210)
+inline Vector3  Vectormath::Aos::Point3 ::operator-(class Vectormath::Aos::Point3 ) const __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1584)
+inline Vector3  Vectormath::Aos::Vector3 ::operator-(class Vectormath::Aos::Vector3 ) const __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(612)
+inline floatInVec  Vectormath::Aos::length(class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(772)
+inline float Vectormath::floatInVec :: conversion operator(void) const, C:usrlocalcelltargetppuincludevectormathcppfloatInVec.h(203)
+inline Vector3  Vectormath::Aos::normalize(class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(777)
+inline floatInVec  Vectormath::Aos::dot(class Vectormath::Aos::Vector3 , class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(762)
+inline Vector3  Vectormath::Aos::operator*(float , class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(683)
+inline Vector3  Vectormath::Aos::Vector3 ::operator*(class Vectormath::floatInVec ) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(627)
+inline Vector3  Vectormath::Aos::cross(class Vectormath::Aos::Vector3 , class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(784)
+inline Vector3  Vectormath::Aos::operator*(class Vectormath::floatInVec , class Vectormath::Aos::Vector3 ), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(688)
+inline Point3  Vectormath::Aos::Point3 ::operator+(class Vectormath::Aos::Vector3 ) const __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1589)
+inline Point3  Vectormath::Aos::Point3 ::operator+(class Vectormath::Aos::Vector3 ) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1589)
+inline Vector3  Vectormath::Aos::Vector3 ::operator+(class Vectormath::Aos::Vector3 ) const __outer, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(607)
+inline Vectormath::Aos::Point3 ::Point3 (void), C:usrlocalcelltargetppuincludevectormathcppvectormath_aos.h(812)
+inline vector float Vectormath::Aos::Vector3 ::get128(void) const, C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(401)
+inline vector float _vmathVfDot3(vector float, vector float), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(45)
+inline vector float std::sqrtf4(vector float), C:usrlocalcelltargetppuincludebitssqrtf4.h(13)
+inline Vectormath::floatInVec ::floatInVec (vector float, int ), C:usrlocalcelltargetppuincludevectormathcppfloatInVec.h(173)
+inline float Vectormath::floatInVec ::getAsFloat(void) const, C:usrlocalcelltargetppuincludevectormathcppfloatInVec.h(195)
+inline vector float std::rsqrtf4(vector float), C:usrlocalcelltargetppuincludebitsrsqrtf4.h(13)
+inline vector float _vmathVfCross(vector float, vector float), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(61)
+inline Vectormath::Aos::Point3 ::Point3 (vector float), C:usrlocalcelltargetppuincludevectormathcppvec_aos.h(1363)</p>
+

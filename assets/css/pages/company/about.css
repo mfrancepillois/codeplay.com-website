@@ -1,0 +1,101 @@
+html {
+    --timeline-height: 570px;
+}
+
+.timeline-wrapper {
+    position: relative;
+}
+
+.timeline {
+    background: transparent !important;
+    height: var(--timeline-height);
+    color: white;
+    overflow: hidden;
+    overflow-x: scroll;
+    width: 100%;
+    position: relative;
+    opacity: .96;
+    transition: .5s all;
+    padding-top: 4rem !important;
+    z-index: 1;
+}
+
+.timeline-bg {
+    z-index: 0;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    background: linear-gradient(306deg, rgb(48, 0, 37) 0%, rgb(13, 0, 43) 100%);
+}
+
+.timeline:hover {
+    opacity: 1;
+}
+
+.timeline .item {
+    width: 300px;
+    height: 100%;
+    display: table-cell;
+    vertical-align: top;
+    border-left: rgba(255, 255, 255, .1) 1px solid;
+}
+
+.timeline .item div {
+    padding: 1rem 2rem;
+}
+
+.timeline .wrapper {
+    width: 2464px;
+    table-layout: fixed;
+    display: table;
+    padding: 0 6rem;
+}
+
+.timeline .item h1 {
+    font-size: 1.8rem;
+}
+
+.timeline .item p {
+    opacity: .7;
+}
+
+.timeline .item img {
+    width: calc(100% + 1px);
+    max-width: 300px;
+    height: auto;
+    background-color: #13003C;
+    margin-bottom: 1rem;
+}
+
+.follow-up {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.follow-up > a {
+    background-color: rgba(0, 0, 0, .1);
+    padding: 1.5rem;
+    border-radius: 12px;
+    opacity: .8;
+    transition: .3s all;
+    cursor: pointer;
+    display: block;
+}
+
+.follow-up > a img,
+.follow-up > a i {
+    vertical-align: middle;
+    margin-right: .5rem;
+}
+
+.follow-up > a img {
+    width: 20px;
+    height: auto;
+}
+
+.follow-up > a:hover {
+    opacity: 1;
+}

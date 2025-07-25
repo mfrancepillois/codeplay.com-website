@@ -1,0 +1,14 @@
+---
+id: 19
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-ignoretrapwordonspu"
+redirect_from:
+  - /kb/19
+layout: products/offload/kb/view
+---
+<p>When compiling PPU code for Offload it is quite usual for the code to be littered with the trap word instruction, as a result of runtime asserts. When Offload tries to compile this for SPU it will error, as the trap word instruction does not exist on SPU. To combat this exact issue we added the &ndash;ignoretrapwordonspu command line option, that handily allows the trap word instructions to simply be ignored when compiling the SPU code.
+</p>
+
+

@@ -1,0 +1,247 @@
+---
+id: 11
+url: optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort
+user_id: 391
+date: 2011-07-11T19:14:59.7200Z
+category: news
+title: "Optimizing Sort Algorithms for the PS3  Part 3 (Merge Sort)"
+showOnFrontPage: 0
+views: 571
+tags:
+redirect_from:
+  - /portal/optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Sorting is a simple but important concept for implementing games. For example, sorting transparent objects before rendering or sorting objects by state attribute (e.g. texture) to improve batching. Because of the way most algorithms work (comparing and swapping pairs of items) sorting often takes precious time. With multi-core architectures like the PS3 it makes sense to parallelize this operation to maximize the use of these cores.
+</p>
+<p>
+In the <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort' | relative_url }}">first</a> <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-2-merge' | relative_url }}">two</a> parts we have implemented the quicksort and merge algorithms, optimized them and and compared their performance to the STL versions. In this part we will do the same with merge sort.
+</p>
+<p>
+Quick Links ==
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort' | relative_url }}">Part 1 (Quicksort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-2-merge' | relative_url }}">Part 2 (Merge)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort' | relative_url }}">Part 3 (Merge Sort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-4-offloading-on-1-spu' | relative_url }}">Part 4 (Offloading on 1 SPU)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-5-parallel-sort-on-2-spus' | relative_url }}">Part 5 (Parallel Sort on 2 SPUs)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-6-final-optimizations' | relative_url }}">Part 6 (Final Optimizations)</a>
+</p>
+<p>
+The entire series is also available as a <a href="{{ '/public/uploaded/filehost/Optimizing_Sort_Algorithms_for_the_PS3.pdf' | relative_url }}">single PDF document</a>.
+</p>
+<p>
+Merge Sort ==
+Like quicksort, this sort also takes O(n * log n) time on average but, unlike quicksort, requires a temporary array whose size is equal to the array to be sorted. On the positive side and also unlike quicksort, this sort is stable. This means that items that are equal will be kept in the same order. This can be useful when sorting values of user-defined types such as structs. In addition, its performance doesn't degrade to O(n^2) with already sorted arrays liked quicksort does.
+</p>
+<p>
+The divide-and-conquer approach of this algorithm makes it easy to implement as a recursive function. It goes like this: the array is divided into two equal parts and the function recursively calls itself on each half of the array. When both halves of the array are sorted, they are merged together to the temporary array. After the contents of this array is copied back to the input array the latter is sorted (see code below).
+</p>
+<pre>template&lt;typename T&gt;
+void mergeSort(T *data, T *temp, size_t start, size_t end)
+{
+    size_t count = end - start + 1;
+    if(count &lt; 2)
+        return;
+
+    // divide the array to sort into two parts and sort them
+    size_t mid = (start + end) / 2;
+    mergeSort(data, temp, start, mid);
+    mergeSort(data, temp, mid + 1, end);
+
+    // merge two parts (data) into one (temp)
+    merge(temp + start, data, start, mid, data, mid + 1, end);
+
+    // copy one part from temp to data
+    __builtin_memcpy(data + start, temp + start, (end - start + 1) * sizeof(T));
+}
+</pre>
+<p>This naive recursive implementation takes 29.5 ms to sort 65k floats and 19.5 ms for sorting 65K integers. As a comparison std::stable_sort takes 31.8 ms and 20 ms, respectively. The same &quot;small array&quot; optimisation can be used. When sorting arrays of size 8 and less with insertion sort, we get 21.2 ms for floats and 11.4 ms for integers.
+</p>
+<p>
+The iterative merge algorithm is a bit different from the recursive one. It consists of several passes with an increasing block size m. For the first pass (m = 16), each block of m items is sorted using the insertion sort. Then pairs of adjacent blocks are merged together, i.e. blocks 0 and 1 will be merge into block 01, then blocks 2 and 3 into block 23, then 3 and 4 into block 34 and so on. With each pass the value of m doubles. This means that in the second pass block 01 is merged with block 23, block 45 with block 67 and so on:
+</p>
+<pre>template&lt;typename T&gt;
+void mergeSortIterative(T *data, T *temp, size_t start, size_t end)
+{
+    size_t count = end - start + 1;
+    size_t m = 16;
+    // this algorithm requires that the source array can be divided into
+    // two chunks, one being as least m in size
+    if(count &lt; (m + 1))
+    {
+        insertionSort(data, start, end);
+        return;
+    }
+
+    // sort chunks of m = 16 items
+    size_t i = start;
+    for(; i &lt;= (end - m + 1); i += m)
+        sort16(data, i);
+    if(i &lt; end)
+        insertionSort(data, i, end);
+
+    Merge&lt;T&gt; merge;
+    T *src = temp, *dst = data, *swap;
+    // with each merge pass the chunks double in size
+    for(; m &lt; count; m *= 2)
+    {
+        // alternate between merging data to temp and temp to data
+        // this is to avoid copying temp to data every time
+        swap = src; src = dst; dst = swap;
+        // merge 2 * N chunks of m items into N chunks of 2 * m items
+        mergeIterative(src, dst, start, end, m);
+       // now all chunks of size 2 * m are sorted
+    }
+    // make sure that the sorted data ends up in the 'data' array
+    if(dst == temp)
+        __builtin_memcpy(data + start, temp + start, count * sizeof(T));
+}
+
+template&lt;typename T&gt;
+void mergeIterative(T *data, T *temp, size_t start, size_t end, size_t m)
+{
+    // merge 2 * N chunks of m items into N chunks of 2 * m items
+    size_t i = start;
+    for(; i &lt;= (end - m); i += (2 * m))
+    {
+        size_t endChunk = min(2 * m - 1, end - i);
+        T *src = (T *)(data + i);
+        T *dst = (T *)(temp + i);
+        mergeImpl(dst, src, 0, m - 1, src, m, endChunk);
+    }
+    // copy trailing items that make the array not divisible by 2 * m
+    for(; i &lt;= end; i++)
+        temp[i] = data[i];
+}
+
+template&lt;typename T&gt;
+void sort16(T *data, size_t start)
+{
+    insertionSort(data, start, start + 15);
+}
+</pre>
+<p>With this approach it takes 22.1 ms to sort the float array and 10.7 ms for the integer array which is no improvement over the recursive version. With the iterative approach, unlike with the recursive approach, we can control the size of array chunks that will be sorted using the simpler sort. We also control the alignment of arrays to be merged. This will be useful for vectorizing parts of our implementation and mitigates the additional complexity.
+</p>
+<p>
+Vectorizing ==
+Our implementation so far processes items one at a time and has a lot of branching. As we have seen in the previous part, vectorizing our code using AltiVec SIMD instructions can improve on both counts. Consider the function sortVec4 below which sorts a vector containing four items without any branching:
+</p>
+<pre>// T is either vec_float4 (4 floats) or vec_int4 (4 ints)
+template&lt;typename T&gt;
+inline void sortVec4(T *a)
+{
+    // va = [x, y, x, w]
+    T va = *a;
+    T v1 = vec_perm(va, va, PERM(VA, VA, VC, VC));
+    T v2 = vec_perm(va, va, PERM(VB, VB, VD, VD));
+    // v3.x = [min(v1.x, v2.x), min(v1.y, v2.y), ..., ...]
+    T v3 = vec_min(v1, v2);
+    T v4 = vec_max(v1, v2);
+    // X = v3.x, Y = v3.y and so on with Z, W. Similarly A = v4.x, B = v4.y ...
+    // v1 = [v3.x, v4.x, v3.y, v3.w]
+    v1 = vec_perm(v3, v4, PERM(VX, VA, VY, VW));
+    v2 = vec_perm(v3, v4, PERM(VZ, VC, VB, VD));
+    v3 = vec_min(v1, v2);
+    v4 = vec_max(v1, v2);
+    v1 = vec_perm(v3, v4, PERM(VX, VA, VY, VB));
+    v2 = vec_perm(v3, v4, PERM(VX, VY, VA, VB));
+    v3 = vec_min(v1, v2);
+    v4 = vec_max(v1, v2);
+    *a = vec_perm(v3, v4, PERM(VX, VY, VC, VD));
+}
+</pre>
+<p>Using this function and the mergeVec4 function seen in the previous part we can create a sortVec8 function. sortVec8 sorts two vectors using sortVec4 and merges them using mergeVec4. Similarly with sortVec8 and mergeVec8 (adapted from <a href="http://seven-degrees-of-freedom.blogspot.com/2010/07/question-of-sorts.html">[1</a>]) we can create a sortVec16 function. This function can be used to specialize the sort16 function for float and integer items; the plain insertion sort will be used for sorting other types of arrays.
+</p>
+<p>
+Results ==
+</p>
+
+<p>
+64K floats
+</p>
+<p>
+64K integers
+</p>
+<p>
+std::stable_sort
+</p>
+<p>
+31.8 ms
+</p>
+<p>
+20 ms
+</p>
+<p>
+Recursive merge sort
+</p>
+<p>
+29.5 ms
+</p>
+<p>
+19.5 ms
+</p>
+<p>
+Recursive merge sort, small array (N &lt;= 8)
+</p>
+<p>
+21.2 ms
+</p>
+<p>
+11.4 ms
+</p>
+<p>
+Iterative merge sort, small array (N = 16)
+</p>
+<p>
+22.1 ms
+</p>
+<p>
+10.7 ms
+</p>
+<p>
+Same as above, but sort16 is defined as sortVec16
+</p>
+<p>
+16.6 ms
+</p>
+<p>
+8.7 ms
+</p>
+<p>
+Same as above, but merge is vectorized (mergeVec4)
+</p>
+<p>
+10.8 ms
+</p>
+<p>
+9.6 ms
+</p>
+<p>
+Specializing sort16 gives us some improvements over using insertion sort for small arrays: we get 16.6 ms for float arrays and 8.7 ms for integer arrays. Finally, if we use the vectorized merge implementation described in the previous part, we get 10.8 ms for float arrays and 9.6 ms for integer arrays. This is a big speed-up for sorting floats but a regression for sorting integers.
+</p>
+<p>
+This is not surprising since we observed the same kind of slowdown when using the vectorized merge on integer arrays. With template specialization we can easily choose to use the vectorized variant only for float arrays. Also, as we will see this won't be an issue when offloading to SPUs.
+</p>
+<p>
+In the <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-4-offloading-on-1-spu' | relative_url }}">next part in the series</a> we will see how to run some of the code we have presented in this series on a SPU using Offload.
+</p>
+<p>
+References ==
+[1] <a href="http://seven-degrees-of-freedom.blogspot.com/2010/07/question-of-sorts.html">http://seven-degrees-of-freedom.blogspot.com/2010/07/question-of-sorts.html</a>
+</p>
+
+
+
+

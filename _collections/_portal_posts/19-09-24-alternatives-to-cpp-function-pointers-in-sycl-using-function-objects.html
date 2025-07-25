@@ -1,0 +1,287 @@
+---
+id: 357
+url: 09-24-19-alternatives-to-cpp-function-pointers-in-sycl-using-function-objects
+user_id: 852
+date: 2019-09-24T11:31:04.7200Z
+category: blogs
+title: "Alternatives to C++ Function Pointers in SYCL using Function Objects"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/09-24-19-alternatives-to-cpp-function-pointers-in-sycl-using-function-objects
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Function Pointers are a feature of the C language and so form part of the C++ standard. As such, a
+  function pointer allows the following behavior:</p>
+
+<ul>
+  <li>"A <code>pointer</code> to a <code>function</code> can be passed as a <code>parameter</code>
+    to another function"</li>
+</ul>
+
+<p>In C++, especially in modern C++, function pointers are a legacy feature from the C language but they
+  still exist in some code bases.</p>
+
+<p>At Codeplay we develop <a href="https://developer.codeplay.com">ComputeCpp</a>, an implementation of the
+  SYCL standard. <a href="https://sycl.tech/">SYCL</a> (pronounced ‘sickle’) is a royalty-free, cross-platform
+  abstraction layer that enables code for heterogeneous processors to be written in a “single-source” style
+  using completely standard C++. SYCL enables single source development where template functions can contain
+  both host and device code to construct complex algorithms that use acceleration. However, SYCL does not
+  provide support for function pointers since this is a limitation posed by the design of OpenCL v1.2 which
+  is the basis of the current SYCL v1.2.1 definition.</p>
+
+<p>But there is good news, we can use modern C++ to implement a solution that can be used with SYCL. SYCL
+  is built with C++11 (and onward depending on the implementation), meaning features like anonymous functions
+  known as "lambdas" can be used with little to zero overhead. Even going back to C++98/03 it is possible to
+  use function objects defined as either structs or classes, and additionally, you can template your operation
+  (the computation logic) to provide a generic way to consume the function objects or lambdas.</p>
+
+<p>Although function pointers are a legacy C/C++ approach the main benefit is fairly obvious; they provide
+  a straightforward mechanism for choosing a function to execute at run-time.</p>
+
+<p>Here is a short example using a function pointer to perform binary operations such as <code>addition</code>,
+  <code>subtraction</code>, <code>multiplication</code> and <code>division</code>.</p>
+
+<p>First we define the operations:</p>
+
+<pre><code>template&lt;typename T&gt;
+auto      add(T left, U right) -&gt; T { return left + right; }
+template&lt;typename T&gt;
+auto subtract(T left, U right) -&gt; T { return left - right; }
+template&lt;typename T&gt;
+auto multiply(T left, U right) -&gt; T { return left * right; }
+template&lt;typename T&gt;
+auto   divide(T left, U right) -&gt; T { return left / right; }
+</code></pre>
+
+<p>Now we can define the function that will compute the result based on the provided operation
+  via the function pointer parameter:</p>
+
+<pre><code>template&lt;typename T&gt;
+auto calculate(T left, T right, int (*binary_op)(T, T)) -&gt; T {
+  return (*binary_op)(left, right);
+}
+// usage: calculate(6, 3.5, add);</code></pre>
+
+<p>On the <code>return (*binary_op)(left, right);</code> call, we are dereferencing the function
+  pointer and this allows us to execute the code in the memory block it points to.</p>
+<p>If we try to call our <code>calculate</code> function or even call any of the binary operators
+  <code>(add, subtract, multiply, divide)</code> inside a SYCL kernel, we will get an error from
+  the SYCL device compiler that indicates that the C++ construction being used cannot be converted
+  into a valid OpenCL code.</p>
+
+<p>Therefore, we need to use an alternative approach that suggests changing the binary operations
+  (our algebraic functions) to be function objects instead of global functions. Additionally,
+  function objects have the ability to encapsulate logic and state within a unique type.</p>
+
+<p>In order to produce a valid compile-time resolvable C++ code, we have to define a template
+  object type such as a <code>struct</code> or <code>class</code> and overload the function
+  call <code>operator()</code> to carry out the computation. C++ allows the overloading of the
+  function call <code>operator()</code>, such that an object instantiated from a class can
+  be invoked like a function.</p>
+
+<p>Let's modify the calculate function to take a function object as an argument instead of a function pointer.</p>
+
+<p>There is a slight difference in the definition; we need to pass the function object a template, but it
+  is in fact easier to understand as no pointer dereferencing is involved.</p>
+
+<p>I actually think this makes things clearer and more readable:</p>
+
+<pre><code>template &lt;typename T, class Operation&gt;
+auto calculate(T left, T right, Operation binary_op) -&gt; T {
+  return binary_op(left, right);
+}
+// usage: calculate(6, 3.5, add&lt;double&gt;{});</code></pre>
+
+<p>On the <code>return binary_op(left, right);</code> call, we are just calling the
+  overloaded <code>operator()</code> of the function object.</p>
+
+<p>Next let's define the function objects:</p>
+
+<pre><code>template&lt;typename T&gt;
+struct add {
+  auto operator()(T left, T right) -&gt; T {
+    return left + right;
+  }
+};
+
+...</code></pre>
+
+<p>The rest of the function objects are defined in the same way with their specific logic
+  inside the overloaded <code>operator()</code>.</p>
+
+<p>Although this may add a small amount of complexity, it provides a good alternative to using
+  function pointers in SYCL kernels and offers some additional benefits. The main benefit is that
+  they are <em>objects</em> and hence can contain state, either statically across all instances
+  of the function objects or individually on a particular instance.</p>
+
+<p>Now that this is clear let's walk through some examples.</p>
+
+<h2>Example Implementation for SYCL Code Using Function Objects</h2>
+
+<p>The following code is intended to offer a <em>generic</em> program that generates sequences of any type.
+  It is very simplified for the purpose of showcasing an alternative to function pointers by
+  using function objects.<br>We can define our abstract SYCL kernel functor, where the real
+  logic is not implemented as a part of this class.</p>
+
+<pre><code>template &lt;typename T, class Operation&gt;
+class generator_kernel {
+  static constexpr auto read_mode = access::mode::read;
+  static constexpr auto write_mode = access::mode::write;
+  static constexpr auto target = access::target::global_buffer;
+
+ public:
+  generator_kernel(accessor&lt;T, 1, read_mode, target&gt; input_acc,
+           accessor&lt;T, 1, write_mode, target&gt; output_acc, Operation op)
+    : m_input_acc(input_acc), m_output_acc(output_acc), m_op(op) {}
+
+  void operator()(item&lt;1&gt; item) {
+    auto id = item.get_linear_id();
+    m_output_acc[id] = m_op(m_input_acc[id]);
+  }
+
+ private:
+  accessor&lt;T, 1, read_mode, target&gt; m_input_acc;
+  accessor&lt;T, 1, write_mode, target&gt; m_output_acc;
+  Operation m_op;
+};</code></pre>
+
+<p>On <code>line 1</code>, we declare our function object template. I like to use <code>class</code>
+  instead of <code>typename</code> in this case because it communicates better that Operation is going
+  to be an actual <code>class</code> (or <code>struct</code>).<br>The kernel becomes rather simple as
+  all of the computational logic is now defined by the function object - <code>op</code> that will be
+  passed later when invoked in the application.</p>
+
+<p>Having the operation declared as a template which allows us to pass a functor with an overloaded
+  <code>operator()</code> which will behave similarly to a function pointer.</p>
+
+<p>Here is the function we will call to generate a sequence:</p>
+
+<pre><code>template &lt;typename T, class Operation&gt;
+void generate_seq(const std::vector&lt;T&gt;&amp; input, std::vector&lt;T&gt;&amp; output,
+                  size_t num_elements, Operation op) {
+&lt;&lt; setup buffers &gt;&gt;
+
+queue.submit([&amp;](handler&amp; cgh) {
+  &lt;&lt; setup accessors &gt;&gt;
+
+  auto kernel = generator_kernel&lt;T, Operation&gt;(input_acc, output_acc, op);
+  cgh.parallel_for(range&lt;1&gt;(num_elements), kernel);
+}</code></pre>
+
+
+<p>The <code>input</code> array in the function parameters is used to store the <code>index</code>
+  values of the sequence that is to be generated.</p>
+
+<p>We instantiate the kernel function object - <code>generator_kernel</code> with a template
+  operation 'auto kernel = generator_kernel&lt;T, Operation&gt;(input_acc, output_acc, op);'.</p>
+
+<p>Now we can create the function objects that we pass as operations.</p>
+
+<p>
+  <strong>1.</strong> A functor that generates an incremental sequence (it increments each element's value by 1).</p>
+
+<pre><code>template &lt;typename T&gt;
+struct increment {
+  auto operator()(int idx) -&gt; T {
+    T res = 0;
+    for (auto i = 0; i &lt; idx; i++) {
+      res++;
+    }
+    return res;
+  }
+};</code></pre>
+
+<p>
+  <code>int idx</code> is the work-item id or our index derived from the input array of index values.</p>
+<p>We can also invoke functors from the body of other functors, thus we can re-use existing code
+  to extend our functionality.</p>
+<p>
+  <strong>2.</strong> The following functor will increment each element in the array and multiply
+  it by a scalar, demonstrating a more specialized sequence based on our <code>input indexes</code>.</p>
+
+<pre><code>template &lt;typename T, int scalar&gt;
+struct increment_and_multiply {
+  auto operator()(int idx) -&gt; T {
+    T res = 0;
+    res = increment&lt;T&gt;{}(idx);
+    res *= scalar;
+    return res;
+  }
+};</code></pre>
+
+<p>First, we declare another template parameter to tune the function object to accept a scalar value
+  for the multiplication part.</p>
+
+<p>In this functor we also make use of other function objects to avoid copy-pasting code by doing an
+  inline instantiation of the <code>increment&lt;T&gt;</code> function object and invoking it through the
+  overloaded function call operator.</p>
+
+<p><strong>3.</strong> Finally, as a more interesting and practical example, we can have a
+  functor that will compute and return the <code>fibonacci sequence</code>.</p>
+
+<pre><code>template &lt;typename T&gt;
+struct fibonacci {
+  auto operator()(int idx) -&gt; T {
+    T res = 0, a = 1, b = 1;
+    if (idx &lt;= 0) {
+      return 0;
+    }
+    if (idx &gt; 0 &amp;&amp; idx &lt; 3) {
+      return 1;
+    }
+    for (auto i = 2; i &lt; idx; i++) {
+      res = a + b;
+      a = b;
+      b = res;
+    }
+    return res;
+  }
+};</code></pre>
+
+<p>Now it is time to use these functors. Below is how you pass them to the
+  <code class="s1wjcqzz-7 kYgbJw">generate_seq</code> function where they will be
+  called like normal functions via the <code>operator()</code>.</p>
+
+<pre><code>// 1 - use 'increment'
+generate_seq(input, output, num_elements, increment&lt;int&gt;{});
+// 2 - use 'increment multiply by scalar'
+generate_seq(input, output, num_elements, increment_and_multiply&lt;int&gt;{});
+// 3 - use 'fibonacci'
+generate_seq(input, output, num_elements, fibonacci&lt;int&gt;{});
+</code></pre>
+
+<p>Since we cannot use function pointers in SYCL kernels, function objects can be used as a
+  standard alternative to them and we also gain other benefits that come alongside function
+  objects. They are flexible, work well with templates and integrate seamlessly within OOP
+  application designs, allowing you to take advantage of <code>object state</code>,
+  <code>composition</code> and even <code>compile-time polymorphism</code> (if you are interested
+  you can also read my <a href="{{ '/portal/07-12-19-enabling-polymorphism-in-sycl-using-the-cpp-idiom-crtp' | relative_url }}">blog
+    post on using polymorphism</a> in SYCL).</p>
+
+<h2>Another alternative to function pointers - Generic Lambdas</h2>
+
+<p>We mentioned lambdas as an alternative to function pointers in the first section and they were introduced in
+  C++11 with more improvements for C++14 including the addition of generic lambdas. <br>If you are interested
+  in using generic lambdas you can read my
+  <a href="{{ '/portal/06-11-19-sycl-cpp-generic-interfaces-with-generic-lambdas' | relative_url }}">blog post</a> that explains how
+  to use them in SYCL device code with practical examples. The SYCL application example in that blog matches
+  the one in this post. <br>While SYCL v1.2.1 was defined with C++ 11 in mind,
+  <a href="https://developer.codeplay.com" target="_blank" rel="noopener">ComputeCpp</a>, our implementation of
+  SYCL, supports C++14 features and make it possible to use generic lambdas, but other SYCL implementations
+  may not if they are using C++11.</p>
+
+<h3>Another Possible Solution</h3>
+
+<p>There may be a possibility that you you really need to call function pointers inside a SYCL kernel.
+  This might mean adding SYCL support to an existing C++ code base that already makes use of function
+  pointers that would be difficult to replace with the proposed solution.</p>
+
+<p>ComputeCpp may be able to
+  support this behavior, however, it is required that the body of the function you are pointing to is
+  resolved in compile time. If you'd like to find out more about this
+  <a href="https://support.codeplay.com/" target="_blank" rel="noopener">ask on our forum to discuss your problem</a>.
+  The solution may vary based on the specifics of your use-case.</p>

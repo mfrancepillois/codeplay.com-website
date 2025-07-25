@@ -1,0 +1,100 @@
+---
+layout: page
+nav_style: alt
+stylesheets:
+  - /assets/css/pages/portal/news.css
+scripts:
+  - /assets/js/pages/portal/index.js
+---
+
+<!-- Search panel -->
+<div id="search-panel">
+    <div class="wrapper">
+        <div>
+            <ul>
+                <li {% if page.url contains 'all' %}class="selected"{% endif %}>
+                    <a href="{{ '/portal/all-updates' | relative_url }}">
+                        <i class="material-icons">article</i>All Updates</a></li>
+                <li {% if page.url contains 'blogs' %}class="selected"{% endif %}>
+                    <a href="{{ '/portal/blogs' | relative_url }}">
+                        <i class="material-icons">rss_feed</i>Developer Blogs</a></li>
+                <li {% if page.url contains 'news' %}class="selected"{% endif %}>
+                    <a href="{{ '/portal/news' | relative_url }}">
+                        <i class="material-icons">announcement</i>News</a></li>
+                <li {% if page.url contains 'press' %}class="selected"{% endif %}>
+                    <a href="{{ '/portal/press-releases' | relative_url }}">
+                        <i class="material-icons">camera_enhance</i>Press-Releases</a></li>
+                <li {% if page.url contains 'videos' %}class="selected"{% endif %}>
+                    <a href="{{ '/portal/videos' | relative_url }}">
+                        <i class="material-icons">movie_creation</i>Videos</a></li>
+            </ul>
+        </div>
+        <div>
+            <input id="search-box" type="search" placeholder="sycl, dpc++, AI Hardware Summit, etc" autocomplete="off" />
+            <a href="{{ '/portal.json' | relative_url }}" target="_blank" rel="noreferrer">
+                <img src="{{ '/assets/images/portal/json.png' | relative_url }}" alt="JSON Feed" />
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Section: News -->
+<section id="news" class="minimal-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <div id="news-list" class="columns two">
+                    {%- for article in paginator.posts -%}
+                    <div class="news-panel">
+                        <a href="{{article.url | relative_url}}">
+                            <div>
+                                <img src="{{article.thumbnail | relative_url}}" alt="{{article.title}} Image" />
+                            </div>
+                            <div>
+                                {%- for author in site.authors -%}
+                                {%- assign current_author_id = author.user_id | times:1 -%}
+                                {%- assign article_author_id = article.user_id | times:1 -%}
+                                {%- if current_author_id == article_author_id -%}
+                                <div class="avatar">
+                                    <img src="{{ author.avatar | relative_url}}" alt="{{author.title}}'s Avatar" />
+                                </div>
+                                {%- endif -%}
+                                {%- endfor -%}
+
+                                <small>{{ article.category }}</small>
+
+                                {%- if article.series -%}
+                                {%- for series_item in article.series -%}
+                                {%- if series_item.current -%}
+                                {%- if series_item.part -%}
+                                <div class="tag">
+                                    <div>Part {{series_item.part}}</div>
+                                </div>
+                                {%- endif -%}
+                                {%- endif -%}
+                                {%- endfor -%}
+                                {%- endif -%}
+
+                                <h1>{{ article.title }}</h1>
+                                <p>{{ article.description }}</p>
+                                <time datetime="{{ article.date | date: '%Y-%m-%d' }}">
+                                    {{ article.date | date_to_long_string }}</time>
+                            </div>
+                        </a>
+                    </div>
+                    {%- endfor -%}
+                </div>
+                <!-- Paginator -->
+                {%- include _includes/portal-paginator.html -%}
+            </div>
+            <div>
+                <div id="twitter-feed" data-requiresCookieAcceptance="true">
+                    <iframe src="{{ '/portal/news/twitter-feed' | relative_url }}"
+                            title="Codeplay Twitter Feed"
+                            height="100%"
+                            frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

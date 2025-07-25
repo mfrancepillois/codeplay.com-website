@@ -1,0 +1,104 @@
+---
+id: 193
+category: offload
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "Automatic separate compilation - aka Call-Graph Duplication"
+url: automatic-separate-compilation---aka-call-graph-duplication
+description:
+redirect_from:
+  - /company/documents/automatic-separate-compilation---aka-call-graph-duplication
+layout: company/documents/view
+---
+<p>Offload C++ is a simple multicore programming model which minimises code changes and shifts the offloading work to the compiler. When targeting heterogeneous processors such as the Cell processor, this simple programming model requires the Offload C++ compiler to perform call-graph duplication which is transparent to the programmer. Code (and local data) inside an <a href="{{ '/account/index.php?option=com_content&amp;view=article&amp;id=191:offload-in-a-nutshell&amp;catid=89:technology' | relative_url }}">__offload block</a> is automatically compiled separately for a different type of processor.
+</p><h2>Why is call-graph duplication required?</h2><p>Standard C++ does not provide memory semantics for different memory spaces on Non-Uniform Memory Architectures (NUMA) such as the Cell processor. Call-graph duplication in Offload C++ is necessary to enable compiling standard C++ code across different instruction types and memory spaces of those processors.
+</p><p>
+Wrapping a section of code inside a block that runs on a different processor however implicitly introduces additional memory semantics. Local (non-static) data items defined inside an __offload block are now located in local  memory (scratchpad memory) whereas data outside the block (outer data) is located in host memory (see <a href="#pointercodeduplication">code sample below</a>). Since accessing both types of memory from inside an __offload block requires different operations,  the compiler has to be able to distinguish addresses of local and outer data. The compiler automatically deduces the (address) types of pointers and references, and separately compiles (duplicates) the code for the appropriate address type.
+</p><p>
+At the same time call-graph duplication allows to offload a large amount of code to heterogeneous processors very quickly.
+</p><h2>Simple programming model - a lot of work for the compiler</h2><p>On homogeneous multi-core processors the code inside __offload blocks (offloaded code) runs on the same type of processor as the code surrounding the __offload block (host code). However, on heterogeneous processors, the offloaded code may run on a different type of processor. For example, on the Cell processor, host code runs on the PPU whereas the offloaded  code runs on the SPU (s). Since host code and offloaded code are in the same translation unit (single source programming model), the compiler has to be able to process host code and offloaded code separately for both types of processors.
+</p><p>
+Offloading full C++ in a way that is transparent to the programmer requires a lot of work from the compiler. Already simple language features (and the combination thereof) such as overloading, pointer parameters (see example below), non-static member methods, out-of-class definitions of class members, non-pod arguments, virtual methods, function pointers etc pose challenges for an offloading compiler. Also C++ ABI integration issues such as name mangling need to be covered.
+</p><h2>Call-graph duplication for heterogeneous processors</h2><p>For the Cell processor the <a href="http://offload.codeplay.com">Offload C++ compiler</a> automatically compiles (duplicates) the code inside an __offload block for the SPU. For example, in the code below the function modifyglobal is called inside an __offload block.
+</p>
+<pre>int global;
+void setglobal(int arg)
+{
+    global = arg;
+}
+void modifyglobal(int arg)
+{
+     setglobal(arg);
+}
+
+int main()
+{
+    modifyglobal(1);
+     __offload
+    {
+            modifyglobal(2);
+    }
+}
+</pre><p>The compiler automatically compiles a separate definition (in addition to the definition for the PPU) of that function to run on an SPU. The function setglobal is also separately compiled as it is called from modifyglobal. Note that the function setglobalmodifies the variable global which is defined outside the __offload block, so it is on the PPU. For the SPU version of that function the compiler therefore generates access code (DMA (Direct Memory Access) or software cache access) to perform this assignment from the SPU.
+</p><h2>Offloading code containing pointer parameters</h2><p>Complex C/C++ programs contain a lot of pointer code. Offloading such code without further changes requires the compiler to be able to distinguish and separately process addresses on the PPU (__outer) and SPU (local). See for example the following test case:
+</p>
+<pre>#include &lt;stdio.h&gt;
+
+int f(int* a, int* b) {
+    return *a + *b;
+}
+
+int ga = 1;
+int gb = 2;
+
+int a,b,c,d;
+
+int main () {
+
+    __offload {
+        int la = 3;
+        int lb = 4;
+        a = f(&amp;la, &amp;lb); //f(int*        ,int*)
+        b = f(&amp;ga, &amp;gb); //f(__outer int*,__outer int*)
+        c = f(&amp;la, &amp;gb); //f(int*        , __outer int*)
+        d = f(&amp;ga, &amp;lb); //f(__outer int*,int*)
+    }
+
+    if ((a == 7) &amp;&amp; (b == 3) &amp;&amp; (c == 5) &amp;&amp; (d == 5)) {
+        printf(&quot;PASS\n&quot;);
+    } else {
+        printf(&quot;FAIL: %d %d %d %d\n&quot;,a,b,c,d);
+        return 1;
+    }
+}
+</pre><p>Inside the __offload block the function f is called with 4 different combinations of  __outer  and SPU- local addresses. The compiler generates (duplicates) a SPU definition of that function for each combination to suit each call arguments. Dereferencing pointers inside the each duplicated generates the appropriate access (DMAs/SW cache accesses on __outer pointers and SPU local reads/writes on local pointers). No change to the function source code is required.
+</p><p>
+Implicit method parameters such as the this pointer are treated similar to normal pointers: Non-static member methods are also duplicated according to the address type of the this pointer.
+</p>
+<pre>struct myClass
+{
+    int var;
+    myClass(int init)
+    {
+        var = init;
+    }
+    void set(int val)
+    {
+        var = val;
+    }
+};
+
+myClass m(1);//global PPU instance
+
+void func()
+{
+    __offload
+    {
+        myClass n(0); //local SPU instance - constructor is automatically offloaded
+        m.set(8); //set is duplicated with an __outer this pointer
+    }
+}
+</pre><p>In the above example a  local variable n is declared inside the __offload block and initialized through a constructor call - this constructor is offloaded with a local this pointer. Then, method set is called on the global variable m - this method is offloaded with an __outer this pointer.
+</p>
+
+

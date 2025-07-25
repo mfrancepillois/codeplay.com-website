@@ -1,0 +1,30 @@
+---
+id: 98
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Offload1204"
+redirect_from:
+  - /kb/98
+layout: products/offload/kb/view
+---
+<p><strong>This virtual or pointer call may fail due to missing entry in domain (declared at %1). That domain must contain a function with the signature %2. For example [ &amp; myfuncwithcorrect_signature]</strong>
+</p><p>
+A domain has been declared but it contains the wrong entries. For example:
+</p>
+<pre><code>int (* ptr)();
+void func(int);
+
+void test()
+{
+	__offload [func] //wrong entry in domain
+	{
+		ptr(); // call that requires a domain
+	}
+}
+</code></pre><p>In this example the domain consists of only one function func whose signature void(int) mismatches with that of the call site of the only pointer call int(),  so this pointer call would fail with a runtime error. This warning is also useful to prevent wasteful offloading as this domain declaration unnecessarily offloads func which is not used inside the __offload block.
+</p><p>
+A description of domains and how to use them can be found in <a href="{{ '/kb/132' | relative_url }}">Article 132</a>
+</p>
+
+

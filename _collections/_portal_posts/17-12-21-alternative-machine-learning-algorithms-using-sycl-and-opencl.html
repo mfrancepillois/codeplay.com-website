@@ -1,0 +1,650 @@
+---
+id: 286
+url: 12-21-17-alternative-machine-learning-algorithms-using-sycl-and-opencl
+user_id: 844
+date: 2017-12-21T14:02:14.3600Z
+category: blogs
+title: "Alternative machine learning algorithms using SYCL and OpenCL"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/12-21-17-alternative-machine-learning-algorithms-using-sycl-and-opencl
+thumbnail: /assets/images/portal/article-images/41a01810c737a115208ca51aaea6904d.jpg
+layout: portal/portal-article-view
+---
+<br><img src="{{ '/assets/images/portal/article-images/41a01810c737a115208ca51aaea6904d.jpg' | relative_url }}" width="593" height="395">
+<p>Classification is a common use-case for machine learning algorithms and is often achieved using regression. Machine learning (ML) is very computationally intensive so making the most of the available hardware is important to improve the performance of machine learning applications. Heterogeneous computing involves using multiple processor architectures to perform complex operations in parallel and offers a way to improve the performance of machine learning applications. Neural networks have become a well-recognized and widely applied solution to machine learning problems and <a href="https://books.google.com/ngrams/graph?content=machine+learning%2Cneural+network%2Cclassifier%2Csvm%2Cdecision+tree%2Cbayes%2Cgmm&amp;case_insensitive=on&amp;year_start=1960&amp;year_end=2008&amp;corpus=15&amp;smoothing=3&amp;share=&amp;direct_url=t4%3B%2Cmachine%20learning%3B%2Cc0%3B%2Cs0%3B%3BMachine%20Learning%3B%2Cc0%3B%3Bmachine%20learning%3B%2Cc0%3B%3BMachine%20learning%3B%2Cc0%3B%3BMACHINE%20LEARNING%3B%2Cc0%3B.t4%3B%2Cneural%20network%3B%2Cc0%3B%2Cs0%3B%3Bneural%20network%3B%2Cc0%3B%3BNeural%20Network%3B%2Cc0%3B%3BNeural%20network%3B%2Cc0%3B%3BNEURAL%20NETWORK%3B%2Cc0%3B.t4%3B%2Cclassifier%3B%2Cc0%3B%2Cs0%3B%3Bclassifier%3B%2Cc0%3B%3BClassifier%3B%2Cc0%3B%3BCLASSIFIER%3B%2Cc0%3B.t4%3B%2Csvm%3B%2Cc0%3B%2Cs0%3B%3BSVM%3B%2Cc0%3B%3Bsvm%3B%2Cc0%3B%3BSvm%3B%2Cc0%3B.t4%3B%2Cdecision%20tree%3B%2Cc0%3B%2Cs0%3B%3Bdecision%20tree%3B%2Cc0%3B%3BDecision%20Tree%3B%2Cc0%3B%3BDecision%20tree%3B%2Cc0%3B%3BDECISION%20TREE%3B%2Cc0%3B.t4%3B%2Cbayes%3B%2Cc0%3B%2Cs0%3B%3BBayes%3B%2Cc0%3B%3BBAYES%3B%2Cc0%3B%3Bbayes%3B%2Cc0%3B.t4%3B%2Cgmm%3B%2Cc0%3B%2Cs0%3B%3BGMM%3B%2Cc0%3B%3BGMm%3B%2Cc0%3B%3BGmm%3B%2Cc0%3B%3Bgmm%3B%2Cc0%3B%3BGmM%3B%2Cc0">statistics from Google Books</a> show this upward trend in the last few years.</p>
+
+<p>Using
+    <a href="https://www.codeplay.com/products/computesuite/computecpp">ComputeCpp</a>, the open SYCL standard has been used to enable OpenCL hardware with <a href="https://github.com/lukeiwanski/tensorflow">TensorFlow</a>, a well known deep neural network, but what about techniques that don't use neural networks for machine learning. We will describe several techniques that can be used as an alternative to neural networks. This code was developed as a proof of concept to show what a machine learning application using heterogeneous computing can look like and has been published as an open source project. All of the results in this blog post were computed using an Intel Core I7-6700K CPU and a Radeon R9 Fury Nano GPU with single floating-point precision.</p>
+
+<p>The "SYCL-ML" project and example code is hosted on <a href="https://github.com/codeplaysoftware/SYCL-ML">GitHub</a>.</p>
+
+<p>
+  We developed this project using SYCL and in particular ComputeCpp, which is our implementation of SYCL, to compile and run the code. SYCL is a royalty-free, cross-platform C++ abstraction layer that builds on the underlying concepts, portability and efficiency of OpenCL, while adding the ease-of-use and flexibility of modern C++11/14.  SYCL enables single-source development, where the same C++ functions are compiled for both host (typically a CPU) and device (typically a GPU) to construct complex algorithms that use OpenCL acceleration. You can find out more about the SYCL standard on the <a href="https://www.khronos.org/sycl">Khronos website</a>, or dive into the <a href="https://developer.codeplay.com/computecppce/latest/sycl-guide-introduction">SYCL guide for beginners</a>.<br>
+
+</p>
+
+<p>
+  We call this project SYCL-ML and it is a library implementing accelerated versions of four classical machine learning algorithms using the open SYCL standard, these algorithms are:</p>
+<ul>
+  <li>Linear Classifier</li>
+  <li>Gaussian Classifier</li>
+  <li>Gaussian Mixture Model</li>
+  <li>Support Vector Machine</li>
+</ul>
+
+<p>Most of the project uses pure SYCL to implement the different kernels however the project has two dependencies that already implement some useful kernels: <a href="https://bitbucket.org/mehdi_goli/opencl/overview">Eigen</a> and <a href="https://github.com/KhronosGroup/SyclParallelSTL">SyclParallelSTL</a>. Eigen is a templated library for linear algebra and Codeplay is working on a custom version that uses SYCL for "Tensor" operations. Eigen is already used in the OpenCL implementation of TensorFlow but SYCL-ML is the proof that Eigen can be used with ease in other simpler SYCL applications. In particular, Eigen is used for its tensor contraction (used as a matrix multiplication) and for some partial reductions (such as summing over a specific dimension of a matrix). The second dependency, SyclParallelSTL, is used to implement some simple kernels in a couple of C++ lines only using the <a href="http://en.cppreference.com/w/cpp/experimental/parallelism">execution policy</a> extension that enables the use of parallel versions of standard C++ methods.</p>
+<h2>The MNIST dataset</h2>
+
+<p>
+  We make use of the
+  <a href="http://yann.lecun.com/exdb/mnist/">
+    MNIST
+  </a>
+   dataset to test each of the classification algorithms presented below. MNIST is a dataset composed of labelled examples of handwritten digits, and is commonly used as a benchmark for classification algorithms. The images are 28 by 28 pixels in grayscale and the labels are the 10 digits.</p>
+
+<p>Because the algorithms are not specific to images an "image" will be mentioned as an "observation". For MNIST the size of an observation is 28*28=784, there are 60,000 observations in the training set and 10,000 in the test set.</p>
+
+<p>The frequency of each label is about the same in both the training set and test set, for this reason the results will only show the success rate (precision and recall are roughly the same).</p>
+<h2>Implemented algorithms</h2><br>
+<h3>Principal Component Analysis</h3>
+
+<p>
+  PCA is an unsupervised algorithm that finds a new basis for any given dataset in order to reduce the dimensionality of the observations to any chosen integer N. It can be proven that in order to lose as little information as possible, the optimal basis should be a set of N eigenvectors of the covariance matrix. The eigenvalue corresponding to an eigenvector represents the "amount of information" this vector holds. Thus choosing the N eigenvectors with the largest eigenvalue gives you the optimal basis. A new dataset can then be created in this basis, effectively reducing the size of each observation to N.
+</p>
+
+<p>
+  The image below shows a random point cloud of <span>150 two-dimensional observations</span> where the two dimensions are correlated. The two vectors in red and orange are the output of the PCA i.e. the basis we could use to transform this dataset. It shows that the first one (in red) is more important as the points are more spread out along this axis.</p>
+<p><img src="{{ '/assets/images/portal/article-images/7bf14dcbb6b8c36a5fb2332caf3acc84.png' | relative_url }}" width="562" height="463"></p>
+
+<p>
+
+
+
+</p>
+
+<p>The more correlated the data is, the fewer vectors are actually needed. In particular for MNIST, 86.2% of the information is kept with only 64 eigenvectors and 93.6% with 128. This was to be expected since a lot of the pixels in the corner are the same across the observations. Besides, the information dropped most of the time is noise that does not help the classification because it will be shown with the Gaussian classifier and the Gaussian Mixture Model.</p>
+
+<p>So applying the PCA before a classifier allows us to reduce both memory consumption (each observation is smaller) and execution time (every operation on the dataset itself will be faster). It is also a way to control the size of an observation without padding the data with zeros. In particular, the observation's size of some of the following implementations must be a power of two.</p>
+
+<p>The current implementation relies on the SVD decomposition to compute the eigenpairs based on <a href="https://arxiv.org/pdf/0811.1081.pdf">this paper</a>. This function has not been optimized yet.</p>
+
+<p>The helper class apply_pca makes it nice and easy to use. The example below is extracted from <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_classifier.hpp">example/src/mnist/run_classifier.hpp</a> which will be explained in more detail later. Note that the same base must be used to transform the train and test data which is why the eigenvectors are computed only when <em>compute_and_apply</em> is called. The argument <em>keep_percent</em> sets the minimum "amount of information" we have to keep using the new basis. It is a percentage in [0, 1] where zero will disable the PCA and one will keep all the basis vectors. The argument <em>min_nb_vecs</em> lets the user choose a specific minimum number of basis vector to use (useful to have a power of two). The number of eigenvectors will be chosen so that both constraints are respected.</p>
+
+<pre><code>ml::pca_args pca_args;
+pca_args.keep_percent = 0.8;
+pca_args.min_nb_vecs = 64;
+auto sycl_train_data = apply_pca.compute_and_apply(q, sycl_train_data_raw, pca_args);
+auto sycl_test_data = apply_pca.apply(q, sycl_test_data_raw);</code></pre>
+
+
+  <br>
+
+<h3>Linear Classifier</h3>
+
+<p>The linear classifier is one of the simplest supervised classification algorithms. As the name suggests, it should only be used when the data is linearly separable. Formally a linear classifier can be seen as a naive Bayes classifier with a Gaussian distribution assuming the covariance matrices are identities.</p>
+
+<p>As with many machine learning classification algorithms, the algorithm consists of separate training and classification or inference stages.</p>
+
+<p>The training stage consists of computing an average observation for each unique label in the classification set. Given a new observation, the inference step selects the label with the smallest Euclidean distance between our new observation and the learned average observations.</p>
+
+<p>In terms of operations that can be accelerated on the device, the training step has as many partial reductions as there are labels. Each reduction is a sum over the number of observations of the current label. The inference has one partial reduction over the size of observation to compute the distance and another on the number of labels to select the minimum distance. The rest are element-wise operations which are easily accelerated on the device as well.</p>
+
+<p>These two images show a dataset in two dimensions with two labels (blue and green). The left one shows the learned average for each label as a small circle. The bigger circle represents the points where the distance is the same for both labels. One way to think about these circles is to picture them growing progressively larger until they collide and create a line called the separator. This visualization will help us to understand the Gaussian classifier. The right image shows the separator.</p>
+<img src="{{ '/assets/images/portal/article-images/8a4a9d0c02f842ecb7b6c831de386058.png' | relative_url }}" ><img src="{{ '/assets/images/portal/article-images/e70d15fd2ef2393b7887bc30fffba371.png' | relative_url }}" >
+<p>Whilst the examples above only illustrate a simple example consisting of two fact dimensions, two labels and a single separating plane, the algorithm can be easily generalized with more dimensions and more labels. The observations within the MNIST dataset violate our requirement that the data be linearly separable. Despite this, the linear classifier can still be applied in order to provide our first result, albeit with reduced classification accuracy.
+</p>
+<p>The linear classifier can be run on MNIST using <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_lin_classifier.cpp">example/src/mnist/run_lin_classifier.cpp</a> and this is the line where the classification is executed:</p>
+<pre><code>run_classifier&lt;ml::linear_classifier&lt;ml::buffer_data_type, uint8_t&gt;&gt;(mnist_path, pca_args);</code></pre>
+
+  <br>
+
+
+<p>The results are given below. It is possible to see that reducing the size of an observation of a factor close to 10 speeds up the training time by a factor 2 and the inference time by a factor 10 at the cost of a slightly worse success rate. All things considered, the success rate is rather good given the time spent in training and inference, but there is definitely some room for improvement.</p>
+
+<div class="table-wrapper">
+  <table><thead><tr><th ></th><th colspan="1" >Observation size</th><th >Training rate (obs/s)</th><th >Inference rate (obs/s)</th><th >Success rate (%)</th></tr></thead><tbody><tr><th >MNIST (raw)</th><td colspan="1" >784</td><td ><span >4.754E5</span> <br></td><td ><span >1.241E5<br></span></td><td >82.03</td></tr><tr><th >MNIST (pca)</th><td colspan="1" >128</td><td ><span ><span >9.927E5</span></span><br></td><td ><span ><span >9.952E5</span>
+</span><br></td><td >81.98</td></tr><tr><th colspan="1" >MNIST (pca)</th><td colspan="1" >64</td><td colspan="1" ><span ><span >9.930E6</span></span><br></td><td colspan="1" ><span ><span >1.882E6</span></span> <br></td><td colspan="1" >81.81</td></tr></tbody>
+  </table>
+</div>
+
+
+
+
+<h3>
+  <br>Gaussian Classifier</h3>
+
+<p>The Gaussian classifier is a more generalized version of the linear one. W<span>e now assume that the data are normally distributed according to their class</span>. This will allow an hyperbolic separator enabling us to solve many more different kinds of problems.</p>
+
+<p>On top of the average observation, the classifier also needs to learn the covariance matrix of each label. One way to interpret this is to think of this matrix as a way to tell which variables (or pixels for MNIST) are important and which are not for a specific label. The covariance matrix is then used during inference to compute the Mahalanobis distance instead of the Euclidean one. This distance is actually the part inside the exponential of the Gaussian Multivariate formula.</p>
+
+<p>Note that the use of PCA is required to remove the useless variables, i.e. the variables that have a variance of zero. The reason for this is that the covariance matrix needs to be inverted.</p>
+
+<p>The two images below show some labelled data that is not linearly separable. The left image is similar to what has been shown with the linear classifier. The ellipses in green and blue were created from a circle with the same radius transformed by their respective covariance matrix (and centered on their respective average). In the <a href="https://en.wikipedia.org/wiki/Whitening_transformation">whitened</a> space of the first label, each point of the blue ellipse is at the same distance to the blue center. This distance is also the same in the whitened space of the second label between each point of the green ellipse and the green center. The right image shows the learned separator which is the set of points with the same likelihood to be either labels. The result is not perfect but is still better than what a linear classifier could do.</p>
+<p><img src="{{ '/assets/images/portal/article-images/f7b02557e92918766ab222f4a9244c3a.png' | relative_url }}" ><img src="{{ '/assets/images/portal/article-images/c31c2c8f03f5f016d486e6048935b2c2.png' | relative_url }}" ></p>
+<p>
+  <br>Now the actual implementation does not use the covariance matrix for performance and precision issues. The Mahalanobis distance is usually written:
+</p>
+
+<p>
+
+
+       <img src="{{ '/assets/images/portal/article-images/acde8221ef1ac9150a845be81c222596.png' | relative_url }}" >
+
+</p>
+
+<p>where X is some centered data (each observation is a row), C is some covariance matrix and diag extracts the diagonal of the given matrix.<br>This is costly because of the inversion of the full matrix C and the two matrix multiplications. Another way to write this is:</p>
+<p><img src="{{ '/assets/images/portal/article-images/da80dd86b5ad954f488c9cc005731ba7.png' | relative_url }}" ></p>
+
+<p>
+
+
+
+</p>
+
+<p>where U is the upper Cholesky decomposition of C, "odot" is the element-wise multiplication and <em>sum</em> is a partial sum here reducing the second dimension.</p>
+
+<p>This is faster because U is an upper triangular matrix and each inversion followed by a product can be done in a single step by a triangular solver. However computing the Cholesky decomposition is not numerically stable and can fail because of the rounding errors introduced by the floating-point representation. The trick is to instead compute the QR decomposition of the dataset. For some dataset A with N observations one has:</p>
+<p><img src="{{ '/assets/images/portal/article-images/08a33da3d04c0d92e36e14ccf6e4d950.png' | relative_url }}" ></p>
+
+<p>
+
+
+
+</p>
+
+<p>because Q is orthogonal. Hence:</p>
+<p><img src="{{ '/assets/images/portal/article-images/f40a5664c329c35793c786728f759555.png' | relative_url }}" ></p>
+
+<p>
+
+
+
+</p>
+
+<p>assuming all diagonal values of R were chosen to be positive.</p>
+
+<p>This last simple equation means that it is possible to use the nicer formula of the Mahalanobis distance without actually computing the covariance matrix and the inefficient Cholesky decomposition but with a QR decomposition instead.</p>
+
+<p>Also note that the log of the Gaussian distribution has to be used to keep values in a reasonable range.<br>To put it in a nutshell, rewriting the distance formula to use the QR decomposition instead of the covariance matrix speeds up the inference time a lot at a reasonable cost during the training time.</p>
+
+<p>During the training, the QR decomposition is the most expensive operation. SYCL-ML uses a version of the <a href="http://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf">Householder QR</a> algorithm that computes only the R matrix. Each row of the R matrix is computed iteratively and each row depends on the result of the previous one, so for this reason the performances on the device are not optimal. A blocked version of this algorithm exists but hasn't been implemented yet.<br>The inference time is bounded by the triangular solver. Once again each row of the output depends on the result of the previous row which makes the algorithm difficult to optimize on a device.</p>
+
+<p>The Gaussian classifier is run with the following code in <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_gauss_classifier.cpp">example/src/mnist/run_gauss_classifier.cpp</a>:</p><pre>using distribution_t = ml::buffered_log_gaussian_distribution&lt;ml::buffer_data_type&gt;;<br>run_classifier&lt;ml::bayes_classifier&lt;distribution_t, uint8_t&gt;&gt;(mnist_path, pca_args);<br></pre>
+
+
+<p>
+  Below are the results of a Gaussian classifier with MNIST. It may look surprising that the success rate is better with 64 variables even though more information is lost than with 128. The reason is that the information lost appeared to be non relevant for the classification however this is not always true.</p>
+
+<div class="table-wrapper">
+  <table class="wrapped">
+    <thead>
+    <tr>
+      <th >
+        <br>
+      </th>
+      <th colspan="1" >Observation size</th>
+      <th >Training rate (obs/s)</th>
+      <th >Inference rate (obs/s)</th>
+      <th >Success rate (%)</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <th >MNIST (pca)</th>
+      <td colspan="1" >128</td>
+      <td >
+        <span >
+          <span >3.356E4</span>
+          <br>
+        </span>
+      </td>
+      <td >
+        <span >
+          <span >3.477E4</span>
+          <br>
+        </span>
+      </td>
+      <td >95.46</td>
+    </tr>
+    <tr>
+      <th colspan="1" >MNIST (pca)</th>
+      <td colspan="1" >64</td>
+      <td colspan="1" >
+        <span >
+          <span >8.171E4</span>
+        </span>
+      </td>
+      <td colspan="1" >
+        <span >
+          <span >8.827E4</span>
+        </span>
+      </td>
+      <td colspan="1" >96.14</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+
+  <br>
+
+<h3>Gaussian Mixture Model</h3>
+
+<p>The Gaussian Mixture Model (GMM) is an improvement on the previously seen Gaussian classifier. The idea is that a single Gaussian distribution may not always be enough to grasp the shape of the data with the same label. Rather than trying to fit a more complex distribution to capture this complexity, it is possible to fit multiple Gaussian distributions. The number of distributions to fit is defined by the parameter M so the total number of distributions is now M times the number of labels.</p>
+
+<p>The difficult part is that the distributions of a same label should not merge in the same distribution. The
+    <a href="https://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm">Expectation Maximization (EM)</a>
+   algorithm makes sure that this does not happen. The EM iteratively maximizes the likelihood of each distribution. It partitions the data in M subsets that are used in the next iteration to compute the new parameters of each distribution (here the average and the covariance matrix). The algorithm stops when the likelihood is stable enough meaning that the distributions don't move much. Note that any distribution can be used, the Gaussian being the most common one.</p>
+
+<p>The current implementation initializes the first parameters for the first iteration randomly. Using clustering techniques to compute the first parameters would ensure a faster convergence but this has not been implemented yet. The implementation also uses the log version of the classical EM to keep values in a reasonable range.</p>
+
+<p>The operations specific to the EM algorithm are either element-wise operations or partial reductions (computing a sum or finding a maximum over the rows). These are pretty well optimized in the current implementation, however the distance of the given distribution needs to be computed during the training as well which now makes the triangular solver the most expensive operation during the training. This inference time is still bounded by the triangular solver as well.</p>
+
+<p>The image below shows the result of the GMM training in a similar way to the Gaussian classifier. Here M=4 meaning that the GMM is trying to fit four Gaussians for each label. The separator would be harder to draw in the general case because it can be multiple hyperbolic functions, here it is easy to guess what it would look like.</p>
+<p><img src="{{ '/assets/images/portal/article-images/41383ce6876c60065560efe9879f4c90.png' | relative_url }}" width="589" height="493"></p>
+
+<p>
+
+
+
+</p>
+
+  <br>
+
+
+<p>The GMM is run with <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_gmm.cpp">example/src/mnist/run_gmm.cpp</a>:</p>
+
+<pre><code>using data_t = ml::buffer_data_type;
+using label_t = uint8_t;
+using distribution_t = ml::buffered_log_gaussian_distribution&lt;data_t&gt;;
+using model_t = ml::log_model_per_label&lt;M, distribution_t&gt;;
+static constexpr unsigned M = 8;
+run_classifier&lt;ml::em_classifier&lt;label_t, model_t&gt;&gt;(mnist_path, pca_args);</code></pre>
+
+<p>
+  Without any surprises, fitting more distributions gives a better success rate but a slower classifier.</p>
+
+<div class="table-wrapper">
+  <table class="wrapped">
+    <thead>
+    <tr>
+      <th >
+        <br>
+      </th>
+      <th colspan="1" >Observation size</th>
+      <th colspan="1">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br></th>
+      <th >Training rate (obs/s)</th>
+      <th >Inference rate (obs/s)</th>
+      <th >Success rate (%)</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <th >MNIST (pca)</th>
+      <td colspan="1" >64</td>
+      <td colspan="1">2</td>
+      <td >
+        <span >
+          <span >
+            <span >1.604</span>E3</span>
+          <br>
+        </span>
+      </td>
+      <td >
+        <span >
+          <span >4.281E4</span>
+          <br>
+        </span>
+      </td>
+      <td >96.54</td>
+    </tr>
+    <tr>
+      <th colspan="1" >MNIST (pca)</th>
+      <td colspan="1" >64</td>
+      <td colspan="1">8</td>
+      <td colspan="1" >4.456E2</td>
+      <td colspan="1" >
+        <span >1.145E4</span>
+      </td>
+      <td colspan="1" >97.41</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<h3>
+  <br>Support Vector Machine</h3>
+
+<p>Support Vector Machines (SVM) provide a completely different approach from those presented so far. The main idea behind it is to cleverly select samples that are close to the theoretical separator. These samples are the support vectors (SVs) and will define the margin i.e. the area between the SVs of the first label and the SVs of the second label. The separator will be in the middle of the margin and the most generic separator will be found by maximizing the margin. This <a href="https://en.wikipedia.org/wiki/Support_vector_machine">Wikipedia</a>
+  <a href="https://en.wikipedia.org/wiki/Support_vector_machine"> page</a> explains more detail on how SVMs work very well.</p>
+
+<p>The implemented SVM is a C-SVM which allows us to use both soft-margin and hard-margin SVMs depending on the C parameter. A hard-margin SVM (with C "big enough") forbids us to mis-classify a training example. This also means that the SVM cannot converge if the data is not separable with the given kernel. The smaller C is the softer the SVM becomes and the more mis-classification is allowed. This can be useful as the training set is often noisy.</p>
+
+<p>The implementation is very similar to that found in <a href="https://www.csie.ntu.edu.tw/~cjlin/libsvm/">libSVM</a>, both of which are based on <a href="https://www.csie.ntu.edu.tw/~cjlin/papers/quadworkset.pdf">this paper</a>. The main difference as a user is that SYCL-ML does not sort the data per label when there are only two labels whereas libSVM does. This will give different results when the dataset has exactly two labels. It uses the One vs One method to combine multiple binary SVMs into one multi-class classifier. This method usually gives better results than One vs All.<br>
+  In general, SVMs are difficult to parallelize; some more work can definitely be done in this area.
+  <br>One of the challenges other than parallelization is how to cache the kernel matrix efficiently. The easiest solution is to compute it once and store it, but this is usually not possible because of the limit on the buffer size. The solution is to cache only a fixed number of rows even if it means recomputing some of the rows. By default, a maximum of two rows are cached, it is also possible to ask for the whole matrix to be cached.</p>
+
+<p>The user can define their own kernel to use but the four most common ones are already available:</p>
+<ul>
+  <li>Linear: u * v'</li>
+  <li>Polynomial: (g .* (u * v') .+ c) .^ d</li>
+  <li>RBF: exp(-g .* |u - v|^2)</li>
+  <li>Sigmoid: tanh(g .* (u * v') .+ c)</li>
+</ul>
+
+<p>The SVM is run on MNIST using the code in <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_svm.cpp">example/src/mnist/run_svm.cpp</a>. The argument <em>nb_cache_line</em> is usually set to 2 meaning that 2 rows of the kernel matrix are cached.</p>
+
+<pre><code>using data_t = ml::buffer_data_type;
+using label_t = uint8_t;
+using svm_kernel_t = ml::svm_rbf_kernel&lt;data_t&gt;;
+using svm_type_t = ml::svm&lt;svm_kernel_t, label_t&gt;;
+
+const data_t C = 5;
+const svm_kernel_t ker(gamma);
+run_classifier(mnist_path, pca_args, svm_type_t(C, ker, nb_cache_line, tol));
+</code></pre>
+
+
+<p>
+  <br>The table below shows the results for several configurations of the SYCL-ML SVMs. While it is possible to use the SVM without a PCA, it is definitely slower and less accurate to use the raw data. The SVM with a polynomial kernel already gives some good results for a high training rate and inference rate. After some fine tuning, the RBF kernel turns out to be the most adapted. The reason the inference rate is lower for RBF kernels is that more SVs are selected.</p>
+
+  <div class="table-wrapper">
+    <table class="wrapped">
+      <thead>
+      <tr >
+        <th >
+          <br>
+        </th>
+        <th >Observation size</th>
+        <th >Kernel</th>
+        <th >SVM<br>parameters</th>
+        <th >Training rate<br>(obs/s)</th>
+        <th >Inference rate<br>(obs/s)</th>
+        <th >Success rate (%)</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <th >MNIST (raw)</th>
+        <td >784</td>
+        <td >Polynomial d=2 g=1 c=1</td>
+        <td >C=1000 tol=0.01</td>
+        <td >
+          <span >1.445E2</span>
+        </td>
+        <td >
+          <span >6.790E3</span>
+        </td>
+        <td >98.10</td>
+      </tr>
+      <tr>
+        <th >MNIST (pca)</th>
+        <td >64</td>
+        <td >
+          <span>Polynomial d=2 g=1 c=1</span>
+        </td>
+        <td >
+          <span>C=1000 tol=0.01</span>
+        </td>
+        <td >2.038E2</td>
+        <td >
+          <span >3.775E4</span>
+        </td>
+        <td >98.30</td>
+      </tr>
+      <tr>
+        <th >
+          <span>MNIST (raw)</span>
+        </th>
+        <td >784</td>
+        <td >RBF gamma=0.05</td>
+        <td >
+          <span>C=5 tol=0.01</span>
+        </td>
+        <td >
+          <span >4.305E0</span>
+        </td>
+        <td >
+          <span >8.887E0</span>
+        </td>
+        <td >98.37</td>
+      </tr>
+      <tr>
+        <th >
+          <span>MNIST (pca)</span>
+        </th>
+        <td >64</td>
+        <td >
+          <span>RBF <span>gamma</span>=0.05</span>
+        </td>
+        <td >
+          <span>C=5 tol=0.01</span>
+        </td>
+        <td >
+          <span >2.100E2</span>
+        </td>
+        <td >
+          <span >2.495E2</span>
+        </td>
+        <td >98.66</td>
+      </tr>
+      <tr>
+        <th colspan="1" >
+          <span>MNIST (pca)</span>
+        </th>
+        <td colspan="1" >64</td>
+        <td colspan="1" >
+          <span>RBF <span>gamma</span>=0.05</span>
+        </td>
+        <td colspan="1" >
+          <span>C=5 tol=0.1</span>
+        </td>
+        <td colspan="1" >
+          <span >3.926E2</span>
+        </td>
+        <td colspan="1" >
+          <span >2.983E2</span>
+        </td>
+        <td colspan="1" >98.66</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <br>
+
+<h2>Usage example</h2>
+
+<p>All the examples of the classifiers use the <a href="https://github.com/codeplaysoftware/SYCL-ML/blob/master/example/src/mnist/run_classifier.hpp">example/src/mnist/run_classifier.hpp</a> function which will be explained now. The usage of the SYCL API is non-intrusive meaning that very little SYCL specific code is actually visible here.
+</p>
+
+<p>First let's start with the prototype and some setup.</p>
+
+<pre><code>template &lt;class ClassifierT&gt;
+void run_classifier(const std::string&amp; mnist_path,
+                    const ml::pca_args&lt;typename ClassifierT::DataType&gt;&amp; pca_args,
+                    ClassifierT classifier = ClassifierT()) {
+  // The TIME macro creates an object that will print the time elapsed between its
+  // construction and destruction
+  TIME(run_classifier);
+
+  using DataType = typename ClassifierT::DataType;
+  using LabelType = typename ClassifierT::LabelType;
+
+  // MNIST specific
+  std::vector&lt;LabelType&gt; label_set(10);
+  // Create the set of labels here instead of computing it during the training
+  std::iota(label_set.begin(), label_set.end(), 0);
+  const DataType normalize_factor = 255;  // Data will be shifted in the range [0, 1]
+
+  // Load and save options
+  const bool load_classifier = false;
+  const bool save_classifier = false;
+
+  // What the classifier will compute
+  std::unique_ptr&lt;LabelType[]&gt; host_predicted_test_labels;</code></pre>
+
+
+
+<p>Next is the first bit of code related to SYCL, the creation of the queue. In SYCL, the queue is tied to a single OpenCL accelerator device and context. The queue allows us to submit kernels for execution on the accelerator, so most functions will require access to it.<br>Creating the queue is usually as simple as calling the default constructor and the SYCL runtime will automatically select the first suitable accelerator for us. Here this is handled by the <em>create_queue</em> function because a few additional steps are required:</p>
+<ul>
+  <li>Query some device constants for later use</li>
+  <li>Initialize Eigen and get the SYCL queue that has been created</li>
+  <li>Launch a first empty kernel to avoid measuring the OpenCL overhead during the training</li>
+</ul>
+
+<p>
+  A scope is opened before creating the queue in order to better control when to destroy it. The destruction of the queue will also release the OpenCL context.</p>
+
+<pre><code>{ // Scope with a SYCL queue
+  cl::sycl::queue& q = create_queue();</code></pre>
+
+<p>The helper class for the PCA will also be used.</p>
+
+<pre><code>ml::apply_pca&lt;DataType&gt; apply_pca;</code></pre>
+
+
+<p>Next the data will be loaded on the host and copied on the device. The <em>ml::matrix_t</em> and <em>ml::vector_t</em> classes are wrappers around the <em>cl::sycl::buffer</em> class for 1D buffer. These wrappers hold a <em>data_range</em> and a <em>kernel_range</em>, the <em>kernel_range</em> can be a larger range than the <em>data_range</em> for better performance (usually the next power of two). When one of these buffers is created with a host pointer, the data will be copied to the device.<br>Another scope is opened to destroy any buffers used for the training only. Notice that the training data will not be transposed, the observation size will be padded to a power of two and the data will be normalized in the range [0, 1]. The resulting matrix will be of size <em>nb_train_obs</em> * <em>padded_obs_size</em> in the row major layout.<br>The call to <em>compute_and_apply</em> will only compute the PCA if this is the first time running it with this number of basis vectors, otherwise it will be loaded from the disk.</p>
+
+<pre><code>{
+  unsigned obs_size, padded_obs_size, nb_train_obs;
+  // Load tain data
+  ml::matrix_t&lt;DataType&gt; sycl_train_data;
+  {
+    std::shared_ptr&lt;DataType&gt; host_train_data =
+      read_mnist_images&lt;DataType&gt;(mnist_get_train_images_path(mnist_path), obs_size,
+                                  padded_obs_size, nb_train_obs, false, true,
+                                  normalize_factor);
+    ml::matrix_t&lt;DataType&gt; sycl_train_data_raw(std::move(host_train_data),
+                                               cl::sycl::range&lt;2&gt;(nb_train_obs,
+                                                 padded_obs_size));
+    sycl_train_data_raw.data_range[1] = obs_size;  // Specify the real size of an observation
+    sycl_train_data_raw.set_final_data(nullptr);
+
+    sycl_train_data = apply_pca.compute_and_apply(q, sycl_train_data_raw, pca_args);
+  }
+
+  // Load labels
+  std::shared_ptr&lt;LabelType&gt; host_train_labels =
+    read_mnist_labels&lt;LabelType&gt;(mnist_get_train_labels_path(mnist_path), nb_train_obs);
+  ml::vector_t&lt;LabelType&gt; sycl_train_labels(std::move(host_train_labels),
+                                            cl::sycl::range&lt;1&gt;(nb_train_obs));
+  sycl_train_labels.set_final_data(nullptr);   </code></pre>
+
+<p>The classifier can then start its training. It could also save the training result to the disk or load a previous training from the disk but this is omitted here for clarity.</p>
+
+<pre><code>{
+    TIME(train_classifier);
+    classifier.set_label_set(label_set);  // Give the sets of labels to avoid computing them during the training
+    classifier.train(q, sycl_train_data, sycl_train_labels);
+    q.wait(); // wait to measure the correct training time
+  }
+} // End of train</code></pre>
+
+<p>In a very similar way, the classifier can then be used to predict the labels of the test data:</p>
+
+
+<pre><code>{
+  unsigned obs_size, padded_obs_size, nb_test_obs;
+  ml::matrix_t&lt;DataType&gt; sycl_test_data;
+  { // Load test data
+    std::shared_ptr&lt;DataType&gt; host_test_data =
+      read_mnist_images&lt;DataType&gt;(mnist_get_test_images_path(mnist_path), obs_size,
+                                  padded_obs_size, nb_test_obs,
+                                  false, true, normalize_factor);
+    ml::matrix_t&lt;DataType&gt; sycl_test_data_raw(host_test_data,
+                                              cl::sycl::range&lt;2&gt;(nb_test_obs,
+                                                padded_obs_size));
+    sycl_test_data_raw.data_range[1] = obs_size;  // Specify the real size of an observation
+    sycl_test_data_raw.set_final_data(nullptr);
+
+    sycl_test_data = apply_pca.apply(q, sycl_test_data_raw);
+  }
+
+  { // Inference
+    TIME(predict_classifier);
+    ml::vector_t&lt;LabelType&gt; sycl_predicted_test_labels = classifier.predict(q, sycl_test_data);
+    // Can be round up to a power of 2
+    auto nb_labels_predicted = sycl_predicted_test_labels.get_count();
+    host_predicted_test_labels =
+      std::unique_ptr&lt;LabelType[]&gt;(new LabelType[nb_labels_predicted]);
+    sycl_predicted_test_labels.set_final_data(host_predicted_test_labels.get());
+    q.wait(); // wait to measure the correct prediction time
+  }
+} // End of tests</code></pre>
+
+<p>Now SYCL is not needed anymore, the context can be cleared. Closing the scope is usually enough to clear everything, here <em>clear_eigen_device</em> is also needed to release a singleton.</p>
+
+<pre><code>  clear_eigen_device();
+} // SYCL queue is destroyed</code></pre>
+
+<p>Finally we can evaluate the classifier's prediction and end the function:</p>
+
+<pre><code>  unsigned nb_test_obs;
+  std::shared_ptr&lt;LabelType&gt; host_expected_test_labels =
+    read_mnist_labels&lt;LabelType&gt;(mnist_get_test_labels_path(mnist_path), nb_test_obs);
+  classifier.print_score(host_predicted_test_labels.get(), host_expected_test_labels.get(),
+                         nb_test_obs);
+}</code></pre>
+
+<p>So that's everything for the <em>run_classifier</em> function. The important lines in this function that actually submit kernels are the calls to:</p>
+<ul>
+  <li>
+    <em>compute_and_apply</em> and <em>apply</em> for the preprocessing step</li>
+  <li>
+    <em>train</em> and <em>predict</em> for the classifying step.</li>
+</ul>
+
+  <br>
+
+
+<p>To have a better idea of what the code looks like inside these functions, let's have a look at a common function used for all inplace binary operations on matrices.</p>
+
+<p>As mentioned before, <em>matrix_t</em> is a wrapper around a <em>cl::sycl::buffer</em> of 1 dimension and we can see two advantages of this wrapper here:</p>
+<ul>
+  <li>the SYCL-ML API forces you to use matrices when it is suited, in particular transposing with D1 and D2 only makes sense for matrices. It is still possible to use the matrix as a simple 1D buffer.</li>
+  <li>the global and local range sizes to use for the kernel is given by the matrix itself with <em>get_nd_range </em>and is not needed as an additional parameter. The local range is computed once on matrix creation depending on device parameters.</li>
+</ul>
+
+<p>Finally, each kernel must have a unique name given at compilation time as a template parameter. Here it is <em>NameGen&lt;0, ml_mat_inplace_binary_op&lt;D1, D2&gt;, T, BinaryOp&gt;</em>. It is important that all template parameters of a function appear in the kernel name otherwise calling the function with different template parameters can lead to the same kernel name.</p>
+
+<pre><code>template &lt;data_dim, data_dim&gt;
+class ml_mat_inplace_binary_op;
+
+template &lt;data_dim D1 = LIN, data_dim D2 = LIN, class T, class BinaryOp&gt;
+void mat_inplace_binary_op(queue&amp; q, matrix_t&lt;T&gt;&amp; in_out1, matrix_t&lt;T&gt;&amp; in2,
+                           BinaryOp op = BinaryOp()) {
+  // Check that the number of rows are the same
+  assert_eq(access_ker_dim&lt;D1&gt;(in_out1, 0), access_ker_dim&lt;D2&gt;(in2, 0));
+  // Check that the number of columns are the same
+  assert_eq(access_ker_dim&lt;D1&gt;(in_out1, 1), access_ker_dim&lt;D2&gt;(in2, 1));
+
+  q.submit([&amp;](handler&amp; cgh) {
+    // accessor will be transposed if D1=TR
+    auto in_out1_acc = in_out1.template get_access_2d&lt;access::mode::read_write, D1&gt;(cgh);
+    // accessor will be transposed if D2=TR
+    auto in2_acc = in2.template get_access_2d&lt;access::mode::read, D2&gt;(cgh);
+    using kernel_name_t = NameGen&lt;0, ml_mat_inplace_binary_op&lt;D1, D2&gt;, T, BinaryOp&gt;;
+    cgh.parallel_for&lt;kernel_name_t&gt;(in_out1.template get_nd_range&lt;D1&gt;(),
+                                    [=](nd_item&lt;2&gt; item) {
+      auto row = item.get_global(0);
+      auto col = item.get_global(1);
+      in_out1_acc(row, col) = op(in_out1_acc(row, col), in2_acc(row, col)); // Apply op
+    });
+  });
+}
+</code></pre>
+
+  <br>
+
+<h2>Conclusion</h2>
+
+<p>To summarize, we have seen four different ways of classifying data with each method more complex than the previous. As with neural networks, they are well suited for classification and regression, although they usually perform worse on complex image classification. The use of SYCL enabled us to write the whole library in modern C++14 with all of the computationally intensive operations accelerated on a device that would not have been possible any other way.</p>
+
+<p>If you want to run the data classification yourself you'll find instructions in the <a href="https://github.com/codeplaysoftware/SYCL-ML">README file</a>, and because this uses SYCL they can be executed on any hardware that supports OpenCL SPIR instructions. Feel free to send in any improvements you make to the <a href="https://github.com/codeplaysoftware/SYCL-ML">GitHub repository</a> and raise any issues through the tracker.</p>
+
+

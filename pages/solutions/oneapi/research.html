@@ -1,0 +1,128 @@
+---
+layout: page
+nav_style: alt
+title: oneAPI
+permalink: /solutions/oneapi/research
+stylesheets:
+- /assets/css/pages/solutions/oneapi/research.css
+---
+
+{%- assign careers = site.careers | where: "type", "studentship" -%}
+{%- assign careers = careers | where: "closed", "false" -%}
+{%- assign careers = careers | where: "hidden", "false" -%}
+{%- assign sorted = careers | reverse -%}
+{%- assign collectionLength = careers | size -%}
+
+<!-- Section: Splash -->
+<section id="splash" class="splash">
+    <div class="splash-bg-loader" data-fade-to="0.1">
+        <video muted="muted" autoplay loop>
+            <source src="{{ '/assets/images/solutions/oneapi/research/splash.mp4' | relative_url }}" type="video/mp4">
+        </video>
+    </div>
+
+    <div class="wrapper">
+        <div>
+            <div>
+                <h1>SYCL&trade; Research</h1>
+                <h2>Codeplay&reg; is at the forefront of cutting-edge research into heterogeneous computing. Our staff are
+                    leading experts in this field, and we are currently involved in two collaborative research
+                    projects funded by the Horizon Europe programme. </h2>
+
+                <a class="button image-button" href="#phds">
+                    <span class="material-icons">work</span> View Research Positions
+                </a>
+            </div>
+        </div>
+        <div>
+            <img src="{{ '/assets/images/solutions/oneapi/research/splashimg.png' | relative_url }}" alt="Research Graphic" />
+        </div>
+    </div>
+</section>
+
+<!-- Section: AERO -->
+<section id="aero">
+    <div class="wrapper">
+        <div class="columns two">
+            <div>
+                <img src="{{ '/assets/images/solutions/oneapi/research/aero.png' | relative_url }}" alt="AERO Research Project" />
+            </div>
+            <div>
+                <h1>AERO</h1>
+
+                <p>AERO is focused on pioneering software that will enable out-of-the-box heterogeneous execution
+                    of the cloud ecosystem on the
+                    <a href="{{ '/portal/blogs/2023/04/06/sycl-performance-for-nvidia-and-amd-gpus-matches-native-system-language' | relative_url }}"
+                       target="_blank">EU Processor</a>. One example
+                    use-case is the execution of the complex scientific computing required by the European Space
+                    Agency’s Gaia mission, where a three-dimensional map of more than a thousand-million stars
+                    throughout the Milky Way galaxy.</p>
+
+                <p>This project is collaboration between Codeplay and 11 other partners across Europe.</p>
+
+                <a class="button image-button" href="https://aero-project.eu/" target="_blank" rel="noopener">
+                    <span class="material-icons">public</span> Visit the AERO Project
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: SYCLOPS -->
+<section id="syclops">
+    <div class="wrapper">
+        <div class="columns two">
+            <div>
+                <h1>SYCLOPS</h1>
+
+                <p>SYCLOPS will further the democratization of AI acceleration using open standards, and will
+                    enable a healthy, competitive, innovation-driven ecosystem for Europe and beyond. To achieve
+                    this, the project brings together RISC-V and SYCL standards. </p>
+
+                <p>SYCLOPS launched in January 2023, and is a collaboration between Codeplay and 7 other
+                    organizations across Europe. </p>
+
+                <a class="button image-button" href="https://syclops.org" target="_blank" rel="noopener">
+                    <span class="material-icons">public</span> Visit the SYCLOPS Project
+                </a>
+            </div>
+            <div>
+                <img src="{{ '/assets/images/solutions/oneapi/research/syclops.png' | relative_url }}" alt="SYCLOPS Research Project" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: PHDs -->
+<section id="phds">
+    <div class="wrapper">
+        <div class="columns two">
+            <div>
+                <img src="{{ '/assets/images/solutions/oneapi/research/academic.png' | relative_url }}" alt="Academic" />
+            </div>
+            <div>
+                <h1>PhD Research</h1>
+
+                <p>If you would like to join our team and get involved in our research based positions,
+                    please feel free to apply. Below is an up-to-date list of our current studentships,
+                    but if you are looking for full time employment please browse all our career opportunities.</p>
+
+                <h2>Current Studentships:</h2>
+
+                {%- if collectionLength == 0 -%}
+                <b>No Studentships Available</b>
+                {%- endif -%}
+
+                <ul>
+                    {%- for career in sorted -%}
+                    <li><a href="{{career.url}}">{{career.title}}</a></li>
+                    {%- endfor -%}
+                </ul>
+
+                <a class="button image-button" href="{{ '/company/careers' | relative_url }}">
+                    <span class="material-icons">work</span> All All Career Opportunities
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

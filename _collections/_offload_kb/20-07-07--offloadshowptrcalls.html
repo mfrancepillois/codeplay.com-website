@@ -1,0 +1,26 @@
+---
+id: 82
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-offloadshowptrcalls"
+redirect_from:
+  - /kb/82
+layout: products/offload/kb/view
+---
+<p>This commandline option makes the Offload compiler print information (call site, signature of called function) inside offload blocks/functions. This is useful to spot all calls to PPU addresses, so the programmer can either remove/refactor that call (because those call hit performance) or build the correct virtual domain to make this call possible from the SPU (see article on virtual domains).
+</p>
+<pre><code>struct test{    virtual void func(int*){}};void do_call(test* ptr,int *arg){   ptr-&gt;func(arg); //virtual call}int main(){    test ovar;    int oint = 1;    __blockingoffload    {        test ivar;        int iint = 1;        do_call(&amp;ivar,&amp;oint); //call with local and outer address        do_call(&amp;ovar,&amp;iint); //call with outer and inner address    }}
+</code></pre>
+<p>
+For example, on the source code above the compiler prints the following output:
+</p>
+<pre><code>domain.cpp(8), test ::func, __offload void (int __outer*), local this pointerdomain.cpp(8), test ::func, __offload void (int *)*** WARNING: (Offload1203) This virtual call or pointer call may fail due to a missing domain. The __offload block declared at domain.cpp(16) must have a domain attached to be able to offload functions, for example __offload [&amp; myfunction]{ ....  .--- In file: domain.cpp, at line: 8, column: 3   $ptr-&gt;func(arg); //virtual call*** WARNING: (Offload1203) This virtual call or pointer call may fail due to a missing domain. The __offload block declared at domain.cpp(16) must have a domain attached to be able to offload functions, for example __offload [&amp; myfunction]{ ....  .--- In file: domain.cpp, at line: 8, column: 3   $ptr-&gt;func(arg); //virtual call
+</code></pre>
+<p>
+There are two calls to do_call with SPU and PPU pointers. That means that inside (the duplicated) do_call the virtual call to test::func is called with SPU and PPU pointers. This information can then be used to offload the correct functions (see virtual domains).
+</p><p>
+The other warnings (Offload1203) mean that the virtual methods are not on the SPU, so a domain needs to be attached to the offload block (see article on virtual domain), otherwhise the call will fail with a DOMAIN_NOT_FOUND runtme error(see article).
+</p>
+
+

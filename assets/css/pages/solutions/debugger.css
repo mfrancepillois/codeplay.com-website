@@ -1,0 +1,7 @@
+section#services i {
+    font-size: 6rem;
+}
+
+section.splash .wrapper > div:nth-of-type(2) i.material-icons {
+    font-size: 300px;
+}

@@ -1,0 +1,94 @@
+---
+id: 59
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "liboffload::constructs::thread"
+redirect_from:
+  - /kb/59
+layout: products/offload/kb/view
+---
+<p>When you include &lt;liboffload&gt; you get access to the features within the constructs library.
+</p><p>
+liboffload::constructs::thread is a scoped thread where you can implement features like deferred function calls into your solutions with ease. What's better is that on PS3 using the &lt;offload&gt; compiler the thread is run on SPU. On other platforms, it is run as a thread using the pthread library.
+</p>
+<pre><code> liboffload::constructs::thread&lt;RETURN_TYPE, ARGUMENT_TYPE, FUNCTION_NAME&gt;
+</code></pre><p><strong>Limitations:</strong>
+</p><ul>
+<li> void is not a supported return type or argument</li>
+<li> Only a single argument is supported</li>
+<li> Reference arguments or return types are not supported</li>
+<li> Avoid calling with large objects, as the pthread implementation for safety and compatability copies arguments into a local store.</li>
+</ul><p>
+<strong>Example use:</strong>
+</p>
+<pre><code>
+#include &lt;liboffload&gt;
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/memory.h&gt;
+#include &lt;string.h&gt;
+#include &lt;time.h&gt;
+
+int PlusPlus(int v)
+{
+	printf(&quot;PlusPlusn&quot;);
+	return ++v;
+}
+
+int MinusMinus(int v)
+{
+	printf(&quot;MinusMinusn&quot;);
+	return --v;
+}
+
+int Double(int v)
+{
+	printf(&quot;Doublen&quot;);
+	return v*2;
+}
+
+int test()
+{
+	int ret = 0;
+	int r0=0,r1=0,r2=0,r3=0,r4=0,r5=0,r6=0,r7=0;
+
+	int start = 2;
+
+	// Thread Tasks
+	liboffload::constructs::thread&lt;int, int, PlusPlus&gt;   tPlus1;
+	liboffload::constructs::thread&lt;int, int, PlusPlus&gt;   tPlus2;
+	liboffload::constructs::thread&lt;int, int, MinusMinus&gt; tMinus1;
+	liboffload::constructs::thread&lt;int, int, Double&gt; 	tDouble1;
+	liboffload::constructs::thread&lt;int, int, Double&gt; 	tDouble2;
+
+	tPlus1.spawn(start);
+	tMinus1.spawn(start);
+
+	r0 = tPlus1.join();
+	r1 = tMinus1.join();
+
+	tPlus1.spawn(r0);
+	tPlus2.spawn(r1);
+	tDouble1.spawn(r0);
+	tDouble2.spawn(r1);
+
+	r2 = tPlus1.join();
+	r3 = tPlus2.join();
+	r4 = tDouble1.join();
+	r5 = tDouble2.join();
+
+	tPlus1.spawn(r4);
+	tMinus1.spawn(r5);
+
+	r6 = tPlus1.join();
+	r7 = tMinus1.join();
+
+	printf(&quot;Results: %d %d %d %d %d %d %d %dn&quot;, r0,r1,r2,r3,r4,r5,r6,r7);
+	return ret;
+}
+</code></pre>
+
+
+

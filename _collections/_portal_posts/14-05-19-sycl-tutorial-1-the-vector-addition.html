@@ -1,0 +1,192 @@
+---
+id: 99
+url: sycl-tutorial-1-the-vector-addition
+user_id: 653
+date: 2014-05-19T18:51:03.7200Z
+category: blogs
+title: "SYCL Tutorial 1: The Vector Addition"
+showOnFrontPage: 0
+views: 0
+tags: SYCL,Vector Addition
+redirect_from:
+  - /portal/sycl-tutorial-1-the-vector-addition
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+<p class="outdated">
+This blog post has been archived since ComputeCpp, the Codeplay implementation of the SYCL standard, is now available. You can find the "Getting Started" guide for ComputeCpp <a href="https://developer.codeplay.com">available on our website here</a> that explains how to get set up and start using SYCL.
+</p>
+
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <strong>Tutorial 1: The Vector Addition</strong></li>
+<li> <a href="{{ '/portal/sycl-tutorial-2-the-vector-addition-re-visited' | relative_url }}">Tutorial 2: The Vector Addition Re-visited</a></li>
+<li> <a href="{{ '/portal/sycl-tutorial-3-integrating-sycl-into-stanford-university-unstructured' | relative_url }}">Tutorial 3: Integrating SYCL Into Stanford University Unstructured</a></li>
+</ul><h4>1 Introduction</h4>
+<p>In this post of the SYCL™ Tutorial series, we illustrate how to implement a simple three-way vector addition using SYCL, and how this code can run on different platforms even if there is no GPU or an OpenCL™ implementation available.
+The provisional spec for SYCL is available in <a href="http://khronos.org/opencl/sycl">the official Khronos website</a>.
+</p>
+<p>
+Rather than re-inventing the wheel, we are using a very nice tutorial from Simon McIntosh-Smith's (from the University of Bristol) OpenCL lectures, that can be found in <a href="http://handsonopencl.github.io">his github webpage</a>.
+The OpenCL C and OpenCL C++ Wrappers version of all the exercises is available there for reference.
+</p>
+<p>
+In this post, we will use the Exercise 05 of the tutorial mentioned above, which is sufficiently simple for our current introductory purposes.
+</p><h4>2 Vector Addition in OpenCL</h4>
+<p>First of all, let's recap how vector addition can be implemented using OpenCL.
+Remember that in classic OpenCL, we need two pieces of code:
+the host code, with our main program and the OpenCL host functions; and the device code, which contains our kernel.
+The kernel is typically stored in a string, which is built with the OpenCL implementation built-in compiler via an API call (e.g, <em>clCreateProgramWithSource</em>).
+The data we use in the device has to be copied over with API calls, and we even need to specify which device, platform and many other things in order to make the program work.
+</p>
+<p>
+The whole code can be seen <a href="https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Solutions/Exercise05/C/vadd_abc.c">here</a>, too long to write it here!
+Note that from line 100 to 213, everything is set-up code (platform, device, kernel, buffer, parameters, etc).
+Using the C++ wrappers, that have been around for a while, slightly reduces the problem <a href="https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Solutions/Exercise05/Cpp/vadd_abc.cpp">here</a>.
+Now the set-up code has been reduced from 83 to 63 lines of code. However, note that even if you are not seeing it, it is still there, just hidden from view in a set of templates inside a header file - so good luck with the debugging!
+Also, the kernel code is still in a separate file, which contains an additional 11 lines (not including comments).
+</p><h4>3 The SYCL Way</h4>
+<p>SYCL offers simple abstractions to core OpenCL features. Rather than just putting C++ classes on top of OpenCL objects, these abstractions have been designed with C++ and Object Oriented programming paradigms in mind.
+</p>
+<p>
+The snippet shown below illustrates the implementation of the three-way vector addition using SYCL. If you are a lucky Codeplay employee, you can even build and run it in your favourite development platform using our prototype implementation!
+</p>
+<p>
+So in SYCL, without sparing any indentation and commenting opportunities, we have the entire OpenCL code in 25 lines, including even the device kernel that we were not taking into account in previous samples.
+That is a great reduction over bare OpenCL C, and even the C++ wrappers!
+Note also that the kernel is inlined with the code: The kernel is still valid C++ code, and we can still run it on the host if there is no device available or if we want to debug it.
+</p><pre>#include &lt;sycl.hpp&gt;
+
+using namespace cl::sycl
+
+#define TOL (0.001)   // tolerance used in floating point comparisons
+#define LENGTH (1024) // Length of vectors a, b and c
+
+int main() {
+  std::vector h_a(LENGTH);             // a vector
+  std::vector h_b(LENGTH);             // b vector
+  std::vector h_c(LENGTH);             // c vector
+  std::vector h_r(LENGTH, 0xdeadbeef); // d vector (result)
+  // Fill vectors a and b with random float values
+  int count = LENGTH;
+  for (int i = 0; i &lt; count; i++) {
+    h_a[i] = rand() / (float)RAND_MAX;
+    h_b[i] = rand() / (float)RAND_MAX;
+    h_c[i] = rand() / (float)RAND_MAX;
+  }
+  {
+    // Device buffers
+    buffer d_a(h_a);
+    buffer d_b(h_b);
+    buffer d_c(h_c);
+    buffer d_r(h_d);
+    queue myQueue;
+    command_group(myQueue, [&amp;]()
+    {
+      // Data accessors
+     auto a = d_a.get_access&lt;access::read&gt;();
+     auto b = d_b.get_access&lt;access::read&gt;();
+     auto c = d_c.get_access&lt;access::read&gt;();
+     auto r = d_r.get_access&lt;access::write&gt;();
+      // Kernel
+      parallel_for(count, kernel_functor([ = ](id&lt;&gt; item) {
+        int i = item.get_global(0);
+        r[i] = a[i] + b[i] + c[i];
+      }));
+    });
+  }
+  // Test the results
+  int correct = 0;
+  float tmp;
+  for (int i = 0; i &lt; count; i++) {
+    tmp = h_a[i] + h_b[i] + h_c[i]; // assign element i of a+b+c to tmp
+    tmp -= h_r[i]; // compute deviation of expected and output result
+    if (tmp * tmp &lt; TOL * TOL) // correct if square deviation is less than
+                               // tolerance squared
+    {
+      correct++;
+    } else {
+      printf(" tmp %f h_a %f h_b %f h_c %f h_r %f \\n", tmp, h_a[i], h_b[i],
+             h_c[i], h_r[i]);
+    }
+  }
+  // summarize results
+  printf("R = A+B+C: %d out of %d results were correct.\\n", correct, count);
+  return (correct == count);
+}
+</pre><h4>4 The Gory Details</h4>
+<p>The first thing to write in SYCL is the inclusion of the SYCL headers, providing the templates and class definitions to interact with the runtime library.
+All SYCL classes and objects are defined in the <em>cl::sycl</em> namespace, following the Khronos standard nomenclature.
+To simplify the readability of this sample, we are importing that namespace by default (<em>using namespace cl::sycl</em>).
+</p>
+<p>
+Data shared between host and device is defined using the SYCL buffer class [Specification Section 3.3.1].
+The class provides different constructors to initialize the data from various sources.
+In this case, we use a constructor from STL Vectors, which transfers data ownership to the SYCL runtime.
+As usual in C++ programs, when the buffer gets out of scope, the destructor is called.
+In this case the ownership is transferred back to the original STL vector.
+Buffers are not associated to particular queues or context, and they are capable of handling data transparently in multiple devices.
+Also note that SYCL buffers do not require read/write information, as this is defined on a per-kernel basis via the <em>accessor</em> class.
+</p>
+<p>
+The next thing we need is a queue to enqueue our kernels.
+In OpenCL we will need to set up all the other related classes on our own; but using SYCL we can use the default constructor of the queue class to automatically target the first OpenCL-enabled device available.
+We could use other constructors and related classes to choose a particular device or a device that has a certain property (and still the code will be much simpler than using traditional OpenCL), but we will keep it minimal for now.
+</p>
+<p>
+Once we have created the queue object, we can enqueue kernels.
+Together with the code itself, we need additional information to enqueue and run the kernel,
+such as the parameters and the dependencies that a certain kernel may have on other kernels.
+All that information is grouped in <em>command_group</em> object [Specification Section 3.2.6].
+In this case we create an anonymous command group object.
+The constructor receives the queue where we want to run the kernel, and a lambda or functor which contains the kernel and the associated accessors.
+</p>
+<p>
+The <em>accessor</em> class characterizes the access of the kernel to the data it requires, i.e. if it is read, write, read/write, or many other access modes. Accessors are just templated objects that can be created from different types.
+Since the most common type used for accessors will be the buffer, the buffer class offers a get_access method to construct an <em>accessor</em> from an existing buffer.
+In this case we create four accessors, one for each buffer. The first three accessors are read-only - the data is only read inside the kernel - whereas the last one is write, since we are writing there the result of the three-way vector addition.
+This allows the device compiler to generate more efficient code, and the runtime to schedule different command groups as efficiently as possible.
+</p>
+<p>
+We want to run the vector addition in parallel for each element of the three different vectors,
+so we use the parallel_for statement to execute the kernel a certain number of times.
+The <em>parallel_for</em> statement is one of the different ways you can launch kernels in SYCL.
+See [Specification section 3.7] for details on other ways of enqueueing kernels.
+</p>
+<p>
+The first parameter of the <em>parallel_for</em> is the number of work-items to use, in this case we use one work-item per number of elements in the vector.
+The second parameter is the kernel itself, provided as a<em> kernel_functor</em> instance.
+<em>kernel_functor</em> is a convenience class that enables creating the kernel instance from different sources, such as legacy OpenCL kernels or, as is the case in this sample, a simple C++11 lambda.
+</p>
+<p>
+The lambda used for<em> parallel_for</em> expects an id parameter, which is the class that represents the current work-item. It features methods to get detailed information from it, such as local or work group info or global work group info. In this case, the contents of the lambda represent what will be executed for each work-item. Note that different execution methods can change this behaviour!
+</p>
+<p>
+In this case the contents of the kernel are pretty much equal to the ones used in classic OpenCL, but we can access local scalar variables from the kernel without adding additional code.
+Also, we can call host functions and methods from inside the kernel, and we use templates and other fancy features inside. We can also use native OpenCL capabilities, such as vector types, images, functions, and so on, via the <em>cl::openclc</em> namespace.
+Note that things that are not supported by the device hardware won't work, e.g. we cannot call virtual methods or use host function pointers inside the device.
+In upcoming entries, we will show you how to overcome these limitations.
+</p>
+<p>
+There is nothing else required! Under the hood, the SYCL runtime will enqueue the kernel and run it for you.
+The host will wait so that the data can be copied back to the host when the ownership of the buffer is transferred at the end of the scope.
+</p><h4>5 Building and Running</h4>
+<p>The process of building and running a SYCL program may vary across implementations.
+The specification defines two possible ways of implementing it: via a single-source compiler that produces everything, or using two separate compilers, one for the device code and other for the host code.
+The advantage of this second approach is that the host compiler does not need to support device code, only needs to be able to parse the SYCL C++ library.
+The device compiler will produce a header file containing the binaries containing kernels that can be integrated with the final program binary.
+</p>
+<p>
+When running the sample program above, the runtime will try to find a GPU device to run the kernel. If there is no GPU device, then it tries to use an OpenCL-capable CPU device.
+If none of them are available, the runtime will fallback to host mode, where the kernels are executed on the host using a C++ runtime, so if there isn't an OpenCL implementation available, we can still execute our kernels!
+</p><h4>6 Conclusions</h4>
+<p>In this blog post we have ported a simple three-way vector add program from OpenCL to SYCL.
+We have demonstrated that SYCL is simple to use, and facilitates integrating OpenCL into existing C++ code.
+Future blog posts will demonstrate more advanced features of the programming model, including templates, virtual inheritance, and much more.
+Fasten your seat belts fellow C++ developers, a new world of possibilities is coming to your nearest machine!
+</p>
+<p>
+<br>
+Khronos, SPIR, and SYCL are trademarks of the Khronos Group Inc.<br>
+OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos.</p>
+

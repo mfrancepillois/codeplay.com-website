@@ -1,0 +1,40 @@
+---
+id: 43
+category: getting-started
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Your First Offload Block"
+redirect_from:
+  - /kb/43
+layout: products/offload/kb/view
+---
+<p>Regardless of how you decided to install Offload™, the first offload block that is attempted is a good sanity test for your installation.
+</p><p>
+Whether you decide to jump right in and integrate Offload™ with your current project, or you would rather create a project from scratch, it is advisable to start small and ensure the installation is working as is expected!
+</p><p>
+The first step is to create an C++ file, which will be compiled with Offload™. Once you have the given C++ file created, the next step is to set it to use Offload™. When using the Visual Studio 2008 integration, you can right-click on the desired file and select 'Activate Offload', or you could use a custom build step as either a Visual Studio custom build step, or within a makefile.
+</p><p>
+Create a function within your file:
+</p>
+<pre><code>
+#include
+#include
+void offloadTestBlock()
+{
+	__blockingoffload()
+	{
+		printf(&quot;Hello world from the SPU!&quot;);
+	};
+}
+</code></pre><p>By creating a corresponding header file to expose the function elsewhere in your code, or simply by using an extern offloadTestBlock();, you can link the offloaded function with your normal game code.When using Visual Studio 2008 Integration, compiling the file as is normal will suffice to build the example.
+</p>
+
+<p>
+<div class="ps3"></p><p>
+Content Has been removed.
+</div>
+</p><p>
+Now compiling this example will create a blocking SPU job which simply prints 'Hello world!' to the console.
+</p>
+
+

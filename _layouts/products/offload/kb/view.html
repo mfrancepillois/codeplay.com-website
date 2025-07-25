@@ -1,0 +1,40 @@
+---
+layout: page
+nav_style: alt
+stylesheets:
+  - /assets/css/pages/products/offload/kb/view.css
+---
+
+<!-- Section: KB View -->
+<section id="kb-view" class="minimal-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <a class="button image-button" href="{{ '/products/offload/kb/' | relative_url }}">
+                    <i class="material-icons">arrow_back_ios</i>
+                    Back to List
+                </a>
+
+                <header>
+                    <h1>{{page.title}}</h1>
+                    <h2>Offload KB - {{page.category}}</h2>
+                </header>
+
+                <div id="content">
+                    <div class="recruitment-notice">
+                        <h1>Old Content Alert</h1>
+                        <p>Please note that this is a old document archive and the will most likely be
+                            out-dated or superseded by various other products and is purely here for
+                            historical purposes.</p>
+                    </div>
+
+                    {{content}}
+                </div>
+            </div>
+            <div>
+                <h3>Share</h3>
+                {%- include _includes/share-buttons.html -%}
+            </div>
+        </div>
+    </div>
+</section>

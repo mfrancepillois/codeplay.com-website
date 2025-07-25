@@ -1,0 +1,52 @@
+---
+id: 121
+category: sieve
+date: 2011-11-22T14:02:11.3600Z
+date_updated: 0
+title: "C++ Language Extensions"
+url: c-language-extensions
+description:
+redirect_from:
+  - /company/documents/c-language-extensions
+layout: company/documents/view
+---
+<p>It is also undesirable to have to re-write entire sections of code to exploit muti-core processors. It is impossible for software to automatically rewrite C/C++ code to adapt it for a multi-core processor. The Sieve system solves these problems by adding simple extensions to the C++ language to minimize the the amount of work a programmer has to do to adapt their programs. The Sieve C++ extensions provide an interface to programmers to give hints to the compiler where to automatically schedule work to multiple processor elements or to offload work to individual elements.
+</p>
+
+<p>
+Here are the primary C++ extensions programmers might expect to take advantage of using Sieve:
+</p>
+
+<p>
+<strong>sieve</strong>
+</p><p>
+Sieve Block is the fundamental construct for specifying parallel computations using the Sieve system. A Sieve block is a marked out using the sieve keyword, followed by a fragment of C++ code, enclosed in Left Brace and Right Brace, thus {...}. We refer to the region of code within a Sieve Block as a Sieve scope.
+</p>
+
+<p>
+<strong>splithere</strong>
+</p><p>
+Split point is a method of indicating, to the Sieve Tool, at what point the code should be divided and parallelized. The divided portions of code within a Sieve Block are called fragments. In Sieve, fragments are the smallest amount of work that can be done in parallel with each other within the Sieve Block.
+</p>
+
+<p>
+Additionally, there are sieve extensions to define sievethreads. Sievethreads are ideal for situations that require offloading of individual sections of code to single co-processor elements on a heterogeneous multi-core processor or accelerator board. They can also be invaluable to the programmer in adding dependency-free sieve blocks to their program.
+</p><p>
+<strong>sievethread</strong>
+</p><p>
+The sievethread keyword defines a sievethread block. A sievethread block contains code that will be offloaded to run on a single co-processing element of a multi-processor system. The code surrounding the sievethread block is executed on the controlling/host processor. A sievethread block is non-blocking or asynchronous. Code inside the block will be executed while the host processor will continue to process the code after the sievethread block
+</p><p>
+<strong>blockingsievethread</strong>
+</p><p>
+Blocking (or synchronous) sievethread blocks suspend the host processor upon entering the block until the coprocessing element is finished processing the block.
+</p><p>
+<strong>__outer</strong>
+</p><p>
+__outer is a pointer modifier to declare pointers/references to host processor or shared memory space from a sievethread block or sievethread function. This modifier is used to be able to access host processor data (outside the sievethread context) from a sievethread context.
+</p>
+
+<p>
+The Sieve C++ extensions are indeed similar to OpenMP pragmas, but overall require less sytax changes to write parallel algorithms. Junoir or less experienced programmers may also find them easier and more intuitive to understand and work with. Of course, there are many other differences between Sieve and OpenMP.
+</p>
+
+

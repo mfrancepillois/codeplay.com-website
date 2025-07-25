@@ -1,0 +1,16 @@
+---
+id: 149
+category: faq
+date: 2020-07-07T17:23:34.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Moving data definitions into Offload™ blocks"
+redirect_from:
+  - /kb/149
+layout: products/offload/kb/view
+---
+<p>Within an Offload&trade; block, code that does not depend on PPU data (defined outside an offload block) will generate fast SPU code. The compiler provides a number of compiler options (<a href="{{ '/kb/80' | relative_url }}">/kb/80.html</a>) to spot PPU data dependencies in order to help the programmer to remove or refactor them for performance.
+</p><p>
+Moving data local onto the SPU (i.e. defining variables inside an offload block) is the essential idea behind the cache classes (<a href="{{ '/kb/136' | relative_url }}">/kb/136.html</a>) and the data locality library (<a href="{{ '/kb/71' | relative_url }}">/kb/71.html</a>).
+</p>
+
+

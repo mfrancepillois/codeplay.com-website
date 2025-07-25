@@ -1,0 +1,42 @@
+---
+id: 151
+category: features
+date: 2020-07-07T17:23:34.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Job Functions"
+redirect_from:
+  - /kb/151
+layout: products/offload/kb/view
+---
+<p>Games engines often implement some kind of job/task system which manages some form of a job list. The application adds jobs into that list, and a scheduler runs them. On the PS3 such a job system may have to be able to handle PPU jobs as well as SPU jobs, and often there may be the need to run the same task on PPU and SPU depending on the availability of the cores.  With Offload such SPU jobs can be easily created using &quot;suspended&quot; Offload blocks. Such an Offload block creates a suspended SPU job and returns a handle which can be used by the task scheduler to resume that job at a later stage.
+</p><p>
+The following function creates a suspended SPU task and returns a handle of that task:
+</p>
+<pre><code>int CreateSPUJob(int arg)
+{
+    int handle = __offload suspended (arg) //offload block with suspended keyword, capturing arg (in a very lambda-like way)
+    {
+          DoSomethingOnSPU(arg);
+    };
+    return handle;
+}
+</code></pre><p>To resume this SPU task, the Offload runtime function offloadThreadStart must be called with the handle of the suspended offload block as the argument:
+</p>
+<pre><code>offloadThreadStart(handle);
+</code></pre>
+
+
+<p>
+The Offload compiler also supports the new function modifier __offloadjob which is essentially syntactic sugar for creating jobs using offload blocks. Using __offloadjob the above function CreateSPUJob becomes:
+</p>
+<pre><code>__offloadjob int CreateSPUJob(int arg)
+{
+    DoSomethingOnSPU(arg);
+}
+
+</code></pre>
+
+
+
+
+

@@ -1,0 +1,56 @@
+---
+title: "Researchers Migrating to SYCL at SC21"
+date: 2021-11-29T10:33:09.715000+00:00
+layout: portal/portal-article-view
+user_id: 840
+category: news
+thumbnail: /assets/images/portal/article-images/2021-11-10_12-53-15.png
+---
+
+<p>The <a href="https://sc21.supercomputing.org/">SuperComputing SC21</a>
+conference is over, and I've been eager to see all the SYCL papers and
+presentations published on various topics. I wrote about all the SYCL
+activities at SC21 <a href="https://www.codeplay.com/portal/blogs/2021/11/10/bringing-the-latest-sycl-research-to-sc21.html">in my previous blog post</a> and now I want to pick out some of the highlights.</p>
+<p>The first day of the conference involved many concurrent sessions with
+around 16 different workshops, as well as a <a href="https://www.oneapi.io/events/oneapi-developer-summit-at-sc">full day of content at the oneAPI Developer Summit</a>. </p>
+<p>The <a href="https://www.oneapi.io/events/oneapi-developer-summit-at-sc">oneAPI Developer Summit</a> focused largely on developers using SYCL with a
+range of sessions from tutorials and technical presentations to the closing
+panel session and this year there. This time there was a real focus on
+migrating code from CUDA to SYCL and the work that Codeplay has been doing to
+bring Nvidia GPU support to oneAPI is crucial for this. </p>
+<p>Early in the day there was <a href="https://www.oneapi.io/event-sessions/developing-for-nvidia-gpus-using-sycl-with-oneapi/">an hour long session</a> by Codeplay engineer Joe Todd who explained how
+easy it is to migrate from CUDA to SYCL while still targeting Nvidia GPUs with
+great performance. The session included a code along section which you can watch back to
+understand how to set up your own environment with oneAPI for CUDA. This session
+is a great way to get a kick start your development journey from CUDA to SYCL.</p>
+<p><br></p><p><img src="{{ '/assets/images/portal/article-images/sc21close.png' | relative_url }}" width="615" height="350"></p><p>To complement this, Eric Nielson from NASA with Mohammed Zubair from Old
+Dominion University presented their <a href="https://www.oneapi.io/event-sessions/experience-in-moving-cuda-optimized-fun3d-kernels-to-intel-gpus-using-intel-oneapi/">experiences of porting jet propulsion simulation code</a> using CUDA optimized kernels to
+SYCL. Eric’s presentation highlights crucial details of how to migrate this
+type of code to target Intel GPUs using SYCL, covering topics including memory
+access patterns and optimization techniques.</p>
+<p>Ravil Dorozhinskii from the Technical University of Munich <a href="https://www.oneapi.io/event-sessions/performance-portability-and-evaluation-of-heterogeneous-components-of-seisol-targeted-to-upcoming-intel-hpc-gpus/">talked</a> about
+the experience of shifting their mindset from CPU programming to GPU
+programming. They also shared their experiences of using oneAPI for CUDA for
+earthquake simulation, with some promising performance results. </p>
+<p>All the sessions are <a href="https://www.oneapi.io/events/oneapi-developer-summit-at-sc">now available on demand</a>.</p>
+<p>Apart from the oneAPI Developer Summit on the first day there were
+numerous workshops worth keeping an eye on. </p>
+<p>Tom Deakin from the University of Bristol regularly presents on
+performance portability and has written multiple papers over the years sharing
+results comparing models including OpenCL, SYCL and OpenMP. This year at SC21
+during the HiPar workshop <a href="https://www.hipar.net/wp-content/uploads/2021/11/ws_hipar21_104s4.pdf">he explained ideas for expanding Hierarchical Parallelism in SYCL</a> and
+showed benchmark results using these experimental techniques. This could be an
+interesting addition to the SYCL standard in the future for more effective use
+of parallelism.</p>
+<p>At WACCPD Vincent Pascuzzi also <a href="https://waccpd.org/wp-content/uploads/2021/11/ws_waccpd106s3-file5.pdf">presented his research</a> in accelerating simulations as part of his
+research using data from the Large Hadron Collider which is fascinating and
+demonstrated that performance portability across processor architectures is
+very possible.</p>
+<p>The last thing I will mention is the SYCL Birds of a Feather which had a
+large and interactive audience of both online and in person participants with
+some excellent debates and questions on a range of topics. If you registered
+for SC21 and missed it, you should definitely watch the recording through the event
+website.</p>
+<p>We move on to Christmas and then 2022 when we expect to be talking about
+lots of activities at conferences and workshops throughout the year. Let us
+know what events you will be watching out for next year on the usual channels.</p>

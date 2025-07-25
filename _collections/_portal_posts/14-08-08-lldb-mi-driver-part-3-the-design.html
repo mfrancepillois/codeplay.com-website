@@ -1,0 +1,191 @@
+---
+id: 107
+url: lldb-mi-driver---part-3-the-design
+user_id: 649
+date: 2014-08-08T18:42:44.7200Z
+category: blogs
+title: "LLDB MI Driver - Part 3: The Design"
+showOnFrontPage: 0
+views: 204
+tags: LLDB,LLDB-MI,C++,Eclipse,Debuggers
+redirect_from:
+  - /portal/lldb-mi-driver---part-3-the-design
+thumbnail: /assets/images/portal/article-images/9bb43e769a5e947aec761caddd5e7974.png
+layout: portal/portal-article-view
+---
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-1-introduction' | relative_url }}">Part 1: Introduction</a></li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-2-setting-up-the-driver' | relative_url }}">Part 2: Setting Up the Driver</a> </li>
+<li> <strong>Part 3: The Design</strong></li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-4-how-to-add-a-command' | relative_url }}">Part 4: How to Add a Command</a></li>
+</ul><h2>1 Introduction</h2>
+<p>The aim of this blog is to give a very high level overview of the design of the MI Driver (version 1.0.0.6/7) so that it can be better understood, should changes need to be made. Any changes made should then complement and work in harmony with its intended design, making it easier to implement new features in future. This blog post covers:
+</p><ul>
+<li> High Level Overview</li>
+<li> Architecture</li>
+<li> Prominent design patterns used</li>
+<li> UML diagram of the whole driver</li>
+</ul>
+<p>
+Many of the images used in this blog are taken from an internal presentation, which this blog follows in parts.
+</p>
+<p>
+The MI Driver was primarily designed and built for a client, with the purpose of enabling them to debug their remote target using the <a href="https://www.eclipse.org/">Eclipse IDE</a> in conjunction with <a href="http://lldb.llvm.org/">LLDB</a>. Secondary to this, but just as important, we saw the opportunity and the need for a good all-purpose MI Driver that could be used with other development environments. The design also takes this into account, making it straight forward to add a new command, for example.
+</p><h2>2 High Level Overview</h2>
+<p>The diagram in Figure 1 shows a very simplistic high level view of where the MI Driver fits in the scheme of things.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/9bb43e769a5e947aec761caddd5e7974.png' | relative_url }}" alt="Figure 1: The MI Driver fits here"/>
+</p>
+<p>
+<strong>Figure 1: The MI Driver fits here</strong>
+</p>
+<p>
+In more detail, Figure 2 shows communication channels, either from a client or directly from a command line interface window.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/4618d8494b646b3b5ab4477955437533.png' | relative_url }}" alt="Figure 2: Communication channels"/>
+</p>
+<p>
+<strong>Figure 2: Communication channels</strong>
+</p>
+<p>
+The LLDB library is statically linked to the MI Driver. It strictly uses only LLDB's public API to carry out all of its actions or responses to LLDB events.
+</p>
+<p>
+The MI Driver interprets text on the stdin stream, and matches the MI command to an equivalent internal command object. A command object calls the appropriate LLDB API function or functions, which normally return an immediate result. The command then turns that result into an MI response and sends it back to the client via the stdout stream. An example of such a procedure would be “connect to target” and the response would be something like “yes successfully connected to target” in MI-speak.
+</p>
+<p>
+ Commands come into the driver in order, and a command cannot be carried out until the previous one has finished. However, the MI Driver also has to respond to LLDB events, which are out of sequence with the commands input to the driver. An event is a result of a command being carried out successfully, whereby new information about the 'request' has come along some point later in time. Other commands have been carried out and completed subsequently, but new information has now materialized.
+</p>
+<p>
+ An example of this is setting a breakpoint. A “set a breakpoint here” command is issued by the IDE. A response is returned immediately by the MI Driver indicating “yes break point created successfully and inserted”. Meanwhile, a user starts a debug session and progresses through the code. New commands are issued to do this and responses have to be made. The user then runs the breakpointed code and the previously requested breakpoint is hit. This creates an out-of-order event which the MI Driver has to handle and create an MI response to, such as “the breakpoint has now been hit”. The client receives this inserted amongst other MI responses for which it can change its GUI, for example to reflect that the break point has been hit and code execution has halted.
+</p>
+<p>
+Figure 3 shows the MI Driver handling both synchronous commands and asynchronous events.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/9a05565f89215c68284d00ff8f89d118.png' | relative_url }}" alt="Figure 3: Synchronous and asynchronous MI responses"/>
+</p>
+<p>
+<strong>Figure 3: Synchronous and asynchronous MI responses</strong>
+</p>
+<p>
+The multi-threaded architecture of the MI Driver handles both types of responses. We'll go into more detail on this later.
+</p><h2>3 Architecture</h2><h3>3.1 Packages</h3>
+<p>The architecture is made up of very distinct separate components called Packages, each of which carries out only one task. Each is self-contained, in that it sets itself up and tears itself down independently of others. All Packages provide a public interface, hiding their implementation within. Should a Package's functionality fail, it will provide an error description of the problem and, in some cases, a solution.
+</p>
+<p>
+A Package may depend on other Packages to carry out its services, and multiple other Packages may also depend upon it. Therefore, each has an internal reference count so that it will not shut down until all of its clients no longer require it. Any Package that requires the services of another Package must reference and initialize that Package in its own Initialise() function. It must also shut down that Package in its own Shutdown() function. Where a Package should generally be available to all other code, it should be initialized at the earliest convenient opportunity, so that it is available and ready to be used.
+</p>
+<p>
+All Packages initialize themselves on application start up before anything else is done. Once they have all initialized successfully, the MI Driver commences to wait and monitor the stdin stream for MI commands.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/977d87d208134ed52c5654d73cd05b3b.png' | relative_url }}" alt="Figure 4: Packages"/>
+</p>
+<p>
+<strong>Figure 4: Packages</strong>
+</p>
+<p>
+The main Packages are:</p><ol>
+<li> Driver Manager – Overall Package that handles the startup, running, and shutdown of the MI Driver. It starts the Packages' initialisation process.</li>
+<li> Stdin Handler – Waits and monitors the stdin stream, filling a queue for the Driver Manager::MIDriver to read from.</li>
+<li> Command Manager – The Driver Manager, and the MI Driver within, utilize the services of this Package to interpret and execute commands. There is one command class for each MI command. A command object carries out the appropriate actions and then, with the aid of MI record formation classes, creates an MI response to send back to the client.</li>
+<li> LLDB Debugger – Holds the current state of the LLDB debugger, and acts as a proxy for commands. A command instance talks to this package to action the LLDB functionality associated with that command. A sub-Package holds debug session data, which a command can place there so that a later command can read and use that data to help it carry out its task. The sub-Package Event registers the events to listen for in LLDB. It then waits for those out-of-order events coming back from LLDB. The event-handling code handles and forms the MI response for the client.</li>
+<li> Medium Output – Receives status and progress updates, and writes to the log file. Any Package can use this facility to aid user feedback, or for debugging the MI Driver itself.</li>
+<li> Application Resources – Resources such as user-facing text are put here, for example error messages. The rule is to put text here and not hard code it directly elsewhere. Should the need arise, this will make it very easy to handle localization.</li>
+<li> Thread Manager – Creates and manages the various threads that are used. A wrapper for all current and future thread functionality.</li>
+<li> Stdout Handler – Looks after all operations on the stdout stream. All such operations must go through this Package and not use stdout directly. </li>
+<li> Stderr Handler - Similar to the Stdout Handler, but operating on the stderr stream.</li>
+</ol>
+<p>
+The &quot;Driver&quot; in the &quot;Driver Manager&quot; Package in Figure 4 represents the LLDB Driver. This may or may not be operational, depending on the build configuration. The Driver Manager and Driver base classes were designed such that one driver could fall through to another, should the first not understand, or wish to accept, a 'command' found on the stdin stream. The first could pass the 'command' onto the fall through driver for it to interpret and act on if desired. This was a requirement that had a low priority, and so has not been fully implemented at this time.
+</p><h3>3.2 Threads</h3>
+<p>The MI Driver currently operates three threads; the main thread and two worker threads. The worker threads, operating in Packages to execute code, are created and managed by the Thread Manager Package.
+</p>
+<p>
+Figure 5 shows where the various threads are utilized.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/c866c189f038e82816fcddbd777eb509.png' | relative_url }}" alt="Figure 5: Threads"/>
+</p>
+<p>
+<strong>Figure 5: Threads</strong>
+</p>
+<p>
+The Packages in red indicate code that is shared between different threads, and so must be thread safe. Also note that a command object and an event handling function are likely to use the MI Result Record and Out-of-band formatting classes, respectively, to form MI responses.
+</p><h3>3.3 Classes</h3>
+<p>Class names follow the taxonomy principle and indicate their area of usage. A break down is as follows:
+</p>
+<p>
+A typical class name: CMICmdArgValFile</p><ul>
+<li> 'C' = class ('S' Struct – Project coding style)</li>
+<li> 'MI' = the project acronym prefix and also indicates the project's set of all files</li>
+<li> 'Cmd' = 'command'. Others are 'Util' for utility code, 'Cmn' for common functionality, and 'Driver' for the MI driver's startup code.</li>
+<li> 'Arg' = argument. Subsequent code area detail.</li>
+</ul>
+<p>
+There is generally one class per file. However, there are exceptions such as the command classes which are grouped so that each file contains all the classes for one type of command.
+</p><h3>3.4 Code Flow</h3>
+<p>Figure 6 shows the high level code flow as an MI command is accepted and acted on in the MI Driver.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/44c2bf8484eb760c6921464cba485a98.png' | relative_url }}" alt="Figure 6: Code flow"/>
+</p>
+<p>
+<strong>Figure 6: Code flow</strong>
+</p><h3>3.5 Build Configuration File</h3>
+<p>In the source directory of the project is a file named MICmnConfig.h. It holds the project's preprocessor definitions, and dictates how the MI Driver is built and which features are included.
+</p>
+<p>
+One such definition controls the ability to pop up a modal dialogue on Windows when the MI Driver starts up, so that a debugger can be attached to the MI Driver process. A similar feature is avaiable for Linux type platforms, however it uses an infinite loop which must be broken out of by altering the loop's condition variable. This is feature is disabled by default, but if enabled it can appear that the MI Driver has locked up and does not respond to input, so be careful!
+</p><h2>4 Design Patterns</h2>
+<p>This section quickly introduces patterns used to help facilitate understanding of the design. The patterns used are a close relation to those described in text and so differ to fit the needs of the design.
+</p><h3>4.1 Singletons</h3>
+<p>All the Packages are singletons.
+</p><h3>4.2 Visitor Pattern</h3>
+<p>The Stdin Package uses the Visitor pattern to call on the current driver object to read a line of text from the stdin stream. Figure 7 shows the implementation.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/cee95b50d2173253b3ed69528e415686.png' | relative_url }}" alt="Figure 7: Queue and read text lines"/>
+</p>
+<p>
+<strong>Figure 7: Queue and read text lines</strong>
+</p>
+<p>
+This design allows reading from the stdin stream in a dedicated thread, while allowing the driver's command code to be executed in the main thread. The stdin Package queues lines of input while the driver executes the next command.
+</p><h3>4.3 Command Pattern</h3>
+<p>The driver uses the Command Manager Package to interpret and execute a command on its behalf. It is an interpretation of the traditional command pattern, as it is not required to do things such as undo and redo. Each MI command is represent by its own command class which has both Execute() and Acknowledge() (equivalent to Undo()) functions.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/2306ab5434276a13df393af3b78ddf38.png' | relative_url }}" alt="Figure 8: Command class interaction with other objects"/>
+</p>
+<p>
+<strong>Figure 8: Command class interaction with other objects</strong>
+</p>
+<p>
+Generally, the rule for implementing a command is that work is only carried out in the Execute() function, and results of that work are turned into an MI response only in the Acknowledge() function. While this is not strictly required, other than for consistency, it does allow scope for future development should it arise.
+</p><h3>4.4 Interpreter Pattern</h3>
+<p>There is a myriad of commands and different ways of interpreting their arguments and options. The Interpreter Pattern was used as inspiration in the design of the CMICmdArgXXXXXX set of classes. This was a later addition to the MI Driver as it became clear that the range of ways to parse command arguments was becoming unwieldy, especially as the parsing code was being repeated for each command in the body of the Execute() function. This 'extra' code creates unnecessary code noise and code duplication distracting from the essence of a command class and the often small amount of code required to talk to the LLDB API.
+</p>
+<p>
+Looking at the MI specification only tells you half the story of what needs to be handled:</p><ul>
+<li> MI has at least 10 different types of arguments or option types i.e. string, number, file path, --longOption, -s (short) option, list of N values.</li>
+<li> The options are in no particular order.</li>
+<li> May be optional or mandatory.</li>
+<li> There are optional string quotes to handle.</li>
+<li> Not all commands' arguments or options obey the rules!</li>
+</ul><h2>5 UML Diagram</h2>
+<p>Figure 9 shows the MI Driver UML Diagram for MI Driver version 1.0.0.6. This will be the same for version 1.0.0.7.
+</p>
+<p>
+ <img src="{{ '/assets/images/portal/article-images/738864a8ee3e5940e406b03b1153c247.png' | relative_url }}" alt="Figure 9: UML diagram"/>
+</p>
+<p>
+<strong>Figure 9: UML diagram</strong>
+</p><h2>6 Conclusion</h2>
+<p>This blog post has covered a high level overview of the design of the MI Driver, the architecture including Packages, Threads, and Classes, and the Design Patterns used. To delve deeper into the implementation, see the next post in the series, <a href="{{ '/portal/lldb-mi-driver---part-4-how-to-add-a-command' | relative_url }}">Part 4: How to Add a Command</a>.
+</p>
+

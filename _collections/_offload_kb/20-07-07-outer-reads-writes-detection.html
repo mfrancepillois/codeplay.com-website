@@ -1,0 +1,20 @@
+---
+id: 119
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Outer Reads/Writes detection"
+redirect_from:
+  - /kb/119
+layout: products/offload/kb/view
+---
+<p>Using the -warnonouterreadswrites command line option will output to the compiler output all instances of __outer reads and writes from within Offload blocks. All these reads and writes will go via the software cache, unless they are listed as being memory copies.
+</p><p>
+This output is very useful for detecting slow reads and writes. One vital aspect is the alignment of the data. If you discover many reads and writes of a size which is greater than the listed alignment of that operation, the software cache cannot deduce that all the requested data exists on a single cache line, and must go through a slower path to guarantee correctness.
+</p><p>
+Using this list then to eliminate these reads and writes by either aligning the data to better boundaries, or grouping reads and writes, can yield speed-up.
+</p><p>
+See <a href="{{ '/kb/79' | relative_url }}">/kb/79.html</a> for further information and examples.
+</p>
+
+

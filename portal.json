@@ -1,0 +1,38 @@
+---
+---
+{%- assign posts = site.portal_posts | sort: 'date' | reverse -%}
+{%- assign firstItemShown = false -%}
+
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Portal JSON Feed",
+    "icon": "https://www.codeplay.com/assets/images/favicon.ico",
+    "home_page_url": "https://www.codeplay.com",
+    "feed_url": "https://www.codeplay.com/portal.json",
+    "items": [
+        {% for post in posts %}
+        {%- if post.sitemap == false or post.hidden == true or post.hidden == 'true' -%}{% continue %}{%- endif -%}
+        {%- for author in site.authors -%}
+        {%- assign current_author_id = author.user_id | times:1 -%}
+        {%- assign article_author_id = post.user_id | times:1 -%}
+        {%- if current_author_id == article_author_id -%}
+        {%- assign foundAuthor = author -%}
+        {%- endif -%}
+        {%- endfor -%}
+        {%- if firstItemShown -%},{%- endif -%}{
+            "id": "{{post.title | slugify}}",
+            "title": "{{ post.title | escape }}",
+            "authors": [{
+                "avatar": "{{ site.url }}{{foundAuthor.avatar}}",
+                "name": "{{foundAuthor.title}}"
+            }],
+            "url": "{{ site.url }}{{ post.url }}",
+            "category": "{{ post.category }}",
+            "thumbnail": "{{ site.url }}{{ post.thumbnail }}",
+            "description": "{{ post.description }}",
+            "date_published": "{{ post.date | date_to_long_string }}"
+        }
+        {%- assign firstItemShown = true -%}
+        {%- endfor -%}
+    ]
+}

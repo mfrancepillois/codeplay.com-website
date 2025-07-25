@@ -1,0 +1,148 @@
+---
+id: 111
+url: sycl-tutorial-2-the-vector-addition-re-visited
+user_id: 653
+date: 2014-08-13T13:48:20.7200Z
+category: blogs
+title: "SYCL Tutorial 2: The Vector Addition Re-visited"
+showOnFrontPage: 0
+views: 0
+tags: SYCL,Vector Addition
+redirect_from:
+  - /portal/sycl-tutorial-2-the-vector-addition-re-visited
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+<div style="background-color: red; color: white; padding: 2rem;">
+This blog post has been archived since ComputeCpp, the Codeplay implementation of the SYCL standard, is now available. You can find the "Getting Started" guide for ComputeCpp <a href="https://www.codeplay.com/products/computesuite/computecpp/reference/getting-started/">available on our website here</a> that explains how to get set up and start using SYCL.
+</div>
+
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <a href="{{ '/portal/sycl-tutorial-1-the-vector-addition' | relative_url }}">Tutorial 1: The Vector Addition</a></li>
+<li> <strong>Tutorial 2: The Vector Addition Re-visited</strong></li>
+<li> <a href="{{ '/portal/sycl-tutorial-3-integrating-sycl-into-stanford-university-unstructured' | relative_url }}">Tutorial 3: Integrating SYCL Into Stanford University Unstructured</a></li>
+</ul><h2>1 Introduction</h2>
+<p>Continuing in the SYCL™ Tutorial series, this post uses another exercise from Simon McIntosh-Smith's tutorial: Exercise number 4. Here we also implement a vector addition, in this case by using a pair-wise addition kernel three times.
+</p>
+<p>
+Although the implementation used in <a href="{{ '/portal/sycl-tutorial-1-the-vector-addition' | relative_url }}">the previous post</a> is probably more efficient in the majority of the cases, this implementation shows certain SYCL features that make the example worth the effort.
+</p><h2>2 Using the OpenCL™ C++ bindings</h2>
+<p>The code in <a href="https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Solutions/Exercise04/Cpp/vadd_chain.cpp">the HandsOnOpenCL github</a> showcases the implementation of this chained vector addition using the OpenCL C++ wrappers:
+</p><ul>
+<li> Seven host-side STL vectors are defined (<strong>h_a</strong>  to <strong>h_f</strong>) and their device counterparts (cl::Buffer) are declared shortly after.</li>
+<li> From line 73 to line 84, the code initializes the devices and loads the source file for the program. Note that at this point (line 84), we define the type of the vectors to be float.</li>
+<li> The kernel itself, in a separate file (<strong>vadd.cl</strong>) is pre-defined to work with floats.</li>
+<li> The following lines (86 to 93) create the buffers in the device (again, pre-set to work with floats).</li>
+<li> Then, the kernel is enqueued three times with different parameters (95, 104, 113), and, finally, data is copied back to the host (line 122).</li>
+</ul>
+<p>
+This is actually a good example of how using the C++ bindings can ease the bare OpenCL C implementation. See the <a href="https://github.com/HandsOnOpenCL/Exercises-Solutions/blob/master/Solutions/Exercise04/C/vadd_chain.c">C version</a> as a comparison.
+</p><h2>3 Using SYCL</h2>
+<p>The simplest way of using a command group, as we did in the previous post in this series, is to use a lambda inside the command group constructor to define the kernel function. Lambdas simplify writing kernel code, especially for simple kernels. However, in this sample we will use a <a href="http://en.wikipedia.org/wiki/Functor_(C++)">functor</a> to illustrate other features of SYCL. The listing below shows the definition of the vector addition kernel from within a command group functor:
+</p><pre>template&lt;typename TYPE&gt;
+class vadd_params
+{
+private:
+   buffer&lt;TYPE, 1&gt; * m_va;
+   buffer&lt;TYPE, 1&gt; * m_vb;
+   buffer&lt;TYPE, 1&gt; * m_vc;
+   unsigned int m_nelems;
+public:
+   vadd_params( buffer&lt;TYPE, 1&gt; * va,
+      buffer&lt;TYPE, 1&gt; * vb,
+      buffer&lt;TYPE, 1&gt; * vc,
+      unsigned int nelems
+    ):
+      m_va(va), m_vb(vb), m_vc(vc), m_nelems(nelems) { };
+  void operator()()
+  {
+   auto ptrA = m_va-&gt;template get_access&lt;access::read&gt;();
+   auto ptrB = m_vb-&gt;template get_access&lt;access::read&gt;();
+   auto ptrC = m_vc-&gt;template get_access&lt;access::read_write&gt;();
+   parallel_for(m_nelems, kernel_lambda&lt;class vadd_params_kernel&gt;
+                ([=] (id&lt;1&gt; i) {
+                                    ptrC[i] = ptrA[i] + ptrB[i];
+                               }
+                ));
+  }
+};
+</pre>
+<p><br/>
+Note that the command group functor (<strong>vadd_params</strong>) is just a normal C++ class, so we can declare it as a template instead of specifying a fixed type. Yes, this is exactly what you were thinking: we have the implementation of all the type-variants of the vector addition <strong>for free</strong>. No need for multiple different kernels for every type, or macros to switch between float and int.
+</p>
+<p>
+The constructor of the command group functor receives pointers to the buffers that we want to add, and the number of elements of the vectors. Since they are pointers there are no move semantics and the ownership is not transferred. The accessors created inside the command group will indicate the runtime the access requirement on the buffers.
+</p>
+<p>
+The <strong>parallel_for</strong> function API call specifies the kind of kernel that we want to launch, and the lambda contains the kernel itself. Another advantage of using command group functors is that we can have the kernel and its accessors grouped in a class. This facilitates the creation of complex class hierarchies, like composition of kernel functors, or doing <a href="http://www.cprogramming.com/c++11/c++11-compile-time-processing-with-constexpr.html">constexpr</a> magic.
+</p>
+<p>
+How do we use this functor? Well, we just have to replace all the humongous boilerplate code with the creation of the SYCL buffers, and the default queue. In the listing below, we create a new scope (A) so that we control when the SYCL buffers are copied back to their host counterparts (in B). Inside the scope, we create the command group objects and pass them our lovely functor, as so:
+</p><pre>const unsigned NELEMS = 1024u;
+(...)
+{ /* A: Create scope */
+  buffer&lt;float, 1&gt; bufA(h_A.data(), h_A.size());
+  buffer&lt;float, 1&gt; bufB(h_B.data(), h_B.size());
+  buffer&lt;float, 1&gt; bufC(h_C.data(), h_C.size());
+  buffer&lt;float, 1&gt; bufD(h_D.data(), h_D.size());
+  buffer&lt;float, 1&gt; bufE(h_E.data(), h_E.size());
+  buffer&lt;float, 1&gt; bufF(h_F.data(), h_F.size());
+  buffer&lt;float, 1&gt; bufG(h_G.data(), h_G.size());
+  /* The default constructor will use a default selector */
+  queue myQueue;
+  /* Now we create the command group objects to enqueue the command group
+   * objects with different parameters.
+   */
+  command_group(myQueue, vadd_params&lt;float&gt;(&amp;bufA, &amp;bufB, &amp;bufC, NELEMS));
+  command_group(myQueue, vadd_params&lt;float&gt; (&amp;bufE, &amp;bufC, &amp;bufD, NELEMS));
+  command_group(myQueue, vadd_params&lt;float&gt; (&amp;bufG, &amp;bufD, &amp;bufF, NELEMS));
+} /* B: Will wait until execution here */
+(...)
+</pre>
+<p><br/>
+The functor is instantiated for floats and passed to the constructor of the command group, which enqueues it on the given queue. Although we only use floats in this sample (as we are following the tutorial), we could be using any type. The compiler will take care of creating the various implementations for us.
+</p>
+<p>
+The three command groups will then be executed in order. When the execution reaches the end of the block statement at B, the destructor of the buffers will trigger the copying back of the result. Note also that we are not copying data in and out for each kernel, and the runtime will take care of copying the data required for each kernel.
+</p><h2>4 Using bind</h2>
+<p>If the above code was too large for your taste, here's a different way to implement it using STL bind, as suggested by a colleague:
+</p><pre>template&lt;typename TYPE&gt;
+void vadd_params_function(buffer&lt;TYPE, 1&gt; * va, buffer&lt;TYPE, 1&gt; * vb,
+                          buffer&lt;TYPE, 1&gt; * vc, unsigned int nelems)
+{
+  auto ptrA = _va-&gt;template get_access&lt;access::read&gt;();
+  auto ptrB = _vb-&gt;template get_access&lt;access::read&gt;();
+  auto ptrC = _vc-&gt;template get_access&lt;access::read_write&gt;();
+
+  parallel_for(nelems, kernel_functor&lt;class vadd_params_kernel&gt;(
+                ([=] (id&lt;1&gt; i) {
+                                 ptrC[i] = ptrA[i] + ptrB[i];
+                               }
+                ));
+}
+(...)
+
+  command_group(myQueue,
+                 std::bind(vadd_params_function, &amp;bufA, &amp;bufB, &amp;bufC, NELEMS));
+  command_group(myQueue,
+                 std::bind(vadd_params_function, &amp;bufE, &amp;bufC, &amp;bufD, NELEMS));
+  command_group(myQueue,
+                 std::bind(vadd_params_function, &amp;bufG, &amp;bufD, &amp;bufF, NELEMS));
+</pre>
+<p><br/>
+Given a templated function, <a href="http://en.cppreference.com/w/cpp/utility/functional/bind">std::bind</a> will create a functor with the given parameters. This saves you the nuisance of writing the class. This is one of the coolest characteristics of SYCL: you get all the nice C++ idioms and tricks nicely integrated with your performance-optimal OpenCL code, all of which will work out of the box.
+</p>
+<p>
+My colleague is neither a SYCL or an OpenCL developer, but he is a highly skilled C++ developer, so he used his experience to simplify the code and integrate it into an existing codebase. This is standard C++, so any standard compiler will produce valid C++ code that will run on the host - providing it has access to the SYCL headers. A SYCL-enabled compiler will also produce a device kernel and handle all the execution for you.
+</p><h2>5 Conclusion</h2>
+<p>In this short blog post, we have implemented a vector addition kernel using SYCL, using templated command groups to reduce the work required to write kernels. As you can see, SYCL provides a great productivity boost for C++ programmers, and integrates well with common C++ techniques (functors, templates, etc). We are confident that this small example has shown lots of ways in which SYCL integrates with your programs, so why not write your own sample code? Even though there is not an implementation available yet, we encourage you to post your ideas in the comments, below or on the <a href="http://www.khronos.org/message_boards/showthread.php/9333-Official-SYCL-1-2-Provisional-feedback-thread?p=30243">Khronos™ forums</a>, as we are eager to see what SYCL will enable you to do! Alternatively, you can also <a href="{{ '/support/contact' | relative_url }}">contact us directly</a>.
+</p><h2>6 Disclaimer</h2>
+<p>Please, note that the above code is based on the provisional specification of SYCL, which can be found on <a href="https://www.khronos.org/opencl/sycl">the official Khronos webpage</a>. The final specification is subject to change from the current draft.
+</p>
+<p>
+<br/>
+Khronos and SYCL are trademarks of the Khronos Group Inc.<br/>
+OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos.
+</p>
+

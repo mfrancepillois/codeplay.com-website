@@ -1,0 +1,138 @@
+---
+id: 94
+url: hello-world-from-sycl
+user_id: 73
+date: 2014-04-17T20:31:34.7200Z
+category: blogs
+title: "Hello World From SYCL"
+showOnFrontPage: 0
+views: 0
+tags: SYCL,OpenCL,Hello World
+redirect_from:
+  - /portal/hello-world-from-sycl
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+<p style="background-color: red; color: white; padding: 2rem;">
+This blog post has been archived since ComputeCpp, the Codeplay implementation of the SYCL standard, is now available. You can find the "Getting Started" guide for ComputeCpp <a href="https://www.codeplay.com/products/computesuite/computecpp/reference/getting-started/">available on our website here</a> that explains how to get set up and start using SYCL.
+</p>
+<p>This blog post is the second in a series of blog posts aimed at describing the recently announced SYCL™ 1.2 standard. The previous blog post was a Q&amp;A style introduction which answered many commonly asked questions, this can be found <a href="http://www.codeplay.com/portal/introduction-to-sycl">here</a>.
+</p>
+<p>
+This blog is a tutorial that will describe how to implement a very simple hello world style SYCL application that will demonstrate the most minimal usage of SYCL's feature set. It will introduce all of the key features required to construct and execute a SYCL kernel function and will describe how they work. Further details of the features of SYCL can be found in the provisional specification <a href="http://khronos.org/opencl/sycl">here</a>.
+</p>
+<p>
+The application presented in this tutorial will define a simple SYCL kernel function that will take a single float variable, square it and then return the result.
+</p>
+<p>
+<br>
+<strong>The Application</strong><br></p><pre>#include "CL/sycl.hpp"
+
+using namespace cl::sycl;
+
+int main ()
+{
+	default_selector mySelector;
+	context myContext(mySelector);
+	queue myQueue(myContext);
+	float floatVar = 5.0f;
+	buffer&lt;float, 1&gt; myBuffer(&amp;floatVar, 1);
+
+	command_group(myQueue, [&amp;]()
+	{
+		auto deviceAcc = myBuffer.get_access&lt;access::read_write, access::global_buffer&gt;();
+
+		single_task(kernel_functor&lt;class kernel0&gt;([=]()
+		{
+			deviceAcc[0] = deviceAcc[0] * deviceAcc[0];
+		}));
+	});
+
+	auto hostAcc = myBuffer.get_access&lt;access::read_write, access::host_buffer&gt;();
+
+	if (hostAcc[0] &gt; 25.0f)
+		return 0;
+	else
+		return 1;
+}
+</pre>
+<p>
+<br>
+<strong>Preparing to use SYCL</strong><br>
+Any application that uses SYCL must include the SYCL runtime header file, this will include all required types and API functions. Everything in the SYCL runtime is defined within the cl::sycl namespace. In this tutorial the header file is included and the cl::sycl namespace is imported to make the code clearer.
+</p><pre>#include "CL/sycl.hpp"
+
+using namespace cl::sycl;
+</pre>
+<p>
+<br>
+<strong>The Device Selector</strong><br>
+In order to enqueue SYCL kernel functions a suitable platform and device must be chosen, this is done using an object called a device_selector. A device_selector is an abstract class which can be implemented by the user in order to instruct the SYCL runtime how to select an appropriate OpenCL™ platform and device for the application. The SYCL runtime also provides a collection of standard selectors for the most common platform and device configurations. In this tutorial a default_selector object will be used, this selector picks any OpenCL device with SPIR™ support and aims primarily to find a GPU, then if unsuccessful aims to find a CPU. Note if no suitable device can be found it will fall back to the host CPU implementation .
+</p><pre>default_selector mySelector;
+</pre>
+<p>
+<br>
+<strong>The Context and Queue</strong><br>
+Once a device_selector object has been constructed, it can then be used to create a context object which can then create a queue object. In SYCL the context and queue objects are merely abstractions of the OpenCL equivalent. There are many different configurations for constructing contexts and queues however this tutorial will use the most simple case, a single context and a single queue, where the context is constructed from the device_selector object and the queue is constructed from the context object.
+</p><pre>context myContext(mySelector);
+
+queue myQueue(myContext);
+</pre>
+<p>
+<br>
+<strong>The Buffer</strong><br>
+In SYCL the manner in which memory is accessed is abstracted in that it separates the storage and access to memory being transferred between host and device(s). In SYCL a buffer is used to maintain an area of memory that can be shared between the host and one or more devices. Access to the data maintained by a buffer object is given by using accessor objects, which will be described later in this tutorial. A buffer object takes two template arguments: a type name specifying the element type of the data that the buffer maintains and an integer specifying the dimensionality. Its constructor takes two arguments: the first is a pointer to the data to be maintained and the second is an integer specifying the number of elements to be stored. In this tutorial a buffer object of element type of float and dimension 1 is constructed with the address of a local float variable and the value 1 as there is just one element. Note the constructor for buffer objects will vary depending on the dimensionality.
+</p><pre>float floatVar = 5.0f;
+
+buffer&lt;float, 1&gt; myBuffer(&amp;floatVar, 1);
+</pre>
+<p>
+<br>
+<strong>The Command Group</strong><br>
+SYCL introduces the concept of a command_group, which is an object used to define a single node of a task graph in terms of a SYCL kernel function and its inputs and outputs which are commands to be executed on a specific device, via a queue. A command_group's constructor takes two arguments: a reference to a queue object and a lambda expression which defines the command group scope. Note the lambda expression which defines the command group scope must capture by reference. The command group scope is where the SYCL kernel function and the inputs and outputs are defined. In this tutorial a command_group object is constructed using the queue object that was constructed previously.
+</p><pre>command_group(myQueue, [&amp;]()
+{
+        ...
+});
+</pre>
+<p>
+<br>
+<strong>The Accessors</strong><br>
+In SYCL accessor objects are used to define input and output to a SYCL kernel function, they give the host or a device access to data maintained by a buffer or image object or to allocate local memory on a device. An accessor object can be constructed by calling the get_access() method of the buffer object. This method takes two template arguments: an integer value specifying the access mode and an integer value specifying the access target. The element type and dimensionality of the accessor object constructed is derived from the buffer object. In this tutorial, the get_access method is called on the buffer object constructed previously, the access mode is access::read_write and the access target is access::global_buffer. Accessors can be constructed inside and outside of a command group scope, however only host accessors can be created outside of a command group scope and host accessors cannot be created inside a command group scope. A host accessor is an accessor which uses either the host_buffer or host_image access targets. If an accessor is not a host accessor it is considered a device accessor. Constructing a device accessor object guarantees that the data that it is giving access to will be available on the device being enqueued on and similarly constructing a host accessor object guarantees that the data this it is giving access to will be available on the host.
+</p><pre>auto deviceAcc = myBuffer.get_access&lt;access::read_write, access::global_buffer&gt;();
+</pre>
+<p>
+<br>
+<strong>The Kernel Code</strong><br>
+In SYCL there are three API functions that are used for executing kernel functions, the one used in this tutorial is the single_task function. The single_task function schedules a single instance of a kernel function and takes a single argument: a kernel_functor container object. The kernel_functor_container object is used to define a SYCL kernel function that will be compiled by a device compiler into a binary that can be then loaded and executed by the API function. The kernel_functor function, returns a kernel_functor_container object and as a parameter can either take a lambda expression or a functor object. In this tutorial the kernel function will be defined by a lambda expression. In the case of lambda expressions the kernel_functor function takes a single template argument; which is a type name used by the device compiler to assign the kernel function (an otherwise unnamed lambda expression) a name. The kernel_functor function takes a single parameter, as mentioned, a lambda expression which defines the kernel function scope. Note the lambda expression which defines the kernel function scope must capture by value. In this tutorial the kernel_functor function is given the type name "kernel0". Also note the kernel_functor_container class is not part of the SYCL 1.2 specification and is therefore implementation defined, however it is simply an internal representation of a SYCL kernel function and this is how Codeplay's implementation defines it.
+</p><pre>single_task(kernel_functor&lt;class kernel0&gt;([=]()
+{
+        ...
+}));
+</pre>
+<p>
+Any variable that is read from or written to inside kernel function scope will captured by value. This allows the SYCL runtime to handle passing these variables to the device the kernel function is being executed on. In this tutorial the accessor object created previously is used within the kernel function scope to read the float variable, square it and then assign the result. This is done using the accessors subscript operator with the index 0, which will point to the single value that was copied to the device.
+</p><pre>deviceAcc[0] = deviceAcc[0] * deviceAcc[0];
+</pre>
+<p>
+<br>
+<strong>Checking the Result</strong><br>
+There are two ways to synchronize and copy data back to the host, either by constructing a host accessor object or by destroying the buffer object. In this tutorial a host accessor is constructed in a similar way as before, however this time the access mode is access::read rather than access::read_write as it only needs to be read from and the access mode is access::host_buffer as it is a host accessor. The result is then checked by evaluating it against the expected answer.
+</p><pre>auto hostAcc = myBuffer.get_access&lt;access::read_write, access::host_buffer&gt;();
+
+if (hostAcc[0] &gt; 25.0f)
+	return 0;
+else
+	return 1;
+</pre>
+<p>
+<br>
+<strong>Summary</strong><br>
+This example application demonstrated how the SYCL runtime can be used to construct a kernel function and execute it on an OpenCL device. This sample only exposes a minimal subset of SYCL's capabilities, but it demonstrates that SYCL can be used to write parallel code quickly and easily.
+</p>
+<p>
+SYCL is still in the provisional stage of specification and is therefore still subject to change based on the feedback from developers and implementers so any feedback is greatly appreciated.
+</p>
+<p>
+Khronos, SPIR and SYCL are trademarks of the Khronos Group Inc. OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos. </p>
+

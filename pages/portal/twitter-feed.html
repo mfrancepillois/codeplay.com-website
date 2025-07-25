@@ -1,0 +1,48 @@
+---
+layout: empty
+permalink: /portal/news/twitter-feed
+---
+
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+<head>
+  <meta charset="utf-8" />
+  <!-- Content security policy -->
+  <meta content="
+                default-src
+                    'self';
+                style-src
+                    'self'
+                    https://platform.twitter.com/widgets.js
+                    https://platform.twitter.com/css/
+                    'unsafe-inline';
+                script-src
+                    'self'
+                    https://platform.twitter.com
+                    https://cdn.syndication.twimg.com/timeline/profile
+                    http://platform.twitter.com;
+                connect-src
+                    'self';
+                img-src
+                    'self'
+                    data:
+                    https://syndication.twitter.com
+                    https://pbs.twimg.com
+                    https://platform.twitter.com/css/
+                    https://platform.twitter.com/css;
+                frame-src
+                    'self'
+                    https://syndication.twitter.com
+                    https://platform.twitter.com/;"
+        http-equiv="Content-Security-Policy"/>
+
+  <script src="https://platform.twitter.com/widgets.js"></script>
+</head>
+<body>
+  <a class="twitter-timeline"
+     data-tweet-limit="4"
+     href="https://twitter.com/codeplaysoft"
+     target="_blank"
+     data-widget-id="347008916514828288"></a>
+</body>
+</html>

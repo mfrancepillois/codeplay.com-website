@@ -1,0 +1,34 @@
+---
+id: 266
+url: 08-08-17-adding-spir-v-support-to-computecpp
+user_id: 840
+date: 2017-08-08T11:50:51.7200Z
+category: news
+title: "Adding SPIR-V support to ComputeCpp"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/08-08-17-adding-spir-v-support-to-computecpp
+thumbnail: /assets/images/portal/article-images/ec4c237fe11bbd7f2386b424fce01ff7.png
+layout: portal/portal-article-view
+---
+
+<p>With v0.3.0, our latest <a href="http://developer.codeplay.com/"><strong>ComputeCpp</strong></a>™ release, we're pleased to announce SPIR-V™ support for ComputeCpp. This beta implementation of SPIR-V for&nbsp;<a href="https://www.khronos.org/opencl/"><strong>OpenCL</strong></a>™ support means that developers can use SYCL™ and ComputeCpp to develop for any OpenCL hardware that includes a driver that consumes <a href="https://www.khronos.org/spir"><strong>SPIR-V</strong></a>.
+</p>
+<p>The open standard SPIR™ 1.2 (Standard Portable Intermediate Representation) was initially developed for use by OpenCL, but has now evolved into a cross-API standard that is fully defined by the Khronos Group™ with native support for shader and kernel features: SPIR-V. SPIR-V is an open standard, cross-API intermediate language and is incorporated as part of the core specification of both OpenCL 2.1 and OpenCL 2.2.
+</p>
+<p>SPIR-V enables a development stack that means high-level languages can be compiled to a standard intermediate form, so they can be ingested by a range of OpenCL drivers that support the SPIR-V intermediate representation. For developers, this means that they can choose to use a common language front-end. This ultimately improves kernel reliability and portability across multiple hardware architectures. When a vendor provides a driver that consumes SPIR-V, it eliminates the need to build a high-level language source compiler into its device drivers, and enables a broad range of language and framework front-ends to run on diverse hardware architectures.
+</p>
+<p>With SPIR-V support in ComputeCpp, developers can use high level frameworks such as TensorFlow™ to target hardware supporting SPIR-V without implementing low-level device-specific code.</p><br>
+<p><img src="{{ '/assets/images/portal/article-images/ec4c237fe11bbd7f2386b424fce01ff7.png' | relative_url }}"><br></p>
+<p>Codeplay has brought more than a decade of experience in developing compilers to help shape and define the SPIR-V standard. Our developers have worked on SPIR-V from its inception and ensured that the standard will enable custom language support on heterogeneous architectures for years to come.
+</p>
+<p>Our beta implementation of SPIR-V support in ComputeCpp is for early adopters and explorers. We are really keen to get feedback on your experiences with the beta release so that we can help overcome any stumbling blocks you discover. We have currently tested the implementation with a limited set of hardware but we welcome developers to try it on a wider range.
+</p>
+<p>SPIR-V as a standard has a huge opportunity to grow and prosper, giving developers the ability to write code that runs on all devices in a platform (for instance, NVIDIA™, AMD™, and Intel™), allowing code to be written that is portable across a huge range of platforms and devices.
+</p>
+<p>Our involvement in the SPIR-V working group has continued strongly. We've been instrumental in releasing two follow-up versions of SPIR-V, and also many extensions to it, to support functionality that allows for lower power and higher performance compute operations.
+</p>
+<p><i>Find out more about our free community version of ComputeCpp and download the latest version <b><a href="http://developer.codeplay.com/">here</a></b>.</i></p>
+

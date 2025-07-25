@@ -1,0 +1,154 @@
+---
+id: 229
+url: 01-06-17-codeplay-s-safety-critical-memory-manager
+user_id: 649
+date: 2017-01-06T10:40:19.3600Z
+category: blogs
+title: "Codeplay's Safety-Critical Memory Manager"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/01-06-17-codeplay-s-safety-critical-memory-manager
+thumbnail: /assets/images/portal/article-images/6d94dd98f92d8f01ca8d5a7abce7edc5.png
+layout: portal/portal-article-view
+---
+<h3>1.&nbsp;Introduction</h3>
+
+<p>In my experience, when implementing an application, the memory management part of its design is very often overlooked. That is also the case when considering the design for a Safety-Critical (SC) system. This blog post talks about why a memory manager should be considered in the design, especially for an SC system, and why the designers of such systems should consider implementing it first, before doing anything else.</p>
+
+<p>
+  Codeplay has created a Safety-Critical Memory Manager (SCMM) as part of its strategy to build an SC tool set, including implementations of open standards (such as OpenCL) for building artificial intelligence in automotive systems. We believe that an SCMM is a fundamental foundation stone to help us achieve and verify the safety goals for our systems in different problem domains.<br><br></p>
+<h3>2. Background</h3>
+
+<p>The subject of limiting resource usage, while getting maximum consistent efficiency out of an application, is not a new one. Since the dawn of personal computing and gaming platforms, engineers have always had to balance performance on resource-limited hardware with pushing the envelope of high quality content. Automotive OEMs and their Tier One&nbsp;(designers and manufacturers of components) suppliers have dealt with similar development challenges for many years, as they try to provide features that will attract customers and differentiate themselves from other manufacturers. The challenge for automotive is made harder on several fronts:</p>
+<ul>
+  <li>Lowest achievable price point</li>
+  <li>Safety considerations</li>
+  <li>Power consumption</li>
+  <li>Cooling</li>
+  <li>Size and weight</li>
+</ul>
+
+<p>What has been new in recent years is the introduction of new players, for both software and hardware IP, that have not developed in the SC domain before. They have been attracted to the automotive industry to take advantage of the&nbsp;growth of Advanced Driver Assistance Systems (ADAS) and the corresponding SC solutions market. The growth has been driven by the reduction in cost of quite powerful CPUs, GPUs and other heterogeneous technologies to enable vehicles to include features that were only dreamed of a decade ago. What has not changed in all that time is the use of limited memory resources, and how to move data from the CPU to memory and back as quickly as possible – limited bandwidth.</p>
+
+<p>The automotive functional safety standard, ISO 26262, has over 600 requirements. One of those requirements is a very small but important paragraph that, like many other requirements, results in a considerable amount of work and rigor to implement:</p>
+
+<blockquote>
+<div style="background-color:#efefef; padding: 1rem">
+
+<p>Chapter 6 section 7.4.17:
+</p>
+<p>a) An upper estimation of required resources for the embedded software shall be made, including:
+</p>
+<p>b) the storage space; and EXAMPLE RAM for stacks and heaps, ROM for program and non-volatile data.</p>
+</div>
+</blockquote>
+
+
+<p>Many of the safety goals for an item (ISO 26262 terminology for a component or a finished working solution e.g. ABS brake system) require consistency of performance, predictability, and the assurance of adequate resources for the lifetime of the executing software, for all operational scenarios.<br><br></p>
+<h3>3. Why is an SCMM Needed?</h3>
+
+<p>A memory manager of any kind is often overlooked for many reasons such as:</p>
+<ul>
+  <li>The Operating System (OS) memory manager's implementations of C's malloc/free and C++'s new/delete operations are considered sufficient.</li>
+  <li>The project utilizes a certified SC OS, reinforcing the assumption of the previous point.</li>
+  <li>The amount of physical memory available in the system is considered to be sufficient.</li>
+  <li>Lack of appreciation of:<ul>
+      <li>the long term detrimental degradation on efficiency or resource availability over long periods of time;&nbsp;</li>
+      <li>the effect of other applications using the same system; or</li>
+      <li>the resource and time demands made on the system when allocating or releasing memory.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>The initial starting point for any embedded SC system is the certified OS, which provides a good foundation for behavioural assurances. However, those assurances have to be considered in the light of the task that the application has to perform - are there fundamental elements of it that need guaranteed behaviour, given the risk and consequences if it should fail? When a strong solution exists already, it may be hard to justify developing a critical component such as an SCMM from scratch, given the high additional effort and rigor required to prove that the new component is safe.</p>
+
+<p>For certain cases, it is my argument that the extra effort can provide greater design flexibility down the road and make it easier to reach design safety goals. Using a custom memory manager, engineers can achieve greater insight into how an application is behaving within the constraints of limited shared resources, which is especially important on an embedded system, and use that analysis to optimize the behaviour. Importantly for any SC application, such a memory manager also provides a mechanism to ensure freedom from interference by other applications sharing the same memory resource.&nbsp;</p>
+
+<p>Imagine that you have built a software component for an SC application that could cause some loss of control, resulting in possible injury or death. You have diligently analyzed the risks and created mitigation strategies to steer your development processes towards achieving your safety goals. However, you have not considered the effects that the component's memory usage and requests will have on your application’s predictable behaviour. This oversight is likely to be carried over from mainstream non-safety-critical software development on systems with an abundance of memory and powerful processors (if your desktop system becomes irritatingly slow, you can just reboot it; for SC embedded systems, a hard reset is an extremely undesirable last resort). Late in the development of your component, you notice an unusual delay in memory requests for a sequence of operations that a new test has revealed. Your first question will be “How and what is causing this glitch?”, followed by “How do we find it?”.</p>
+
+<p>When developing an SC application, you need to know about the following:</p>
+<ul>
+  <li>
+    Dynamic memory usage budget versus worst-case maximum usage
+  </li>
+  <li>Interference from other parts of the system -&nbsp; memory separation is normally required in highly critical systems</li>
+  <li>Maximum allocation/deallocation request time allowed</li>
+  <li>Overall time slot to operate within</li>
+  <li>Identification of glitches early and quickly&nbsp;</li>
+</ul>
+
+<p>We believe that an SCMM is so important to understanding the true behaviour of SC software that it must be integrated into development at the earliest stages. Engineers can then monitor the resource usage and performance, and quickly&nbsp;catch any anomalies before the architecture of the software is set in stone.<br><br></p>
+<h3>4. What Makes a Good SCMM?</h3><br><a href="{{ '/assets/images/portal/article-images/6d94dd98f92d8f01ca8d5a7abce7edc5.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/6d94dd98f92d8f01ca8d5a7abce7edc5.png' | relative_url }}"></a><br>
+
+<p>Figure 1 shows how we can customise our SCMM for different heterogeneous target devices.</p>
+&nbsp;
+<p><br><div style="text-align: center;"><span style="color: inherit; font-size: 1.1rem; font-weight: inherit;">&nbsp;</span><img src="{{ '/assets/images/portal/article-images/1c46a38ec54d630caa9f002a746f10d9.png' | relative_url }}" style="color: inherit; font-size: 1.1rem; font-weight: inherit;"></div><p style="text-align: center;">
+  Figure 1: Evaluate and configure the SCMM for each intended target in a new usage scenario</p>
+&nbsp;
+
+<p>ISO 26262 asks that you evaluate and refactor accordingly, so that an SCMM solution for each item in each usage context satisfies the safety goals for that usage context.<br><br></p>
+<h3>5. Reporting Strategy</h3>
+
+<p>Diagnostic information is very important to building up an image of exactly how the allocation system is operating during the lifetime of the application. Our SCMM can report usage on such things as:</p>
+<ul>
+  <li>Average, maximum, and minimum allocation size</li>
+  <li>Average, maximum, and minimum&nbsp;allocation and deallocation time</li>
+  <li>Memory usage tide mark</li>
+  <li>Total allocations made</li>
+  <li>Usage behaviour per thread</li>
+</ul>
+
+<p>Figure 2 indicates how a typical memory manager could report usage and diagnostic information.</p><div style="text-align: center;"><span style="color: inherit; font-size: 1.1rem; font-weight: inherit;">&nbsp;&nbsp;</span><img src="{{ '/assets/images/portal/article-images/d5a12f211d193f018aba37c360c501d5.png' | relative_url }}" style="color: inherit; font-size: 1.1rem; font-weight: inherit;"></div><p style="text-align: center;">
+
+
+  Figure 2:&nbsp; Memory manager reporting diagnostics to the client</p>
+&nbsp;
+
+<p>Like other SC standards, ISO 26262 requires that you identify systemic faults introduced during development. Again, a good SCMM can report on allocation / deallocation code logic faults:</p>
+<ul>
+  <li>Mismatch of the number of allocations made to deallocations made</li>
+  <li>C++'s new and delete operations mixed with C's malloc or free</li>
+  <li>Under- or over-flowing a memory block</li>
+  <li>Reporting locations of faults<br><br></li>
+</ul><br>
+<h3>6. Allocation Composition Strategy</h3>
+
+<p>Andrei Alexandrescu [1] provides a compelling presentation of memory allocation algorithm composition and the benefits it can provide, over and above the stock default allocation systems provided by an OS. Our memory manager was designed and built using the principles that he describes, and it allows the client to use one or more allocation algorithms together (an allocation system). We have taken this one step further, so that multiple allocation systems can exist independently of each other, inside a single memory manager. The client can also use multiple instances of an allocation algorithm within the same allocation system, each with their own operating parameters and reporting mechanism for feedback. This allows an engineer to very quickly swap in or out different systems (a one-line edit) to determine the most efficient system setup for different implementations. Examples of the memory allocation algorithms that can be mixed and matched are:</p>
+<ul>
+  <li>Standard OS-provided (a wrapper around the C++ new and delete operators - not recommended for production but good for developing the SCMM)</li>
+  <li>Bucket</li>
+  <li>Free list</li>
+  <li>Buddy</li>
+  <li>Stack</li>
+  <li>
+    Garbage&nbsp;collection (not recommended)</li>
+</ul>
+
+<p>Each algorithm has advantages and disadvantages, but by providing a platform to implement, monitor, and tune individual allocation patterns and/or combine them, the best solution can be found for each usage scenario. It may be that a mix or composition of algorithms provides a better solution than using a single one.</p>
+
+<p>Figure 3 shows how our SCMM can facilitate using different allocation systems together to get the best efficiency for the client application on any particular hardware. Each of the primary handlers in the diagram represents an instance of an allocation algorithm. In this case, each allocation algorithm is filtering on the size of the requested allocation block, to judge whether it is suitable to store in its container. If not, the request falls through to the next allocation algorithm or filter. If none of the configured handlers can handle the allocation request, the last resort Fallback handler takes control, which could mean returning an error condition or using some memory reserve.</p>
+&nbsp;</p>
+<p><br><div style="text-align: center;"><span style="color: inherit; font-size: 1.1rem; font-weight: inherit;">&nbsp;</span><img src="{{ '/assets/images/portal/article-images/09b9d77c9d6642920bffe4bf32925e97.png' | relative_url }}" style="color: inherit; font-size: 1.1rem; font-weight: inherit;"></div><p align="center">
+  Figure 3:
+    Client
+   using 2 allocation systems each with their own mix of allocation algorithm composition</p>
+&nbsp;
+
+<p>While an allocation request is being handled, it is timed to see it meets operational limits. Deallocation follows a similar filtering process to find the container holding the allocation block and release it, again while being timed.&nbsp;</p>
+
+<p>Figure 4 shows an extension to Figure 3’s model, to facilitate the partitioning of allocation systems to accommodate Automotive Safety Integrity Level (ASIL) decomposition and partitioning. For the purposes of this blog, it is greatly simplified to show the principle. ASIL is an ISO 26262 categorisation for the identified level of risk to cause injury to the occupants of a vehicle, should the item fail to operate within its normal expected behaviour. ASIL A is the lowest level of risk, with the highest level, ASIL D, representing risk of death or serious injury. The diagram in Figure 4 shows ISO 26262 ASIL decomposition and how an item (the client software) could mitigate risk of interference from a less rigorously tested ASIL B-rated component harming the critical ASIL D-rated functionality. Decomposition allows architects to reduce the complexity of the software and the rigor of the quality management process for some parts of a system. That reduces cost by not having to apply such rigor to the whole system, while achieving the overall ASIL D safety goal. &nbsp;&nbsp;</p><div style="text-align: center;"><span style="color: inherit; font-size: 1.1rem; font-weight: inherit;">&nbsp;&nbsp;</span><img src="{{ '/assets/images/portal/article-images/ef608ea3ea1a129fd729caeca6ddce88.png' | relative_url }}" style="color: inherit; font-size: 1.1rem; font-weight: inherit;"></div><p align="center">
+
+
+  Figure 4: Allocation system partitioning</p>
+<h3>7. Conclusion</h3>
+
+<p>I hope that this blog post has shown that rolling your own memory manager can provide flexibility and help engineers gain insight in to the true behaviour of their applications, for both static and dynamic resource handling systems. It allows opportunities to instrument and monitor code, to better tune applications' memory management for optimal fit, as well as providing evidence to show that safety goals are being met throughout the life time of the project. Combined with existing memory usage sanitizers such as Valgrind, this creates a more versatile toolbox to identify, and more importantly address, incorrect operational assumptions. For a safety-critical system where litigation is a possibility and black boxes must be understood, the initial effort will pay dividends in many ways.</p><br>
+<h3>8. References</h3>
+<ul>
+  <li>[1] Mixim or composition pattern allocator presented by Andrei Alexandrescu: <a href="https://www.youtube.com/watch?v=LIb3L4vKZ7U"></a><a href="https://www.youtube.com/watch?v=LIb3L4vKZ7U">https://www.youtube.com/watch?v=LIb3L4vKZ7U</a><a href="https://www.youtube.com/watch?v=LIb3L4vKZ7U"></a>
+  </li>
+</ul>
+</p>
+

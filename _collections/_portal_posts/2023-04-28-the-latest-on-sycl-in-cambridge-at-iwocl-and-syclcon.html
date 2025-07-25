@@ -1,0 +1,119 @@
+---
+title: "The Latest on SYCL&trade; in Cambridge at IWOCL & SYCLcon"
+date: 2023-04-28T09:00:00.298000+00:00
+layout: portal/portal-article-view
+user_id: 840
+category: blogs
+thumbnail: /assets/images/portal/article-images/2023-04-28-iwocl/thumbnail.jpg
+redirect_from:
+  - /portal/blogs/2023/04/28/take-a-punt-on-sycl-in-cambridge-at-iwocl-and-syclcon
+---
+
+<p>As I return on the train from Cambridge to Edinburgh, I reflect on the first physical IWOCL & SYCLcon in four years
+    and what jumps out at me was the transformation of content since the last physical event in Boston. What I mean by
+    this is that I count roughly 24 SYCL&trade; presentations and posters, which is a significant increase on the
+    approximately
+    5 SYCL talks and posters in Boston. The range of content is also unique to this conference, with presentations and
+    posters covering complex science applications alongside in-depth presentations covering potential new features for
+    SYCL and panels consisting of key members of the SYCL Working Group. </p>
+
+<p>The week began for me at the SYCL Practitioners Hackathon organised by Miren at the University of Cambridge. We were
+    lucky enough to be hosted in the Applied Mathematics building which is not only architecturally interesting (I think
+    it would make a good set for a scene in a Star Wars movie or series) but is also home to Stephen Hawking's office
+    which has been left as it was when he sadly passed away. It's quite something to think about the bright minds and
+    work that has happened inside the walls of the building. </p>
+
+<p>I helped to organise some aspects of the hackathon, setting up some themes for the participants to work on. We
+    settled on looking at the HeCBench project, a benchmark project that includes implementations across CUDA&reg;, HIP
+    and SYCL. The themes focused on examining some of the benchmarks that exhibited unusual performance results, and
+    those that required updates to the new SYCL 2020 features. </p>
+
+<div class="side-by-side">
+    <div>
+        <img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/1.jpg' | relative_url }}" alt="1"/>
+    </div>
+    <div>
+        <img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/2.jpg' | relative_url }}" alt="2"/>
+    </div>
+</div>
+
+<p>During the day we all had a lot of fun as well as learning new things from others and the experiences during the day.
+    One of the most exciting aspects of the day was the access to interesting hardware. This was the first hackathon to
+    let SYCL developers access the latest Intel&reg; PVC GPU as well as the Cambridge CSD3 cluster. Attendees were able to
+    run their code on both Intel and Nvidia&reg; hardware using SYCL. Everyone found this to be straightforward with expected
+    results from the benchmarks. This is a great illustration of the portability of SYCL.</p>
+
+<p>On the second day of the week, I was coordinating a new tutorial covering advanced SYCL topics. As usual, I was
+    joined by a team far more knowledgeable than myself consisting of Hugh Delaney, Aksel Alpay, Ronan Keryell and
+    (remotely) Igor Vorobtsov. This was the first time we have tried to run a tutorial with more advanced topics, as
+    opposed to the Introduction to SYCL we have done many times before. It was extremely popular with around 30
+    attendees and was well received, it has really motivated us to repeat this and make it even better.</p>
+
+<img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/3.jpg' | relative_url }}" alt="3"/>
+
+<p>Following the tutorial day, IWOCL & SYCLcon has two days of presentations consisting of a mix of papers and technical
+    presentations. It began with the usual "<a
+            href="https://www.youtube.com/watch?v=StqDWKzhk7A&list=PL46sP9LM8Gszc1ABV66YneXr7j8mT7Vz_&index=3"
+            target="_blank" rel="noopener">State of the Union</a>" where SYCL Working Group chair Michael Wong talked
+    about
+    what has been going on in the past year or so with SYCL. The conformance suite (CTS) for SYCL 2020 was one of the
+    main topics, where the message is that SYCL is one of the few frameworks that provide a conformance test suite for
+    anyone to use. By becoming an adopter - which can be free - you can access all the resources. It is expected that
+    vendors will soon begin their testing and start the official conformance. Another highlight is the inclusion of SYCL
+    in the popular Compiler Explorer project, a web service used by developers across the globe to help them understand
+    code syntax, compile code using lots of compilers and see the instruction output. The DPC++ compiler is now
+    included, and developers can use this to examine the SPIR and LLVM IR output. This is a great learning tool as well
+    as useful for debugging code, and it certainly made me wonder if we could use this valuable service during SYCL
+    tutorials and training, both online and in person. </p>
+
+<img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/4.jpg' | relative_url }}" alt="4"/>
+
+<p>Following this, I was lucky enough to see all the presentations and I'll call out a couple of my key observations
+    from the conference.</p>
+
+<p>There were multiple presentations on the experiences of migrating code from CUDA to SYCL. This is an important topic
+    for many developers who are currently working with a code base that is implemented using CUDA, preventing them from
+    running their code on hardware that isn't made by Nvidia. Whilst there were some comments on edge cases where
+    investigation was needed to resolve code or performance issues, overall, all developers reported the experience was
+    not difficult and brought them very acceptable performance results when compared to native CUDA. By making this
+    migration these organisations have been able to bring their code to new hardware targets, delivering greater levels
+    of choice and freedom. </p>
+
+<p>One of the success stories covered in the past year or so is the GROMACS project using SYCL to widen their target
+    architectures. <a
+            href="https://www.youtube.com/watch?v=OJqw2KyQnA8&list=PL46sP9LM8Gszc1ABV66YneXr7j8mT7Vz_&index=16"
+            target="_blank" rel="noopener">Andrey, the lead developer of the SYCL part of GROMACS, gave an update on the
+        performance they have
+        been seeing</a>. Whilst there are still some further optimizations to do, the results so far are promising. The
+    adoption
+    of SYCL by such a crucial science project demonstrates the strength of support that SYCL has from the community.</p>
+
+<p>The presentations on new SYCL extensions give us a glimpse of the new SYCL features we are likely to see in SYCL
+    NEXT, the upcoming version of the standard. <a
+            href="https://www.youtube.com/watch?v=aOTAmyr04rM&list=PL46sP9LM8Gszc1ABV66YneXr7j8mT7Vz_&index=21"
+            target="_blank" rel="noopener">My colleague Ewan presented the work we have been doing in cooperation
+        with Intel to implement SYCL Graph</a>. This feature is published for everyone to review and comment on and is
+    designed
+    to bring runtime performance benefits. The prototype implementation is <a
+            href="https://github.com/reble/llvm/tree/sycl-graph-develop" target="_blank" rel="noopener">already
+        available</a>.</p>
+
+<img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/5.jpg' | relative_url }}" alt="5"/>
+
+<p>The last thing to mention is the prize winners, and I am proud to be able to say that my colleague Victor Perez
+    (representing a team effort) won the best paper prize. The paper and our team's work on kernel fusion has the
+    potential to bring impressive performance benefits, in particular where an application is using lots of smaller
+    kernels. <a href="https://www.youtube.com/watch?v=s39awJ_-W_k&list=PL46sP9LM8Gszc1ABV66YneXr7j8mT7Vz_&index=22"
+                target="_blank" rel="noopener">Take a look at the paper to find out more</a>. The other well-deserved
+    winner was Andrey Aleeksenko with his
+    presentation on GROMACS.</p>
+
+<img src="{{ '/assets/images/portal/article-images/2023-04-28-iwocl/6.jpg' | relative_url }}" alt="6"/>
+
+<p>The conference reminded me how important it is to bring the community together in person and how effective this is in
+    sharing knowledge and bringing about discussions on the direction we should be going. The week flowed from the
+    hands-on coding at the hackathon to the formal learning at the tutorial, and finally the presentations and panels in
+    the conference program. I am excited to be able to look forward to the next IWOCL & SYCLcon in North America
+    (location to be announced) and if you want to be the first to know about what will be happening next year sign up
+    for the <a href="https://www.iwocl.org/" target="_blank" rel="noopener">IWOCL & SYCLcon mailing list</a> or keep an
+    eye on the <a href="https://www.khronos.org/" target="_blank" rel="noopener">Khronos website</a> for news.</p>

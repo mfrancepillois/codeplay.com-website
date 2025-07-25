@@ -1,0 +1,33 @@
+---
+id: 99
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Offload1205"
+redirect_from:
+  - /kb/99
+layout: products/offload/kb/view
+---
+<p><strong>This virtual or pointer call may fail due to missing suitable entry in domain (declared at %1). This call requires a local 'this' pointer but none of the domain entries where declared with 'this'.</strong>
+</p><p>
+A virtual function is called on a local this pointer, but the domain does not contain any entry of matching signature declared with 'this'. The following example raises this warning:
+</p>
+<pre><code>
+struct str
+{
+	virtual void f();
+};
+
+void test()
+{
+	__offload [str::f] //domain declared  with virtual method/outer this
+	{
+		str v;
+		str* ptr = &amp;v;
+		ptr-&gt;f(); // virtual call with a local this pointer
+	}
+}
+</code></pre><p>The virtual inside the __offload block will fail because there is no function in the domain with local this pointer. To fix this problem the domain entry str::func needs to be follwed by 'this' keyword. Here is the correct domain [str::func this].
+</p>
+
+

@@ -1,0 +1,67 @@
+#cookie-policy-container {
+    background-color: rgba(0, 0, 0, .97);
+    color: #efefef;
+    width: 100%;
+    position: fixed;
+    padding: 0;
+    margin: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: 1000000000000000000;
+    box-sizing: border-box;
+    display: none;
+    font-size: 1rem;
+}
+@media screen and (min-width: 45rem) {
+    #cookie-policy-container {
+        background-color: rgba(0, 0, 0, .8);
+        width: 400px;
+        bottom: 2rem;
+        right: 2rem;
+        left: auto;
+    }
+}
+#cookie-policy-container * {
+    padding: 0;
+    margin: 0;
+}
+#cookie-policy-container h1 {
+    font-size: 1.6rem;
+}
+#cookie-policy-container > div {
+    padding: 2rem;
+}
+#cookie-policy-container > div button {
+    border: 0;
+    padding: 0.5rem 2rem 0.5rem 2rem;
+    background-color: rgba(255, 255, 255, .2);
+}
+#cookie-policy-container > div button:hover {
+    background-color: rgba(255, 255, 255, .3);
+}
+#cookie-policy-container > div h1, #cookie-policy-container > div p {
+    padding-bottom: 1rem;
+}
+#cookie-policy-container ul {
+    padding-bottom: 1rem;
+    list-style: none;
+    color: #ccc;
+}
+#cookie-policy-container ul li a {
+    padding: 0.3rem;
+    display: block;
+}
+#cookie-policy-container ul li:not(:last-of-type) {
+    border-bottom: rgba(255, 255, 255, .1) 1px solid;
+}
+.cookie-policy-not-accepted-placeholder {
+    background-color: #ccc;
+    color: #111;
+    border-radius: 1rem;
+    padding: 2rem;
+}
+.cookie-policy-not-accepted-placeholder a {
+    cursor: pointer;
+}
+

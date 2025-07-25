@@ -1,0 +1,46 @@
+---
+id: 136
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Cache classes reduce code changes"
+redirect_from:
+  - /kb/136
+layout: products/offload/kb/view
+---
+<p>The example in the previous article <a href="{{ '/kb/134' | relative_url }}">/kb/134.html</a> requires the explicit declaration of a local, the transfer from PPU memory into that local, and the write-back. Also, the method is now called on a different (local object) object using the component access operator (&quot;.&quot;). These code changes can be reduced by using cache classes which are written in <strong>standard C++</strong>:
+</p>
+<pre><code>template &lt;class T&gt; struct cache
+{
+	inline cache(T* ptr):var(*ptr) //caching data
+	{}
+	inline T* operator-&gt;() {return &amp;var;} //enables -&gt;operator
+	protected:
+		T var;
+};
+
+template &lt;class T&gt; struct writeback_cache:cache&lt;T&gt;
+{
+	writeback_cache(T* ptr):cache&lt;T&gt;(ptr) {this-&gt;ptr = ptr;}
+	~writeback_cache() { *ptr = cache&lt;T&gt;::var; } //writeback in destructor
+	private:
+		T* ptr;
+};
+</code></pre><p>Using these standard C++ class templates the offload example from <a href="{{ '/kb/135' | relative_url }}">/kb/135.html</a> could be written as:
+</p>
+<pre><code>__offload()
+{
+	/*** begin cache setup ***/
+	Type* tempptr = ptr; //shuffling to trick name lookup;
+	writeback_cache&lt;Type&gt; ptr(tempptr); //ptr now hides ptr from parent scope
+	/*** end cache setup ***/
+
+	/*** Now use original unchanged code, but on cached instance ptr ***/
+	ptr-&gt;func(ptrarg1,ptrarg2);//local this and __outer argument pointers
+}
+</code></pre><p>The first two code lines inside the Offload block are setup code for Offload (creating the cache variable which hides the original variable so that subsequent code does not have to be changed). The type of such a variable overloads all required operators to make the cache variable appear as the original variable it hides (a pointer in the example above). Note that except for the __offload keyword the code is still standard C++.
+</p><p>
+Cache classes are part of the Data Locality Library (See <a href="{{ '/kb/71' | relative_url }}">/kb/71.html</a>) which resides in the liboffload header (See <a href="{{ '/kb/60)' | relative_url }}">/kb/60).html</a>.
+</p>
+
+

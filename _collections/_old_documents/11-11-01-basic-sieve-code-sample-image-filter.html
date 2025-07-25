@@ -1,0 +1,60 @@
+---
+id: 128
+category: sieve
+date: 2011-11-01T17:32:25.3600Z
+date_updated: 0
+title: "Basic Sieve Code Sample: Image Filter"
+url: basic-sieve-code-sample-image-filter
+description:
+redirect_from:
+  - /company/documents/basic-sieve-code-sample-image-filter
+layout: company/documents/view
+---
+<p>The following example code illustrates the parallelization of an image convolution function using a Sieve block. A median filter can be used to reduce noise in an image by replacing the value of each pixel by the midpoint of the values of pixels in its neighbourhood.  The following code shows part of the implementation of such a filter (the computeMedian functions, and the definition of an Image object are straightforward).
+</p>
+<pre>/* Apply median filter to an Image object (serial) */
+void Image::medianFilter(Image&amp; target, int neigbourhoodSize)
+{
+	for(int i=0; i&lt;height; ++i)
+	{
+		for(int j=0; j&lt;width; j++)
+		{
+			/* Compute the median value for
+			neighbourhood of pixel (i,j)
+			*/
+			target.pixels[i*width+j] =
+			computeMedian(*this,i,j,neigbourhoodSize);
+		}
+	}
+}
+</pre><p>Since the median computation for each pixel is independent, there is a lot of potential for parallelization (in theory, all pixels could be convolved in a single step, on a machine with enough cores). On a machine with a few cores (e.g. a quad core Xeon), it is sensible to give each core a contiguous chunk of the image to work on.
+</p><p>
+  The following code is similar to the above code, but the convolution loops have been enclosed in a Sieve block. The splithere keyword indicates that distinct iterations of the outer loop can be computed in parallel, and the int variable i has been replaced with an iterator. This is a simple object which is designed to be live across a splithere statement.
+</p>
+<pre>/* Apply median filter to an Image object (parallelized using Sieve) */
+void Image::medianFilter(Image&amp; target, int neigbourhoodSize)
+{
+	sieve
+	{
+		for(itr i(0); i&lt;height; ++i)
+		{
+			for(int j=0; j&lt;width; j++)
+			{
+				/* Compute the median value for
+				neighbourhood of pixel (i,j)
+				*/
+				target.pixels[i*width+j] =
+				computeMedian(*this,i,j,neigbourhoodSize);
+			}
+
+			/* Split on image rows, rather
+			than individual pixels.
+			*/
+			splithere;
+		}
+	}
+}
+</pre><p>Notice that apart from specifying the split point, we have not provided information about how many cores are present, and how the loop iterations should be distributed across the cores. This is all handled by the Sieve runtime - if the code is executed on a dual core machine the runtime will attempt to allocate half of the iterations to each core; on a many-core processor the splitting of data will be finer.
+</p>
+
+

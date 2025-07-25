@@ -1,0 +1,65 @@
+---
+id: 383
+url: 04-27-20-computecpp-v2-0-0-release-with-usm
+user_id: 840
+date: 2020-04-27T14:32:45.7200Z
+category: news
+title: "ComputeCpp v2.0.0 Release with USM"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/04-27-20-computecpp-v2-0-0-release-with-usm
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>To coincide with <a href="https://www.iwocl.org/">IWOCL and SYCLcon</a> 2020 we are releasing ComputeCpp v2.0.0 and this brings with it some changes to our practices and support as well as adding some new features. You can download this latest release <a href="https://developer.codeplay.com">on our website</a>.<br></p>
+
+<p>
+  <strong><strong>Semantic Versioning</strong></strong>
+</p>
+
+<p>Whilst we have always aimed to follow <a href="https://semver.org/">semantic versioning,</a> with this latest release we are putting more controls in place to ensure that we follow the rules that are outlined by this practice. You'll find details of any relevant changes that relate to this major version release in the <a href="https://developer.codeplay.com/products/computecpp/ce/guides/release-notes">release notes</a>.</p>
+
+<p>
+  <strong><strong>Unified Shared Memory</strong></strong>
+</p>
+
+<p>Over the past while there has been a range of feedback from SYCL developers, and this is what drives much of the discussion within the SYCL working group. Codeplay has a presence on this group both in assisting as chair and contributor authors for the specification. One of the discussions has been around making SYCL more accessible and less verbose for developers. This has resulted in a proposal for what is named <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/USM/USM.adoc">"Unified Shared Memory (USM)"</a> which aims to "reduce the barrier to integrate SYCL code into existing C++ codebases by introducing new modes that reduce the amount of code that must be changed to interface the two codes." We are pleased to be able to make an "experimental" version of USM in ComputeCpp available in v2.0.0. You'll find example code in the proposal <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/USM/USM.adoc#dags-without-accessors">here</a> and more documentation will follow soon.</p>
+
+<p>
+  <strong><strong>Upgrading Visual Studio Support</strong></strong>
+</p>
+
+<p>We have upgraded our supported version of Microsoft Visual Studio to 2019 with a new Toolset (v142) and updated template files. This does mean that you will need to update your environment to VS2019 soon as our support for the older versions is being deprecated. We also recommend that you uninstall any older versions of ComputeCpp before installing the latest.<br></p>
+
+<p>
+  <strong><strong>A Single Release Package For Linux</strong></strong>
+</p>
+
+<p>In this release we have moved from having separate release packages for our supported Linux flavours to having a single Linux x86 package.</p>
+
+<p>What this means is that we expect our Linux package to work on various Linux flavours assuming that the pre-requisites for the toolchain are met, but we only test on a subset of Linux systems. The minimum required package base version minimum for support is libstdc++ 3.4.19 and glibc 2.17.</p>
+
+<p>
+  <strong><strong>Updated Platform Support</strong></strong>
+</p>
+
+<p>After v2.0.0 we will provide limited support for AMD and NVIDIA hardware because we are reducing our testing efforts for this hardware support. We also recently made a contribution to DPC++ that adds NVIDIA GPU support, you can read about that in <a href="https://www.codeplay.com/portal/02-03-20-codeplay-contribution-to-dpcpp-brings-sycl-support-for-nvidia-gpus">our blog post</a>.</p>
+
+  <br>
+
+
+<p>As ever if you need support you can put in a request on our <a href="https://support.codeplay.com/">forum</a>.</p>
+
+  <br>
+
+
+  <br>
+
+
+  <br>
+
+
+

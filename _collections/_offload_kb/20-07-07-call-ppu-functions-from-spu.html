@@ -1,0 +1,46 @@
+---
+id: 30
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Call PPU functions from SPU"
+redirect_from:
+  - /kb/30
+layout: products/offload/kb/view
+---
+<p>One of the most powerful features of Offload is the ability to call PPU functions from the SPU.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+static void errorHandler()
+{
+	// perform some work unable to be called on an SPU
+}
+
+static void func()
+{
+	__blockingoffload()
+	{
+		errorHandler(); // will result in compile time error as unable to duplicate errorHandler function!
+	};
+}
+</code></pre><p>In the above case, we can add __attribute__((outer_call)) to errorHandler, which triggers an interrupt on the PPU, performing the required PPU work before returning execution to the SPU.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+static void errorHandler() __attribute__((outer_call))
+{
+	// perform some work unable to be called on an SPU
+}
+
+static void func()
+{
+	__blockingoffload()
+	{
+		errorHandler(); // works, as errorHandler is called on the PPU instead
+	};
+}
+</code></pre><p>Outer calls should be avoided where possible, as there is a performance hit for performing the operation. Outer calls are extremely useful when initially migrating code to SPU, as code can be moved over to the SPU gradually. Outer calls are also useful when integrated with error reporting code on the PPU - allowing much greater passing of information from within offload blocks.Outer calls cannot be used on virtual functions, and all pointer arguments and duplicated structs passed to an outer call function must be pointing to outer data.
+</p>
+
+

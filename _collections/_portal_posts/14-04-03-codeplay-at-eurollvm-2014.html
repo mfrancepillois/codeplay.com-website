@@ -1,0 +1,41 @@
+---
+id: 93
+url: codeplay-at-eurollvm-2014
+user_id: 63
+date: 2014-04-03T17:39:14.7200Z
+category: news
+title: "Codeplay at EuroLLVM 2014"
+showOnFrontPage: 0
+views: 268
+tags: LLVM Marcello Fraser Pierre EuroLLVM
+redirect_from:
+  - /portal/codeplay-at-eurollvm-2014
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Codeplay is proud to announce its participation in, and sponsorship of, the <a href="http://llvm.org/devmtg/2014-04/">4th European LLVM Conference</a> at The University of Edinburgh in Codeplay's home city of Edinburgh, Scotland, on the 7th and 8th of April 2014.
+</p>
+<p>
+As part of the conference programme, some of our foremost <a href="http://llvm.org/">LLVM</a> experts will be giving the following presentations:
+</p>
+<p>
+<strong>Marcello Maggioni - &quot;Branching in Data-Parallel Languages using Predication with LLVM&quot;</strong><br/>
+<strong>Monday 7th,14:30-15:10, Lecture Theatre 5</strong> <br/>
+Abstract: Modern graphics hardware is often implemented by packing multiple execution units in a SIMD vector unit of some sort, and many current CPUs also have access to SIMD units. In order to fully exploit these processors for highly parallelizable applications, we need to be able to execute our code on all of the SIMD units provided. However, this becomes difficult the moment that control flow is introduced, because the inherent design of SIMD-packed execution units make them unable to branch independently from one another. This is usually worked around by applying if-conversion to the control flow of the program, transforming control dependencies into data dependencies and linearizing the CFG. Depending on the architecture we are working on there might be different approaches available to achieve this goal. This talk will give an overview of implementing such a paradigm in LLVM, giving a high level overview of the available approaches and comparing their effectiveness, dependent on the features provided by the targeted hardware.
+</p>
+<p>
+<strong>Marcello Maggioni - &quot;LLVM Data Structures&quot;</strong><br/>
+<strong>As part of the Lightning Talks session, Tuesday 8th, 11:00-12:00, Lecture Theatre 4</strong> <br/>
+Abstract:  LLVM provides various custom data structures for different purposes (Vectors, Maps and Sets). These often overlap with data structures already provided by the C++ standard library, for example, and it is not always obvious which data structure is the best for a certain job. In the LLVM Programming Guide there is a space dedicated to these data structures, but it is lacking in real world examples and performance comparisons to illustrate their usage. This talk tries to guide inexperienced/new LLVM developers in deciding when a certain data structure is better used with respect to the others, and what possible performance or memory footprint implications may result from this decision. To clarify the differences in the types of custom data structure available, we will look at real case studies and performance measurements.
+</p>
+<p>
+<strong>Fraser Cormack and Pierre-André Saulais - &quot;Building an LLVM Backend&quot;</strong><br/>
+<strong>Tuesday 8th,15:20-16:20, Lecture Theatre 5</strong> <br/>
+Abstract:  This talk is about the structure of a modern LLVM backend and what needs to be put in place in order to build one. The intent is to show how an LLVM backend is made from DAG selection down to assembly output by showing the implementation of a backend for a RISC architecture supporting a very basic Turing-complete instruction set. It will cover: basic definition of the architecture in TableGen (instructions, registers, operands ...), how the instructions are selected from DAG nodes, how to implement memory accesses to stack variables through frame indices, how to implement and add a basic custom machine-pass to the pass manager, implementation of function calls and argument passing, and everything else that is needed in order to have a compilable subset of the C language.
+</p>
+<p>
+<br/>
+Many of our experts in LLVM and related technologies, such as the LLDB debugger and <a href="http://www.khronos.org/opencl/sycl">SYCL™</a>, the new (provisional) standard for C++ parallel processing, will be in attendance. If you are attending the conference and would like to have a chat with us regarding collaboration, business opportunities, careers at Codeplay, or anything else, you can find us in Room G.05 during the scheduled programme breaks, where we will be delighted to meet and talk with you! G.05 will be clearly signposted and is located to the left of the elevators at the back. The breaks in the programme are 10:45-11:45, 12:00-13:15, and 15:10-15:40 on Monday 7th, and 10:40-11:00, 12:00-13:00, and 14:20-14:40 on Tuesday 8th. Alternatively, look out for our delegates in their distinctive Codeplay hoodies, or <a href="http://www.codeplay.com/support/contact">contact us</a> to arrange a meeting.
+</p>
+

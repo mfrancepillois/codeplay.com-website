@@ -1,0 +1,39 @@
+---
+id: 192
+url: tensorflow™-for-opencl™-using-sycl™
+user_id: 497
+date: 2016-06-01T11:31:22.7200Z
+category: blogs
+title: "TensorFlow™ for OpenCL™ using SYCL™"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from_utf8:
+  - /portal/tensorflow™-for-opencl™-using-sycl™
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+<p style="background-color:#f1cfcf; padding: 2rem">
+  <strong>This post contains out of date information</strong><strong> and this section was added on 7th August 2019<br></strong>&nbsp;<br>Development continues on the SYCL implementation for TensorFlow and we continue to make progress on this integration.<br><br>- The SYCL implementation is currently maintainted on a separate branch <a href="https://github.com/codeplaysoftware/tensorflow">here</a>. <br>- Up to date instructions on how to use the SYCL implementation for TensorFlow are <a href="https://developer.codeplay.com/products/computecpp/ce/guides/tensorflow-guide">here</a>.<br><br>This implementation uses Eigen and we have now upstreamed all our Eigen code to the main branch.<br><em></em></p><br>
+
+
+<p>Codeplay has started work on adding OpenCL support to TensorFlow using SYCL. TensorFlow is built on top of the <a href="http://eigen.tuxfamily.org/">Eigen C++ library for linear algebra</a>. Because Eigen uses C++ extensively, we have used <a href="https://www.khronos.org/sycl">SYCL</a> (which enables Eigen-style C++ metaprogramming) to offload parts of Eigen to OpenCL devices.
+</p>
+<p>
+You can get the code here: <a href="https://bitbucket.org/benoitsteiner/opencl">https://bitbucket.org/benoitsteiner/opencl</a>. This is open-source software and a work-in-progress, so not everything works yet (see below) but you are welcome to get involved.
+</p>
+<p>
+To compile this code, you need a SYCL compiler. Currently, the only supported compiler is Codeplay's ComputeCpp, which is available currently via  <a href="https://codeplay.com/products/computecpp/#register">Codeplay's evaluation program</a>. ComputeCpp will be made available for free as a public open beta, later in 2016 and then released with a free version (the ComputeCpp Community Edition) in 2017. This will let anyone compile and develop TensorFlow on OpenCL devices, such as AMD or Intel GPUs and CPUs. Alternatively, there is an open-source implementation of SYCL in development, called <a href="https://github.com/amd/triSYCL">triSYCL</a>, but it does not (yet) support the TensorFlow source code or compiling C++ for OpenCL devices (only CPUs using OpenMP). If you want open-source SYCL, you may want to get involved in that project, too.
+</p>
+<p>
+There is a spreadsheet maintained here with a list of things left to do to fully support TensorFlow: <a href="https://docs.google.com/spreadsheets/d/1YbHn7dAFPPG_PgTtgCJlWhMGorUPYsF681TsZ4Y4LP0/edit#gid=0">https://docs.google.com/spreadsheets/d/1YbHn7dAFPPG_PgTtgCJlWhMGorUPYsF681TsZ4Y4LP0/edit#gid=0</a>. As this is an open-source project, you are welcome to get involved.
+</p>
+<p>
+Some of the acceleration of TensorFlow could use OpenCL C libraries directly, such as for the BLAS components, or convolutions. SYCL is being used for the C++ tensor operations only (for now) which enables complex programmability of those tensor operations.
+</p>
+<p>
+The work on porting to SYCL is actually being performed in <a href="http://eigen.tuxfamily.org/">Eigen</a>, so this will enable other software that uses Eigen to be accelerated on multiple heterogeneous devices. SYCL is designed to allow performance-portability, by enabling the writing of C++ generic algorithms that can adapt to the underlying hardware. Applying these techniques to Eigen will enable performance portability of a range of linear algebra operations. Some work on demonstrating performance-portability using SYCL <a href="http://conf.researchr.org/event/SYCL-2016/sycl-2016-papers-developing-a-sycl-based-computer-vision-framework-for-heterogeneous-and-embedded-architectures">has been presented here</a> and also <a href="http://www.iwocl.org/wp-content/uploads/iwocl-2015-tutorial-SYCL-part3.pdf">here</a>.
+</p>
+<p>
+If you are interested in paid internships at Codeplay to work more on Eigen or TensorFlow, there are <a href="{{ '/company/careers/' | relative_url }}">positions open here</a>.</p>
+

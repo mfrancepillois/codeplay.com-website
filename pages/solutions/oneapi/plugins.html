@@ -1,0 +1,265 @@
+---
+layout: page
+nav_style: alt
+title: oneAPI
+permalink: /solutions/oneapi/plugins/
+stylesheets:
+  - /assets/css/jquery.popupdialog.css
+  - /assets/css/pages/solutions/oneapi/plugins.css
+scripts:
+  - /assets/js/jquery.popupdialog.js
+  - /assets/js/chart-js.js
+  - /assets/js/pages/solutions/oneapi/plugins.js
+---
+
+<!-- Section: Splash -->
+<section id="splash" class="splash">
+    <div class="wrapper">
+        <div>
+            <div>
+                <h1>Codeplay&reg; oneAPI Plugins for NVIDIA&reg; &amp; AMD</h1>
+                <h2>oneAPI is an open, cross-industry and standards-based programming model that delivers a
+                    standardized experience across different hardware architectures.</h2>
+                <a class="button image-button" title="View Support Packages" href="#support">
+                    <span class="material-icons">help</span> View Support Packages
+                </a>
+            </div>
+        </div>
+        <div>
+            <div id="splash-image">
+                <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/1.png' | relative_url }}" role="presentation" />
+                <div class="layered-image">
+                    <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/1.png' | relative_url }}" role="presentation" />
+                    <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/3.png' | relative_url }}" role="presentation" />
+                    <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/4.png' | relative_url }}" role="presentation" />
+                    <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/5.png' | relative_url }}" role="presentation" />
+                    <img src="{{ '/assets/images/solutions/oneapi/plugins/splash/2.png' | relative_url }}" role="presentation" />
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Open Source -->
+<section id="open-source">
+    <div class="wrapper">
+        <div>
+           <img src="{{ '/assets/images/solutions/oneapi/plugins/open-source.png' | relative_url }}" alt="GitHub Open Source" />
+        </div>
+        <div>
+            <div>
+                <h1>Clone or Fork via GitHub.com</h1>
+                <p>Our fully open source plugins for NVIDIA/AMD bring the oneAPI ecosystem to this hardware quickly and
+                    easily. You can download the binaries as extensions for Intel&reg;'s oneAPI Base Toolkit, or
+                    build the plugins for your own implementation of oneAPI.</p>
+            </div>
+        </div>
+        <div>
+            <a class="button image-button"
+               href="https://github.com/intel/llvm/tree/sycl/unified-runtime/source/adapters"
+               target="_blank"
+               rel="noopener">
+                <span class="material-icons">book</span> View Source on GitHub.com
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Section: oneAPI for NVIDIA GPUs -->
+<section id="oneapi-for-nvidia" class="chart-section">
+    <div class="wrapper">
+        <div class="columns two">
+            <div>
+                <canvas id="oneapi-nvidia-chart" class="gpu-chart"></canvas>
+            </div>
+            <div class="center-content">
+                <div>
+                    <h1>oneAPI for NVIDIA GPUs</h1>
+                    <p>Add support for NVIDIA GPUs to the Intel® oneAPI Base Toolkit using oneAPI for NVIDIA GPUs.
+                        Develop code using SYCL™ and run on NVIDIA GPUs.</p>
+                    <a class="button image-button"
+                       href="https://developer.codeplay.com/products/oneapi/nvidia/download"
+                       target="_blank">
+                        <span class="material-icons">cloud_download</span>Download oneAPI for NVIDIA GPUs Now
+                    </a>
+                    <div class="disclaimer">
+                        <b>Testing Date:</b> Performance results are based on testing by Intel as of Aug. 15, 2022
+                        and may not reflect all publicly available updates. Configuration Details and Workload
+                        Setup: Intel® Xeon® Platinum 8360Y CPU @ 2.4GHz, 2 socket, Hyper Thread On, Turbo On,
+                        256GB Hynix DDR4-3200, ucode 0x000363. GPU: Nvidia A100 PCIe 80GB GPU memory. Software:
+                        YCL open source/CLANG 15.0.0, CUDA SDK 11.7 with NVIDIA-NVCC 11.7.64 cuMath 11.7, cuDNN
+                        11.7, Ubuntu 22.04.1. SYCL open source/CLANG compiler switches:
+                        -fsycl-targets=nvptx64-nvidia-cuda, NVIDIA NVCC compiler switches:
+                        -O3-gencode arch=compute_80, code=sm_80. Represented workloads with Intel optimizations.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: oneAPI for AMD GPUs -->
+<section id="oneapi-for-amd" class="chart-section">
+    <div class="wrapper">
+        <div class="columns two">
+            <div class="center-content">
+                <div>
+                    <h1>oneAPI for AMD GPUs</h1>
+                    <p>Add support for AMD GPUs to the Intel® oneAPI Base Toolkit using oneAPI for AMD GPUs. Develop
+                        code using SYCL™ and run on AMD GPUs.</p>
+                    <a class="button image-button"
+                       href="https://developer.codeplay.com/products/oneapi/amd/download"
+                       target="_blank">
+                        <span class="material-icons">cloud_download</span>Download oneAPI for AMD GPUs Now
+                    </a>
+                    <div class="disclaimer">
+                        <b>Testing Date:</b> Performance results are based on testing by Intel as of Aug. 15,
+                        2022 and may not reflect all publicly available updates. Configuration Details and
+                        Workload Setup: Intel® Xeon® Gold 6330 CPU @ 2.0GHz, 2 socket, Hyper Thread Off, Turbo On,
+                        256GB Hynix DDR4-3200, ucode 0xd000363. GPU: AMD Instinct MI100, 32GB GPU memory.
+                        Software: SYCL open source/CLANG 15.0.0, AMD RoCm 5.2.1 with AMD-HIPCC 5.2.21152-4b155a06,
+                        hipSolver 5.2.1, rocBLAS 5.2.1, Ubuntu 20.04.4. SYCL open source/CLANG compiler
+                        switches: -fsycl-targets=amdgcn-amd-amdhsa-Xsycl-target-backend-offload-arch=gfx908,
+                        AMD-HIPCC compiler switches: -O3. Represented workloads with Intel optimizations.
+                    </div>
+                </div>
+            </div>
+            <div>
+                <canvas id="oneapi-amd-chart" class="gpu-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Support Packages -->
+<section id="support" >
+    <div class="wrapper">
+        <header>
+            <h1>Support Packages</h1>
+        </header>
+
+        <!-- Notice -->
+        <div class="notice">
+            <div>
+                <span class="material-icons">info</span>
+            </div>
+            <div>
+                We provide a range of support levels to ensure you get the support you need. From our public forum
+                all the way to enterprise support with direct access to Codeplay engineers.
+            </div>
+        </div>
+
+        <!-- Packages -->
+        <div class="package-list">
+            <!-- Enterprise Support -->
+            <div class="package">
+                <div>
+                    <h1><span class="material-icons">support_agent</span> Enterprise Support</h1>
+                    <p>Our highest level of support for large teams and organizations.</p>
+                </div>
+                <div>
+                    <ul>
+                        <li>Billed annually</li>
+                        <li>Raise and track issues via our support desk</li>
+                        <li>Accelerated response time for technical questions and other product needs</li>
+                        <li>Direct access to Codeplay's expert engineers via emails and scheduled calls</li>
+                        <li>Custom support plan tailored to support your needs for implementation and deployment</li>
+                    </ul>
+                </div>
+                <div>
+                    <a class="button package-select" data-package="Enterprise" role="button">
+                        <span class="material-icons">phone</span> Request Call-Back
+                    </a>
+                </div>
+            </div>
+
+            <!-- Priority Support -->
+            <div class="package">
+                <div>
+                    <h1><span class="material-icons">offline_bolt</span> Priority Support</h1>
+                    <p>Our support package tailored to small teams and individuals.</p>
+                </div>
+                <div>
+                    <ul>
+                        <li>Billed annually, per seat</li>
+                        <li>Raise and track issues via our support desk</li>
+                        <li>Accelerated response time for technical questions and other product needs</li>
+                        <li>Instantly track your support requests via update email alerts</li>
+                    </ul>
+                </div>
+                <div>
+                    <a class="button package-select" data-package="Priority" role="button">
+                        <span class="material-icons">phone</span> Request Call-Back
+                    </a>
+                </div>
+            </div>
+
+            <!-- Free Support -->
+            <div class="package">
+                <div>
+                    <h1><span class="material-icons">groups</span> Public Support</h1>
+                    <p>Community support forum, moderated by Codeplay engineers.</p>
+                    <div class="free-tag">FREE</div>
+                </div>
+                <div>
+                    <ul>
+                        <li>Free to use</li>
+                        <li>Easily search for solutions to common issues</li>
+                        <li>Advice and support from Codeplay engineers and the oneAPI community</li>
+                    </ul>
+                </div>
+                <div>
+                    <a class="button" target="_blank" rel="noopener" href="https://support.codeplay.com">
+                        <span class="material-icons">language</span> Visit Discourse
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popup: Support Packages -->
+<div id="support-packages-popup" class="popup">
+    <div class="prepare">
+        <h1><span class="package-title">PACKAGE</span> Support Request</h1>
+        <p>Thank you for your interest in oneAPI <span class="package-title">PACKAGE</span> Support. Please confirm
+            your email address and press request call-back below, someone from our team will contact you to follow
+            up on your specific requirements.</p>
+
+        <form action="https://formspree.io/f/xvowrngy"
+              method="post"
+              data-is-valid="false"
+              data-requiresCookieAcceptance="true">
+
+            <input type="email"
+                   name="email"
+                   placeholder="john.smith@smith.com"
+                   required />
+
+            <div class="g-recaptcha"
+                 data-site-key="{{site.recaptcha_site_key}}"></div>
+
+            <input type="hidden"
+                   name="_subject"
+                   value="oneAPI Support Subscribe Request" />
+
+            <input type="hidden"
+                   name="package"
+                   value="" />
+
+            <input type="hidden" name="_next"
+                   value="{{page.url}}#sent" />
+
+            <button class="button image-button" type="submit" disabled>
+                <span class="material-icons">call</span> Request Call-Back</button>
+        </form>
+    </div>
+    <div class="sent">
+        <h1>Support Request Sent</h1>
+        <p>Thank you for your support package upgrade request. Someone from our team will message you via the email
+            address you have provided.</p>
+        <button class="button image-button close">
+            <span class="material-icons">call</span> Close Popup</button>
+    </div>
+</div>

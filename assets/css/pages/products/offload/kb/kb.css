@@ -1,0 +1,30 @@
+.recruitment-notice {
+    background-color: #e8dfb4;
+    padding: 2rem;
+    border-radius: 6px;
+    margin: 0 0 4rem 0;
+}
+.recruitment-notice * {
+    padding: 0;
+    margin: 0;
+}
+.recruitment-notice h1 {
+    font-size: 1rem;
+    font-weight: bold;
+}
+#kb-list h2 {
+    border-bottom: #ccc 1px solid;
+    padding-bottom: 1rem;
+}
+#kb-list ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#kb-list ol > li {
+    margin-top: 2rem;
+}
+#kb-list ol a:hover h3 {
+    text-decoration: underline;
+}
+

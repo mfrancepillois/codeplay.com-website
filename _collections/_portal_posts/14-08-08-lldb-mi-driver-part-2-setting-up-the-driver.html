@@ -1,0 +1,102 @@
+---
+id: 108
+url: lldb-mi-driver---part-2-setting-up-the-driver
+user_id: 649
+date: 2014-08-08T18:50:09.7200Z
+category: blogs
+title: "LLDB MI Driver - Part 2: Setting Up the Driver"
+showOnFrontPage: 0
+views: 317
+tags: LLDB,LLDB-MI,C++,Eclipse,Debuggers
+redirect_from:
+  - /portal/lldb-mi-driver---part-2-setting-up-the-driver
+thumbnail: /assets/images/portal/article-images/8b401ee048a88ad8aeebbf528e7dd0b4.png
+layout: portal/portal-article-view
+---
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-1-introduction' | relative_url }}">Part 1: Intro</a></li>
+<li> <strong>Part 2: Setting Up the Driver</strong></li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-3-the-design' | relative_url }}">Part 3: The Design</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-4-how-to-add-a-command' | relative_url }}">Part 4: How to Add a Command</a></li>
+</ul><h2>1 Introduction</h2>
+<p>In this blog post, the second in this series on the MI Driver, we will show how to use it from the Eclipse IDE to debug a remote target.  So far, the MI Driver has only been tested with Eclipse, however it should work with any IDE that supports the GDB/MI protocol.
+</p>
+<p>
+The LLDB Machine Interface (MI) Driver is a standalone executable that sits between an IDE and a debug server. Figure 1 shows a typical scenario.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/8b401ee048a88ad8aeebbf528e7dd0b4.png' | relative_url }}" alt="Figure 1: MI Driver usage scenario"/>
+</p>
+<p>
+<strong>Figure 1: MI Driver usage scenario</strong>
+</p>
+<p>
+In the case of remote debugging, the MI Driver can be set up from an IDE to connect to a remote debug server. At the time of writing this blog post, the MI Driver is currently at version 1.0.0.9, and does not yet support debugging from the command line. The functionality is present in the Driver to support this mode, but it has not yet been tested and, as such, is currently disabled.
+</p>
+<p>
+In this blog post, we will concentrate on setting up the MI Driver to work with the Eclipse IDE.
+</p><h2>2 Setting Up Eclipse</h2>
+<p>The following set up instructions rely on Eclipse 4.2.0 (Juno). They describe how to set up a remote debug session using a debug server. You can use any debug server that is compatible with LLDB.
+</p>
+<p>
+It is assumed that you already have Eclipse installed, with all of the necessary pre-requisites to enable compilation and debugging of C and C++ code. You can download Eclipse 4.2.0 from the <a href="http://eclipse.org/downloads/packages/eclipse-ide-cc-developers/junosr2">Eclipse Project</a>. You may also need to download the <a href="http://download.eclipse.org/tools/cdt/releases/juno">Eclipse C/C++ Development Tools (CDT) plugin</a>.
+</p><h3>2.1 Getting the Code</h3>
+<p>The code for the MI Driver can be downloaded as part of the <a href="http://lldb.llvm.org/source.html">LLDB project's source code</a>, and the lldb-mi project is built as part of a full LLVM build. Please refer to the official <a href="http://lldb.llvm.org/build.html">LLDB build instructions</a> when compiling LLDB.
+</p>
+<p>
+After compilation, the lldb-mi executable will be located in the bin directory of the LLVM build folder.
+</p><h3>2.2 Creating a Project for Remote Debugging</h3>
+<p>The follow steps describe how to create a new C++ project for a simple Hello World application. Once the project is set up, a Debug Configuration will be created to allow us to debug the Hello World application using the MI Driver.
+</p>
+<p>
+1. In Eclipse, navigate to <strong>File ? New Project ? C/C++ ? 'C++' Project</strong>.<br/>
+2. Give the project a name, select 'Hello World C++ Project' under executable, select a toolchain e.g. MinGW GCC (Linux GCC on Unix), and then click the 'Finish' button.<br/>
+3. Build the project by navigating to <strong>Project ? Build All</strong> .<br/>
+4. Open the 'Debug Configurations' window by navigating to <strong>Run ? Debug Configurations</strong><br/>
+5. Now, create a new instance of a 'C/C++ Remote Application'. See Figure 2.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/8387ad8806919edcea5ce4fde1f52799.png' | relative_url }}" alt="Figure 2: Create a remote application"/>
+</p>
+<p>
+<strong>Figure 2: Create a remote application</strong>
+</p>
+<p>
+6. Add the executable’s path to the 'C/C++ Application' text box.<br/>
+7. Click on the 'Debugger' tab.<br/>
+8. In the 'Main' window pane, add the lldb-mi executable's path to the 'GDB Debugger:' text box.<br/>
+9. At the bottom of the same page, click on 'Select other...' (near the 'Apply' button). A 'Select Preferred Launcher' dialogue will pop up. Click the 'Use configuration specific settings' tick box and then highlight 'GDB (DSF) Manual Remote Debugger Launcher' in the list. See Figure 3.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/6e46ad8ebe6e668f2a13170c23715559.png' | relative_url }}" alt="Figure 3: Select preferred launcher"/>
+</p>
+<p>
+<strong>Figure 3: Select preferred launcher</strong>
+</p>
+<p>
+10. Click the 'OK' button and return to the previous dialogue.<br/>
+11. Click the 'Connection' tab to reveal the pane to set the TCP/IP port number. Your can enter any preferred number, but here we will use 1240 for the port number.<br/>
+12. That's it for the Debug Configuration, the set up of your project is complete.
+</p><h3>2.3 Debugging the Project</h3>
+<p>At this stage, you should have a Hello World executable. Make sure that the file exists and that, for example, your anti-virus software has not decided to quarantine it.
+</p>
+<p>
+To be sure that we are able to debug the Hello World program, put a breakpoint in the code just after main().
+</p>
+<p>
+From the command line, start your debug server using the TCP/IP port number entered earlier. For example, port 1240 was used above.
+</p>
+<p>
+From Eclipse's main toolbar, select the Debugger and choose the Debug Configuration that you just created, for example: 'Blog Hello World MI Driver Setup'. A debug session will be launched, and the code will execute, stopping at the breakpoint.
+</p><h3>2.4 Tracing MI Commands</h3>
+<p>If you wish, you can see the communication between Eclipse and the MI Driver by looking in Eclipse's Console view. Open a Console view, then select the 'gdb traces' view using the 'Display Selected Console' drop-down menu button. The MI commands that have been issued will be revealed, as shown in Figure 4.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/f3653f94b4e4c8a6a6c23b21ff8b8cb6.png' | relative_url }}" alt="Figure 4: MI command trace"/>
+</p>
+<p>
+<strong>Figure 4: MI command trace</strong>
+</p><h2>3 Conclusion</h2>
+<p>This blog post has given a brief overview of the steps required to set up Eclipse to use the LLDB MI Driver. For more information on the MI Driver's design, see the next post in the series, <a href="{{ '/portal/lldb-mi-driver---part-3-the-design' | relative_url }}">Part 3: The Design</a>.</p>
+

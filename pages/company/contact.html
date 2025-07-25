@@ -1,0 +1,103 @@
+---
+layout: page
+nav_style: alt
+title: Contact Us
+permalink: /company/contact/
+stylesheets:
+  - /assets/css/pages/company/contact.css
+scripts:
+  - /assets/js/pages/company/contact.js
+redirect_from:
+  - /support/contact/
+  - /support/faq/
+  - /support/faq/5
+  - /support/faq/3
+  - /support/faq/2
+  - /support/faq/1
+  - /support/
+  - /supportbase/
+  - /support/contactus.html
+---
+
+<!-- Section: Contact -->
+<section id="contact" class="minimal-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <header>
+                    <h1>Contact Us</h1>
+                </header>
+
+                <!-- After Form Sent -->
+                <div class="form-response notice">
+                    <a id="form-after-send" class="jump-anchor"></a>
+                    Your message has been sent successfully. We aim to respond to all messages within two working days.
+                </div>
+
+                <!-- Before Form Sent -->
+                <div id="form-before-send">
+                    <p>The Codeplay team is waiting to help you in any way they can. Please fill in the form below,
+                        and someone from our team will respond (usually within two working days).</p>
+
+                    <form id="contact-form"
+                          action="https://formspree.io/mvowwlpz"
+                          method="POST"
+                          data-requiresCookieAcceptance="true">
+                        <label for="name">Name</label>
+                        <input name="name" required="required" type="text" id="name"/>
+
+                        <label for="subject">Subject</label>
+                        <select name="_subject" id="subject">
+                            <option>General Enquiry</option>
+                            <option>Sales Enquiry</option>
+                            <option>Careers Enquiry</option>
+                            <option>Report Security Issue</option>
+                            <option>Portal Post Inaccuracy</option>
+                        </select>
+
+                        <label for="email">Email Address</label>
+                        <input name="email" required="required" type="email" id="email"/>
+
+                        <label for="message">Message <small>(10 characters min length)</small></label>
+                        <textarea name="message" id="message" required="required" minlength="10"></textarea>
+
+                        <!-- CAPTCHA -->
+                        <div class="g-recaptcha"></div>
+
+                        <br/>
+                        <button type="submit" disabled>Send Message</button>
+
+                        <!-- Redirect -->
+                        <input type="hidden" name="_next" value="{{page.url}}#form-after-send" />
+                    </form>
+                </div>
+            </div>
+            <div>
+                <h2>Developer Support</h2>
+                <p>If you are looking for developer support, <a href="https://support.codeplay.com" target="_blank">please
+                    click here to visit our developer support forum</a>.</p>
+                <br/>
+
+                <h2>Write To Us</h2>
+                <p>If you would like to contact us the good old fashioned way, please address any correspondence
+                    to: </p>
+                <p>
+                <address>Codeplay Software Ltd.<br/>Level C<br/>Argyle House<br/>3 Lady Lawson Street<br/>Edinburgh<br/>EH3
+                    9DR<br/>United Kingdom
+                </address>
+                </p>
+                <br/>
+
+                <p><a href="{{ '/company/office-map/' | relative_url }}">
+                    <button>View on Google Maps</button>
+                </a></p>
+                <br/>
+
+                <h2>Telephone Us</h2>
+                <p>If you would like to speak to a member of our team directly, please call us on:</p>
+                <p><a href="tel:+441314660503">(+44) 131 466 0503</a></p>
+                <p>We are open Monday to Friday from 9:30AM to 5:30PM.</p>
+            </div>
+        </div>
+    </div>
+</section>

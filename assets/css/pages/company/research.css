@@ -1,0 +1,9 @@
+section#splash video {
+    max-width: 645px;
+    width: 100%;
+}
+section#lpgpu2 p img {
+    width: 50px;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+}

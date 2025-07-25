@@ -1,0 +1,203 @@
+---
+id: 121
+url: sycl-tutorial-3-integrating-sycl-into-stanford-university-unstructured
+user_id: 653
+date: 2014-11-05T14:15:53.3600Z
+category: blogs
+title: "SYCL Tutorial 3: Integrating SYCL Into Stanford University Unstructured"
+showOnFrontPage: 0
+views: 0
+tags: SYCL
+redirect_from:
+  - /portal/sycl-tutorial-3-integrating-sycl-into-stanford-university-unstructured
+thumbnail: /assets/images/portal/article-images/030af182c3f1c32902747e3d47b157c2.png
+layout: portal/portal-article-view
+---
+<div style="background-color: red; color: white; padding: 2rem;">
+This blog post has been archived since ComputeCpp, the Codeplay implementation of the SYCL standard, is now available. You can find the "Getting Started" guide for ComputeCpp <a href="https://www.codeplay.com/products/computesuite/computecpp/reference/getting-started/">available on our website here</a> that explains how to get set up and start using SYCL.
+</div>
+
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <a href="{{ '/portal/sycl-tutorial-1-the-vector-addition' | relative_url }}">Tutorial 1: The Vector Addition</a></li>
+<li> <a href="{{ '/portal/sycl-tutorial-2-the-vector-addition-re-visited' | relative_url }}">Tutorial 2: The Vector Addition Re-visited</a></li>
+<li> <strong>Tutorial 3: Integrating SYCL Into Stanford University Unstructured</strong></li></ul><ul>
+</ul><h2>1 Introduction</h2>
+<p>In part 3 of the SYCL™ tutorial series, we will look into integrating SYCL into a larger existing application. For this example, we have chosen to look into the Computational Fluid Dynamics (CFD) application <em>Stanford University Unstructured</em> .
+</p><h2>2 Stanford University Unstructured</h2>
+<p>Stanford University Unstructured (SU2) is a scientific set of tools to do Partial Differential Equation (PDE) analysis and to solve PDE-constrained optimization problems. The software package is mainly focused on solving CFD-related problems. While fluid dynamics have many use cases, one of the more interesting applications is in aerodynamics. Here, the movement of air around a solid object, such as an aeroplane, is studied. Aerodynamics are also used in other fields, such as car manufacturing (including heavy use in the design of race cars, for example Formula One), and even in designing hard drives.
+</p>
+<p>
+SU2 is developed by the Aerospace Design Laboratory (ADL) at Stanford University, but is Open Sourced under <a href="http://www.gnu.org/licenses/lgpl-2.1.html">GNU Lesser General Public License Version 2.1</a>. The full source can be found on <a href="https://github.com/su2code/SU2">GitHub</a>.
+</p>
+<p>
+At the heart of solving fluid dynamic problems are the Navier–Stokes equations. However, SU2 also supports other solvers such as Euler and Reynolds-Averaged Navier-Stokes. Simulation of the fluid dynamics, that is, solving the PDEs, is done using an iterative solution method. Solving these also requires solving a system of linear equations.
+</p>
+<p>
+To run SU2 you need two components. One is the “mesh” file. This file describes the solid object that you are interested in analysing. For example, this could represent an aeroplane wing. The second file is a configuration file describing both physical settings and settings about the solvers, such as max iterations.
+</p>
+<p>
+Currently SU2 supports parallelization using MPI. It does so using a separate domain decomposition application that splits up the mesh into several distinct problems. Hereafter, the normal SU2 binary is run with the newly separated input files using MPI. These steps are usually combined by running an included python script. Several MPI API calls are used during execution to synchronize the computation across the different MPI instances.
+</p>
+<p>
+SU2 is a command line application and has no graphical user interface. However, the results of the simulations can be viewed in several post-processing applications, both Open Source (Paraview) and Proprietary (Tecplot).
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/030af182c3f1c32902747e3d47b157c2.png' | relative_url }}" alt=""><br>
+<em>Simulation of the <a href="http://adl-public.stanford.edu/docs/display/SUSQUARED/Tutorial+2+-+Inviscid+ONERA+M6">Inviscid ONERA M6 wing test case</a> showing Mach numbers in the post processing software <a href="http://www.paraview.org">Paraview</a></em>
+</p><h2>3 Integrating SYCL</h2>
+<p>When integrating SYCL into an existing application, a good place to start is to analyze where it makes most sense to introduce the parallel computation. In SU2 there is already a parallel computational structure in place, so we will take a look at this first. As mentioned in the previous section, SU2 uses MPI to do data decomposition, before running the full computation on a smaller dataset. This is a method which is well suited for distributed memory architectures, however, in the context of SYCL, doing parallelization this way imposes several issues with the current design of SU2. For example, there are several instances of recursion, class structures containing pointers, and use of dynamic memory, all of which are not allowed in SYCL. While it may be possible to do parallelization this way in SYCL, it would require a major re-write of the software to eliminate the aforementioned problems. Another point to consider is that re-writing the code into doing a similar parallelization as the current MPI solution would inevitably break the MPI support. If possible, it would be great to maintain the MPI support and as a result make it possible to run the code on a distributed GPU cluster.
+</p>
+<p>
+Taking the above into account leaves us with many different places to introduce SYCL accelerated code; for example matrix operations would be a likely candidate. However, there is also a linear solver, with several preconditioners that should be well suited. A preconditioner is an operation on the data that makes it more suited for numerical applications and algorithms, and in turn improves the convergence of the linear solver. There is also a setup phase that might be able to be accelerated. To get a good speedup, more than one thing should be accelerated using SYCL.
+</p>
+<p>
+In this example we will look at the matrix vector product, a function heavily used by the linear solver in SU2. An example of a matrix vector product (AB) is shown below. It is equivalent to a normal matrix multiplication where matrix A is multiplied by matrix B where B has one column and the same number of rows as the number of columns in matrix A.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/26bbbe6b91fa2b8f9f6759afd5d024fd.png' | relative_url }}" alt="">
+</p>
+<p>
+In SU2, the matrix vector product is located in the library “Common”, which is shared between all the software modules of SU2. To be exact, the source of all matrix operations, including the matrix vector product, is in the file <a href="https://github.com/su2code/SU2/blob/master/Common/src/matrix_structure.cpp">Common/src/matrix_structure.cpp</a>, and the header file is located in <a href="https://github.com/su2code/SU2/blob/master/Common/include/matrix_structure.hpp">Common/include/matrix_structure.hpp</a>.
+</p>
+<p>
+The following is the original code of the matrix vector product routine from the 3.2.0 version of SU2.</p><pre>void CSysMatrix::MatrixVectorProduct(const CSysVector &amp; vec, CSysVector &amp; prod, CGeometry *geometry, CConfig *config) {
+    unsigned long prod_begin, vec_begin, mat_begin, index, iVar, jVar, row_i;
+    /*--- Some checks for consistency between CSysMatrix and the CSysVectors ---*/
+    if ( (nVar != vec.GetNVar()) || (nVar != prod.GetNVar()) ) {
+        cerr &lt;&lt; "CSysMatrix::MatrixVectorProduct(const CSysVector&amp;, CSysVector): "
+        &lt;&lt; "nVar values incompatible." &lt;&lt; endl;
+        throw(-1);
+    }
+    if ( (nPoint != vec.GetNBlk()) || (nPoint != prod.GetNBlk()) ) {
+        cerr &lt;&lt; "CSysMatrix::MatrixVectorProduct(const CSysVector&amp;, CSysVector): "
+        &lt;&lt; "nPoint and nBlk values incompatible." &lt;&lt; endl;
+        throw(-1);
+    }
+    prod = 0.0; // set all entries of prod to zero
+    for (row_i = 0; row_i &lt; this-&gt;nPointDomain; row_i++) {
+        prod_begin = row_i*this-&gt;nVar; // offset to beginning of block row_i
+        for (index = this-&gt;row_ptr[row_i]; index &lt; this-&gt;row_ptr[row_i+1]; index++) {
+            vec_begin = this-&gt;col_ind[index]*this-&gt;nVar; // offset to beginning of block col_ind[index]
+            mat_begin = (index*this-&gt;nVar*this-&gt;nVar); // offset to beginning of matrix block[row_i][col_ind[indx]]
+            for (iVar = 0; iVar &lt; this-&gt;nVar; iVar++) {
+                for (jVar = 0; jVar  nVar; jVar++) {
+                    this-&gt;prod[(const unsigned int)(prod_begin+iVar)] += this-&gt;matrix[(const unsigned int)(mat_begin+iVar*nVar+jVar)]*this-&gt;vec[(const unsigned int)(vec_begin+jVar)];
+                }
+            }
+        }
+    }
+    /*--- MPI Parallelization ---*/
+    SendReceive_Solution(prod, geometry, config);
+}
+</pre>
+<p><br>
+Note that the code here is slightly modified to show class members more clearly.
+</p>
+<p>
+In the above code, we multiply a given <em><strong>CSysMatrix</strong></em> object with the <em><strong>CSysVector</strong></em> object passed in as a parameter to the function. The result is stored in the <em><strong>CSysVector</strong></em> <em>prod</em> variable, which is likewise passed to the <em><strong>CSysMatrix</strong></em> member function.
+</p>
+<p>
+The code might seem to be fairly complicated, keeping in mind the mathematical formula for the matrix vector product. The reason for this is that we are dealing with a sparse matrix, that is, a matrix with a large number of zero-values. To optimize the algorithm, the developers of SU2 have chosen to use the <a href="http://netlib.org/linalg/html_templates/node93.html">Block Compressed Row Storage format</a>, which is a modification of the more widely used <a href="http://netlib.org/linalg/html_templates/node91.html">Compressed Row Storage format</a>. This complicates the code a little, but improves the execution time. The storage format, and associated algorithm, skips access to, and storage of, as many zero-values as possible. Information about row and column indexes is stored in the row_ptr and col_ind arrays.
+</p>
+<p>
+There have been several papers and much research into optimizing sparse matrix multiplication on GPU devices. While the block format is likely better than the normal Compressed Row Storage variant, there may be better solutions. Some research into this area has been done by Nvidia in their technical report <a href="http://www.nvidia.com/object/nvidia_research_pub_001.html">"Efficient Sparse Matrix-Vector Multiplication on CUDA"</a>.
+</p>
+<p>
+Creating a SYCL version of the algorithm used in SU2 should be relatively straightforward bearing in mind what we have learned in the previous SYCL tutorials. The full code for the SYCL version is shown below.</p><pre>void CSysMatrix::MatrixVectorProduct(const CSysVector &amp; vec, CSysVector &amp; prod, CGeometry *geometry, CConfig *config) {
+    unsigned long prod_begin, vec_begin, mat_begin, index, iVar, jVar, row_i;
+    /*--- Some checks for consistency between CSysMatrix and the CSysVectors ---*/
+    if ( (nVar != vec.GetNVar()) || (nVar != prod.GetNVar()) ) {
+        cerr &lt;&lt; "CSysMatrix::MatrixVectorProduct(const CSysVector&amp;, CSysVector): "
+        &lt;&lt; "nVar values incompatible." &lt;&lt; endl;
+        throw(-1);
+    }
+    if ( (nPoint != vec.GetNBlk()) || (nPoint != prod.GetNBlk()) ) {
+        cerr &lt;&lt; "CSysMatrix::MatrixVectorProduct(const CSysVector&amp;, CSysVector): "
+        &lt;&lt; "nPoint and nBlk values incompatible." &lt;&lt; endl;         throw(-1);     }     prod = 0.0; // set all entries of prod to zero     double *vec_ptr = vec.GetData();     double *prod_ptr = prod.GetData();         unsigned long nvar = this-&gt;nVar;
+    { // sycl scope start
+      default_selector selector;
+      queue myQueue(selector);
+
+      cl::sycl::buffer&lt;double, 1&gt; buf_vec(vec_ptr, vec.GetSize());
+      cl::sycl::buffer&lt;double, 1&gt; buf_prod(prod_ptr, prod.GetSize());
+      cl::sycl::buffer&lt;double, 1&gt; buf_matrix(this-&gt;matrix, nnz * nVar * nEqn);
+      cl::sycl::buffer buf_row_ptr(this-&gt;row_ptr, nPoint+1);
+      cl::sycl::buffer buf_col_ind(this-&gt;col_ind, nnz);
+
+      command_group(myQueue, [&amp;]() {
+
+        auto acc_vec = buf_vec.get_access();
+        auto acc_prod = buf_prod.get_access();
+        auto acc_matrix = buf_matrix.get_access();
+        auto acc_row_ptr = buf_row_ptr.get_access();
+        auto acc_col_ind = buf_col_ind.get_access();
+
+        auto myRange = nd_range(range(nPointDomain));
+
+        auto myKernel = ( [=](item&lt;1&gt; item) {
+
+          unsigned long prod_begin, vec_begin, mat_begin, index, iVar, jVar;
+          int row_i = item.get_global();
+          prod_begin = row_i*nvar; // offset to beginning of block row_i
+
+          for (index = acc_row_ptr[row_i]; index &lt; acc_row_ptr[row_i+1];
+               index++) {
+            vec_begin = acc_col_ind[index]*nvar; // offset to beginning of block col_ind[index]
+            mat_begin = (index*nvar*nvar); // offset to beginning of matrix block[row_i][col_ind[indx]]
+
+            for (iVar = 0; iVar &lt; nvar; iVar++) {
+              for (jVar = 0; jVar &lt; nvar; jVar++) {
+                acc_prod[(const unsigned int)(prod_begin+iVar)] +=
+                  acc_matrix[(const unsigned int)(mat_begin+iVar*nvar+jVar)]*
+                  acc_vec[(const unsigned int)(vec_begin+jVar)];
+              }
+            }
+          }
+        });// kernel end
+
+        parallel_for(myRange,
+            kernel_lambda(myKernel));
+
+      }); // command group end
+    }    // sycl scope end
+    /*--- MPI Parallelization ---*/
+    SendReceive_Solution(prod, geometry, config);
+}
+</pre>
+<p><br>
+As in our previous tutorials, the first steps in our SYCL-ported code are to choose an OpenCL™ device and create a queue. In SYCL, we can use one of several predefined device selectors. In this example, we have used the <em><strong>default_selector</strong></em>  , which means that the implementation-specific SYCL runtime will select the OpenCL device that it finds most suitable. Following this, we can create a queue for the device.
+</p>
+<p>
+We now need to set up buffers for the data needed when executing the kernel. Note that, in this function, we are dealing with custom classes to hold the vector and result (<em><strong>CSysVector</strong></em>). Internally, this class stores the data as a dynamic array of doubles. While this makes it impossible to use directly with a SYCL buffer, a simple getter function to the internal representation of the object makes this possible. Therefore, we have introduced a <em>GetData</em> getter method in the <em><strong>CSysVector</strong></em> class. In this example, we need to use class variable <em>nVar</em> in our kernel. It is not possible to capture a class member variable by value in a C++ 11 lambda. It is only possible to capture a pointer to <em>this</em>, however copying a pointer to an OpenCL device is undefined. As a result, we copy the class member variable into a local scoped variable, which can be captured by the lambda. Furthermore, we note that some of the data used here is of type <em><strong>double</strong></em>. Hence, an OpenCL device that supports the optional double type is required in order to run the above code.
+</p>
+<p>
+Following the creation of the buffers, we create a command group, inside of which we can enqueue data and our kernel to the device. Inside the command group, we first create the accessor to our buffers. Note that, in our kernel, we only need to write to the result vector <em>prod</em>, whereas the remaining data only requires read access. We can now define our workgroup size, using the <em><strong>nd_range</strong></em> object. In this case, we want the workgroup size to be <em>nPointDomain</em>, to introduce the parallelism on the most outer loop of the original implementation. One thing to keep in mind, however, is that the <em>nPointDomain</em> may not match well to the OpenCL device’s preferred workgroup multiple, and we may therefore want to change the number slightly for optimizations. We have chosen to let the local workgroup size be undefined, and let the SYCL implementation choose a value for us. The kernel is now specified. The code in the kernel is identical to the original solution, with the outermost loop removed, and variable names changed to use the created SYCL assessors and the local <em>nvar</em> variable, which is being captured by the lambda. No further changes are needed to the original algorithm.
+</p>
+<p>
+Now we can launch the kernel using the parallel_for call with our defined kernel and range objects.
+</p><h2>4 Conclusion</h2>
+<p>In this tutorial, we have shown how SYCL can be integrated into a large scale scientific application, with minimal code and structural changes. In the ported code, we have added support for parallelization using OpenCL-compatible devices by adding less than 30 lines of additional code to the original software. Furthermore, we have shown how SYCL can compliment other forms of parallelization, by retaining the original MPI support of SU2, making it possible to execute the application on a GPU cluster. This makes the code highly scalable and suitable to solve very large and computationally heavy simulations that are required in the field of fluid dynamics.
+</p>
+<p>
+You can learn much more about SU2 on their <a href="http://su2.stanford.edu/">website</a> and in their two published papers below.
+</p>
+<p>
+<a href="http://su2.stanford.edu/documents/SU2_AIAA_ASM2013.pdf">Palacios, M. R. Colonno, A. C. Aranake, A. Campos, S. R. Copeland, T. D. Economon, A. K. Lonkar, T. W. Lukaczyk, T. W. R. Taylor, and J. J. Alonso, "Stanford University Unstructured (SU2): An open-source integrated computational environment for multi-physics simulation and design", AIAA Paper 2013-0287</a>.
+</p>
+<p>
+<a href="http://su2.stanford.edu/documents/SU2_AIAA_SciTech2014.pdf">F. Palacios, T. D. Economon, A. C. Aranake, S. R. Copeland, A. K. Lonkar, T. W. Lukaczyk, D. E. Manosalvas, K. R. Naik, A. S. Padron, B. Tracey, A. Variyar, and J. J. Alonso, "Stanford University Unstructured (SU2): Open-source analysis and design technology for turbulent flows", AIAA Paper 2014-0243</a>.
+</p><h2>5 Disclaimer</h2>
+<p>Please, note that the above code is based on the <a href="https://www.khronos.org/registry/sycl/specs/sycl-1.2.pdf">provisional specification of SYCL</a>. The final specification is subject to change from the current draft.
+</p>
+<p>
+The code in this blog post is licensed under GNU <em>Lesser General Public License</em> version 2.1 which can be found in full here: <a href="http://www.gnu.org/licenses/lgpl-2.1.html">http://www.gnu.org/licenses/lgpl-2.1.html</a>.
+</p>
+<p>
+The full code for SU2 can be found directly on GitHub: <a href="https://github.com/su2code/SU2">https://github.com/su2code/SU2</a>.
+</p>
+<p>
+<br>
+Khronos and SYCL are trademarks of the Khronos Group Inc.<br>
+OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos.</p>
+

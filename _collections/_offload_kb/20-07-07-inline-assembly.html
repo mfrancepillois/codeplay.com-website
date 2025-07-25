@@ -1,0 +1,31 @@
+---
+id: 146
+category: faq
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Inline Assembly"
+redirect_from:
+  - /kb/146
+layout: products/offload/kb/view
+---
+<p>Source code containing PPU inline assembly usually cannot be offloaded. Therefore, the Offload compiler will issue an error message whenever an attempt is made to duplicate functions containing inline assembly.If possible, inline assembly should be replaced with GNU or AltiVec Intrinsics (where they are portable).
+</p><p>
+Otherwise, where this is not possible, functions with inline assembly should be overloaded by __offload functions that implement the same semantics of the SPU. That way, at overload resolution the compiler will be able to select the __offload function in SPU code. For example:
+</p>
+<pre><code>int func(int arg)
+{
+	__asm{/*some PPU assembly*/}
+}
+
+__offload int func(int arg) //overload for SPU
+{
+	//equivalent implementation for SPU
+}
+</code></pre><p>If func is called from within an offload block, the compiler will select the second function.
+</p><p>
+On real games or larger applications it is good practise to put all required __offload function definitions in a separate header file which can be included before the offload block/function that uses them. This enables a clear separation of offloaded code from main PPU code.
+</p><p>
+Often, though, a function may contain PPU inline assembly that may be difficult to replace by intrinsics that work on SPU, or even the PPU assembly may be too complex or cannot otherwise be emulated on the SPU. In that case it is best to outer-call the function on the PPU (see <a href="{{ '/kb/30' | relative_url }}">/kb/30.html</a>). Outer calls though incur a performance penalty.
+</p>
+
+

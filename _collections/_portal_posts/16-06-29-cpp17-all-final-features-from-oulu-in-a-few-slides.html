@@ -1,0 +1,46 @@
+---
+id: 197
+url: c17-all-final-features-from-oulu-in-a-few-slides
+user_id: 829
+date: 2016-06-29T19:54:40.7200Z
+category: blogs
+title: "C++17, All Final Features from Oulu in a Few Slides"
+showOnFrontPage: 0
+views: 0
+tags: c++
+redirect_from:
+  - /portal/c17-all-final-features-from-oulu-in-a-few-slides
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Hi all, my name is Michael Wong, and while you may have followed my previous Standard updates hosted by my previous employer, I have joined Codeplay as their VP of R&amp;D and will continue my C++ Standard updates as Codeplay is deeply involved with C++ usage through their implementation of Parallel STL. Codeplay is a company developing software for heterogeneous platforms involved with self-driving cars, neural networks, and machine vision.
+</p>
+<p>
+The good news from Oulu is that we approved the publishing of a draft of C++17.
+</p>
+<p>
+As I changed job between the last Jacksonville and this Oulu meeting, I have been unable to keep up and write my usual update either post-meeting or pre-Oulu, so I thought I would keep it simple and make up for it in this post (although there have been plenty of other blogs) and show you all the details in a <a href="{{ '/public/uploaded/public/0cbdaf_c++17post-oulu2016.pdf' | relative_url }}">slide deck</a> that I have been using as a keynote at recent ADC++, IWOCL 2016, and Chicago STAC 2016 meetings.
+</p>
+<p>
+If you just want to see all the features going into C++17 other than the Special Math, Parallelism, Library Fundamentals, and FIlesystems TS, just go to slides 44-47 which will contain both the Language and Library features with clickable links for you to follow.  The features voted in Oulu are on slide 45 for language and 47 for library.
+</p>
+<p>
+The new C++ way of using PxxxxRx instead of the old Nxxx numbering means that the link will always take you to the latest Rx version that is posted, since the Pxxxx does not change. This means blog posted links will not have to keep changing. In some cases, especially the page containing the Oulu voted in features, it will still contain the wording of the pre-Oulu paper. In a few weeks, the post-Oulu mailing will be out and you will be able to magically access the latest updated paper. Another vote for the new paper numbering system.
+</p>
+<p>
+It's appropriate that the meeting to close the door firmly on all features that we plan to put into C++17, such that a Committee Draft (CD) can appear for National Body vote, is done in the land of midnight sun, hosted in Oulu Finland, very near the Arctic circle. The effect of perpetual daylight (we are so close to the Arctic circle such that the brief hour of twilight has the effect that at no time is it ever dark) is strange and wonderful at the same time for the human body. If we make any crazy decision, then you know where it came from!
+</p>
+<p>
+This CD will be the primary comment ballot resulting in National Body comments to be reviewed in Issaquah in November. It is unlikely we will be able to address all comments in one meeting, and we will either have to issue another CD, and address remaining comments in Kona in Feb. After Kona, there will be a Draft International Standard (DIS) and there will be an up-down vote (no comment) after the Kona meeting. The result of that vote will be shown in the July Toronto meeting. Assuming it goes well, it will be approved in Toronto to go to ISO in Geneva for publication, likely EOY 2017. If there is any opposition, then we will need to possibly adjust the CD and issue a Final Draft International Standard (FDIS) after Toronto for balloting. This would possibly delay C++17.
+</p>
+<p>
+The major thing you will notice is that in slide 45, two anticipated features were not voted in. Default comparison was removed from balloting on the last day in plenary as it did not survive the full committee vote. There were contentions on that it should be an opt-in feature as opposed to opt-out. I think the author originally had it as opt-in, but was convinced by EWG to change it to opt-out, and now the full committee has reversed that. It's like multiple court rulings reversing previous rulings. The other issue is that some people would like to not be forced to have the &lt;=, &gt;= and associated relational operators. I would expect many forms of National Body comment on this one and that it will revive in some limited form.
+</p>
+<p>
+Another feature expected to be voted on but was not, was the operator dot. A last minute problem was found during Core Wording Review, so the proposal was sent back to be fixed. So this proposal will not be in the CD. Although this is a fairly late stage in finding a problem, this proposal still has a chance of coming if some National Body comment requesting it, and that seems likely.
+</p>
+<p>
+At this point, many people will be writing their trip reports and they will do a great job of explaining what the new additional features are. I will also follow up with a more detailed post about what happened in SG1 on parallelism, concurrency, and heterogeneous computing as well as update on the status of SG14 on Low Latency for Games/Financial/Trading/Simulation/Embedded.
+</p>
+

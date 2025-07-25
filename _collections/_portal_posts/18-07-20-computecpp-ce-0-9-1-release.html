@@ -1,0 +1,193 @@
+---
+id: 308
+url: 07-20-18-computecpp-ce-0-9-1-release
+user_id: 607
+date: 2018-07-20T16:54:31.7200Z
+category: news
+title: "ComputeCpp CE 0.9.1 Release"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/07-20-18-computecpp-ce-0-9-1-release
+thumbnail: /assets/images/portal/article-images/d36cf70eaefa0450efc96570f09479aa.png
+layout: portal/portal-article-view
+---
+<img src="{{ '/assets/images/portal/article-images/d36cf70eaefa0450efc96570f09479aa.png' | relative_url }}">
+<p>The SYCL specification has been updated to <strong>SYCL v1.2.1 revision 3</strong> providing a maintenance update to the published specification. This new revision of the SYCL specification introduces clarifications and enhancements to improve consistency. These changes, agreed by the SYCL working group, will make it easier to learn SYCL and write generic code.</p>
+
+<p>For this reason we have released ComputeCpp Community Edition, v0.9.1, a minor update supporting this new revision of the specification, that can be <a href="https://developer.codeplay.com">downloaded from our website</a>.</p>
+
+<p>One of the improvements to the interface included in this release will require mandatory changes to SYCL applications in order to support SYCL 1.2.1 revision 3. These changes are in naming only and do not effect semantics, so applications will continue to execute as before. Furthermore these changes have been implemented as deprecations to the interface so applications will continue to compile, however ComputeCpp will report warnings for any use of the deprecated interface.</p>
+
+<h3>Updating your Applications</h3>
+
+<p>Your application is likely to require changes in order to be compatible with the new release. The changes you will need to make are to the member function names of the <strong>group</strong>, <strong>nd_item</strong> and <strong>nd_range</strong> classes. These changes improve consistency in naming across all of the SYCL index and range class types.</p>
+
+<p>We have tried to make this transition as straightforward as possible, by deprecating the original function names and introduced new functions names. This means that your code will not immediately fail to compile when updating to ComputeCpp CE 0.9.1, but you will experience warnings explaining that you are now using a deprecated interface.</p>
+
+<p>
+  <strong>Please note</strong> that because the names of the functions which have changed still exist in other parts of the SYCL interface, <strong>using a find and replace is not recommended</strong>. Instead we recommend that you either manually change the function names taking care of the context or use the deprecation warnings as a guide, since these warnings will list the new function names that you need to use.</p>
+
+<p>The table below shows a list of changes introduced in the SYCL v1.2.1 revision 3 specification which will need to be applied to affected SYCL applications.</p>
+<table class="relative-table wrapped" style="width: 100%;">
+  <thead>
+<tr>
+      <th style="text-align: center;">SYCL 1.2.1 Revision 2</th>
+      <th style="text-align: center;">SYCL 1.2.1 Revision 3</th>
+    </tr></thead>
+  <tbody>
+
+    <tr>
+      <td style="text-align: center;">size_t group::<span style="color: rgb(255,0,0);">
+          <strong>get_linear</strong>
+        </span>()</td>
+      <td style="text-align: center;">size_t group::<span style="color: rgb(51,153,102);">
+          <strong>get_linear_id</strong>
+        </span>()</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">
+
+<p>
+          <span style="color: rgb(255,0,0);">
+            <strong>id</strong>
+          </span>&lt;dimensions&gt; nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_num_groups</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_num_groups</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td style="text-align: center;">
+
+<p>
+          <span style="color: rgb(51,153,102);">
+            <strong>range</strong>
+          </span>&lt;dimensions&gt; nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_group_range</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_group_range</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">
+
+<p>id&lt;dimensions&gt; nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_local</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_local</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td style="text-align: center;">
+
+<p>id&lt;dimensions&gt; nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_local_id</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_local_id</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">
+
+<p>id&lt;dimensions&gt; nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_global</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(255,0,0);">
+            <strong>get_global</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td style="text-align: center;">
+
+<p>id&lt;dimensions&gt; nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_global_id</strong>
+          </span>()</p>
+
+<p>size_t nd_item::<span style="color: rgb(51,153,102);">
+            <strong>get_global_id</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_local</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_local</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_local_range</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_local_range</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_global</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_global</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_global_range</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_global_range</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_group</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(255,0,0);">
+            <strong>get_group</strong>
+          </span>(int dimension)</p>
+      </td>
+      <td colspan="1" style="text-align: center;">
+
+<p>range&lt;dimensions&gt; nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_group_range</strong>
+          </span>()</p>
+
+<p>size_t nd_range::<span style="color: rgb(51,153,102);">
+            <strong>get_group_range</strong>
+          </span>(int dimension)</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <br>
+
+
+

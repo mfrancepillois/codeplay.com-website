@@ -1,0 +1,41 @@
+---
+category: blogs
+date: '2023-07-13T10:22:41.430030'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/article-images/2022-12-16-thumb2.jpg
+title: oneAPI 2023.2 Release
+user_id: 1
+---
+<p class="outdated">
+    This blog is now outdated and a newer version is
+    <a href="{{ '/portal/news/2024/03/27/oneapi-2024-1-brings-sycl-graph-to-nvidia-and-amd-gpus.html' | relative_url }}">available here</a>.
+</p>
+
+<div class="plugins-widget">
+<div>
+<a href="https://developer.codeplay.com/products/oneapi/nvidia/home/" rel="noopener" target="_blank">oneAPI for NVIDIA GPUs</a>
+<a href="https://developer.codeplay.com/products/oneapi/nvidia/download" rel="noopener" target="_blank">
+<span class="material-icons">cloud_download</span>
+</a>
+</div>
+<div>
+<a href="https://developer.codeplay.com/products/oneapi/amd/home/" rel="noopener" target="_blank">oneAPI for AMD GPUs</a>
+<a href="https://developer.codeplay.com/products/oneapi/amd/download" rel="noopener" target="_blank">
+<span class="material-icons">cloud_download</span>
+</a>
+</div>
+</div>
+<p>Codeplay® is happy to announce the release of the 2023.2 oneAPI plugins for NVIDIA® and AMD, alongside Intel's 2023.2 oneAPI Base ToolKit release. These plugins, when installed with <a href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/base-toolkit.html">Intel's oneAPI Base ToolKit</a>, extend the SYCL support to NVIDIA and AMD platforms - enabling all the benefits of open, heterogeneous computing for your hardware.</p>
+<p>Since the 2023.1 release, we have continued our work to improve the stability and performance of SYCL on NVIDIA and AMD platforms through several bug fixes and performance improvements. This release continues that work, and you'll find some information on the main improvements we've brought to the NVIDIA and AMD plugins below.</p>
+<p>For <b>NVIDIA</b> platforms, this release includes more aggressive inlining, which may bring significant performance improvements when compared to 2023.1. It also includes a <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_cuda_tex_cache_read.asciidoc">SYCL extension</a> to expose the CUDA texture cache through a new ldg built-in function, which can also be used in some cases to bring performance improvements.</p>
+<p>For <b>AMD</b> platforms, we have improved the support for SYCL atomics, especially for very recent GPUs such as the MI250X. These improvements not only make using atomics when targeting AMD more reliable but it can also bring significant performance improvements.</p>
+<p>To learn more about the 2023.2 plugin release visit our <a href="https://developer.codeplay.com/">developer website</a>, which includes download links, installation instructions and various guides on how to use and get the most out of oneAPI on NVIDIA and AMD. For more detail on the changes in the 2023.2 release, you can view the changelogs for <a href="https://developer.codeplay.com/products/oneapi/nvidia/2023.2.0/guides/changelog-nvidia">NVIDIA</a> and <a href="https://developer.codeplay.com/products/oneapi/amd/2023.2.0/guides/changelog-amd">AMD</a>.</p>
+<p><b>Notices</b></p>
+<p>Performance varies by use, configuration and other factors.</p>
+<p>Performance results are based on testing as of dates shown in configurations and may not reflect all publicly available updates. See backup for configuration details. No product or component can be absolutely secure.</p>
+<p>Your costs and results may vary.</p>
+<p>Intel technologies may require enabled hardware, software or service activation.<br/></p>
+<p>© Codeplay Software Ltd. Intel, the Intel logo, Codeplay and Codeplay logo, and other Intel marks are trademarks of Intel Corporation or its subsidiaries. Other names and brands may be claimed as the property of others. SYCL is a registered trademark of the Khronos Group, Inc.<br/></p>
+

@@ -1,0 +1,31 @@
+---
+id: 279
+url: 10-24-17-lpgpu2-project-enhances-codexl-for-remote-profiling-on-android-devices
+user_id: 649
+date: 2017-10-24T14:45:37.7200Z
+category: blogs
+title: "LPGPU2 project enhances CodeXL for remote profiling on Android devices"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/10-24-17-lpgpu2-project-enhances-codexl-for-remote-profiling-on-android-devices
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Codeplay is working as part of the team on the <a href="www.lpgpu.org">LPGPU2</a> project, a European H2020 project set up to find ways to allow developers to retrieve power usage analysis on low power devices. This work has led to the team modifying <a href="https://gpuopen.com/compute-product/codexl/">CodeXL</a>, AMD™’s open source profiling and debugging tool. The team is excited to be able to talk about how, for the first time, they have managed to use CodeXL to capture and display power usage data from a standard Android™ device. They've also created a video to demonstrate this new capability which is embedded below so you can see how it works in practice. By adding this new capability the LPGPU2 project has opened up the ability to use CodeXL to perform profiling on non-AMD hardware such as Android devices and other remote low power devices.</p><br>
+<iframe width="560"
+        height="315"
+        data-requiresCookieAcceptance="true"
+        data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/7ZDQWUQiTI0"></iframe>
+><br>
+<p>With these changes CodeXL is able to offer a new capability to communicate with and retrieve power data from a standard Android device or any other device that implements the "Data Collection" (DC) API. This means that it is now possible to receive power data sent from any remote application or library that implements the DC API on an Android device. The CodeXL remote device protocol remains backward compatible and it can update its visualization in real time while also recording the new power data to its standard but extended database for static analysis offline later. Like the remote protocol, the database layer within CodeXL remains compatible with existing CodeXL projects.</p>
+<p>The Android device shown in the video is a standard phone and has not been rooted. The ability to allow profiling to take place on any standard device is important for ease of use. The phone has a service installed on it that listens out for CodeXL and waits for it to attach to it. When a connection is established the service provides CodeXL with information about the applications it can profile. The user can then start the selected application which commences sending profiling data back to CodeXL using the DC API.</p>
+<p>For the demonstration, this version of CodeXL is only able to communicate with a device running Android but in the future there are plans to support other low powered devices.</p><strong>The DC API</strong>
+<p>Early on in the project it became clear that in order to provide a consistent interface and enable support for the widest number of devices, a standard API should be defined. Rather than implement different interfaces for each device and platform the DC API was defined . This API removes the problem of enumerating, describing, enabling, disabling and collecting data from different hardware providing a single defined interface. The DC API has been developed by Samsung and ThinkSilicon. It will be presented to Khronos as part of the LPGPU2’s dissemination and exploitation plans. The DC API can be implemented by an application or library on any remote device, not just an Android device.</p>
+<p><strong>Static Analysis</strong></p>
+<p>The beauty of being able to capture profiling data from a device is not just in the real time capture capability shown in the video, but also when CodeXL is in offline mode the same data can be statically analysed to examine the power usage. Samsung are developing, as part of the LPGPU2 project, a power profiling analysis feedback engine that will parse the captured data and feedback the efficiency anomalies to the user. Codeplay have extended CodeXL’s data visualizations to highlight regions of the profiling data from which the user can choose to examine the source code that generated the power data (indirectly of course) and be presented with advice. For more information on the feedback engine see the article “Farewell Borja and whither Feedback” on LPGU2’s web site.</p>
+<p><strong>About LPGPU2</strong></p>
+<p>LPGPU2 is a European H2020 project to develop applications and an API to support power usage analysis on lower power devices. This helps developers to understand and address the power implications of their code, with the aim to improving performance. The project consortium is made of the following partners - TUB University Berlin, ThinkSilicon, Spin Digital, Samsung and Codeplay. For more information visit <a href="www.lpgpu.org">www.lpgpu.org</a>.</p><br><br><br>
+

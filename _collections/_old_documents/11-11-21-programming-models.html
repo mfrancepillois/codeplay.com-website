@@ -1,0 +1,47 @@
+---
+id: 257
+category: compiler
+date: 2011-11-21T11:47:14.3600Z
+date_updated: 0
+title: "Programming Models"
+url: programming-models
+description:
+redirect_from:
+  - /company/documents/programming-models
+layout: company/documents/view
+---
+<p>Codeplay compilers provide programmers with the option to use many different language extensions inside C/C++ to establish a programming model best suited to the application and processor. For example, enabling HLSL/OpenCL extensions inside C++ permits an OpenCL++ -like progamming model.
+</p><h2>Choose C++ over C to build reusable firmwares</h2><p>From experience we always encourage our processor- making customers to use C++ over C as it is far better suited for writing more portable, higher-level firmware. Choosing the right programming language is very important when it comes to reusing libraries written for one processor on the next generation of that chip. Programmers used to writing C code appreciate the fact that C++ programs can be written in a very C-like way. The good thing about C++ is, though, that the programmer is much better protected from making mistakes by a far stronger type system than that used in C. Also, built-in (compile time) language features such as namespaces, overloading, and structure member access checks, features that have no runtime overhead whatsoever, make C++ programs orders of magnitudes more expressive than C programs and enable the compiler to check and verify the programmers intent.
+</p><p>
+Using the C++ template system the programmer can achieve program performance that would not be possible using C. For example, modern processors implement instructions that can take immediates (constants) or registers as arguments. If that instruction takes a register, a dependency is created on that register which means that if the value in that register is not ready yet for the current cycle, the processor will stall (or the compiler will have to create stall cycles on non-stalling processors) which is wasteful and hurts performance. More efficiently, if the instruction takes an immediate as an argument, that immediate may be encoded directly in the instruction word and hence there is not such a scheduling constraint. Therefore, using immediates as arguments to instructions where applicable is a primary optimization target for our compilers.
+</p>
+<pre>template &lt;int immediate&gt; void libfunction()
+{
+    asm{ instr reg, immediate; }  //assembly instruction that takes an immediate
+}
+
+void test()
+{
+    libfunction&lt;2&gt;(); // call library function (instantiate template) with immediate
+}
+</pre><p>Using C++ templates to pass immediates to library functions
+</p>
+
+<p>
+Sometimes there may be instructions (or intrinsics) that only support immediates. This means that function parameters in C cannot be used as arguments to these instructions (or intrinsics) which makes it difficult or impossible to wrap these potentially proprietary instructions (or intrinsics) inside functions which in turn prevents building generic libraries. The C++ template system provides a solution to this problem. It is possible to pass immediates as template arguments to function templates and these argument values are still immediates inside the function template and can hence be used by appropriate instructions. The programmer can pass immediates either directly as template arguments, or immediates can be encoded as static constants inside a struct/class type which can then be passed as a type argument to the function template:
+</p>
+<pre>void __intrinsics_that_needs_immediates(int,int);template &lt;class Para&gt; void libfunc(){    __intrinsics_that_needs_immediates(Para::immediate_arg1,Para::immediate_arg2);     //both arguments are immediate values for the struct argument_values}struct argument_values{ //struct containing immediate argument values that  //could be used for the libfunc function template     static const int immediate_arg1 = 1;   static const int immediate_arg2 = 2; //some arguments};void test(){    libfunc&lt;argument_values&gt;();// passing struct with immediates to function template}
+</pre><h2>C++ programming model for shader-like processors</h2><p>Our compilers can compile C/C++ code for processors that have not been designed to execute code compiled from these languages. For example dereferencing random pointer values or accessing (unaligned) members inside structs usually requires byte- addressing which is not possible on specialized processors such as the PS2 vector unit (VU). The VU only supports 16 Byte addressing (here a pointer value is an index into an array of 16 byte elements), which makes the following simple function difficult to compile:
+</p>
+<pre>short return_value(short* array,short index){     return array[index];}
+</pre><p>Reading an element from the array parameter in that function requires at least 2 byte addressing (assuming the data pointed to by array is already aligned to at least 2 bytes). To compile this function to work efficiently on the VU the compiler would have to inline it and be able to optimize index to a constant.
+</p><p>
+Strict alignmentAlignment is very important on GPU- like vector processors. C code is usually full of casts that may lose alignment information that could lead to unexpected behaviour. For example, casts that increase the data alignment make the compiler incorrectly assume a higher alignment and potentially select inappropriate instructions at code generation. Our compilers preserve pointer target data alignment where possible and issue warning/advice messages where data alignment has changed through casts.
+</p><p>
+Compiler can control data layout in memoryStatic data can be layed out by the compiler. This makes it easy to compile for processor systems with simple tool chains, for example where there is no linker. For those tool chains the compiler can generate assembly code containing program code and layed-out data (static storage data). Since the compiler can be left in charge of the data-layout (static storage items such as global variables, static local variables etc can be allocated statically at fixed offsets), it can easily optimize global data accesses as data offsets are known at compile time.
+</p><p>
+We have implemented solutions for these and other issues in our core technology.
+</p><h2>HLSL/OpenCL language extensions to C++</h2><p>The use of vector types and intrinsics inside C/C++ has always been attractive for system programmers who want to directly program modern vector processors (as opposed to relying on vectorizing compilers). GCC for example supports GNU vector types, and <a href="http://en.wikipedia.org/wiki/AltiVec&quot; target=&quot;_blank">AltiVec&trade;</a> extensions for PowerPC based processors. HLSL and OpenCL incorporate vector types and intrinsics in their language specifications. Codeplay compilers support GNU vectors, AltiVec extensions and HLSL/OpenCL extensions within C/C++. The HLSL/OpenCL extensions are particularly interesting as they permit an OpenCL++ programming model.  These extensions can be enabled using command line options. This provides the programmer for example with high-level intrinsic functions such as the dot product or swizzle operations which can be mapped directly to processor instructions. If the target processor does not support these instructions, the compiler automatically generates code to emulate these operations.
+</p>
+
+

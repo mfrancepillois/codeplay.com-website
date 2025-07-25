@@ -1,0 +1,21 @@
+---
+id: 53
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadGetMaxThreads"
+redirect_from:
+  - /kb/53
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>unsigned int offloadGetMaxThreads( void )
+</code></pre>
+
+
+<p>
+The return value is the amount of Offload thread handles that can exist at any one time. Trying to spawn more than this number will result in undefined behaviour.
+</p>
+
+

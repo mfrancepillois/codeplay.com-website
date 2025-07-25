@@ -1,0 +1,22 @@
+---
+id: 81
+category: vectorc
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "Catching the Bus (Part I)"
+url: catching-the-bus-part-i
+description:
+redirect_from:
+  - /company/documents/catching-the-bus-part-i
+layout: company/documents/view
+---
+<p>  To gain performance from multi-core in these situations it is necessary to come up with totally new algorithms.
+</p><p>
+Consequently, the most obvious candidates for easy parallelization among existing algorithms are problems where each processor can be given a load of work to do, independently from all the others.  Examples include raytracing, computing matrix products, and image convolution. However, there is a problem which is often overlooked (especially by theoreticians who may not consider low level implementation details): on a shared memory machine <strong>there is only one data bus!</strong> This means that although a given data-intensive algorithm is parallelizable, limited memory bandwidth may degrade performance.As an example, consider image convolution.  Say we have a 3000x2500 image which we want to sharpen using a 5x5 matrix filter.  The standard way to do this is to apply the matrix to every pixel in the image (perhaps excluding a small number of border pixels, an irrelevant complication which we ignore here).  There are 7.5 million pixels, and the filter can be applied to any two pixels independently.  On a dual core machine the obvious way to parallelize this is to give each core 3.75 million pixels and the sharpening matrix and let them get on with the job.  This appears to be <a href="http://en.wikipedia.org/wiki/Embarrassingly_parallel">embarrassingly parallel</a>, and we would quite reasonably expect run-time to approach &frac12; of the serial run-time.  However, the computation involved in applying the filter to a pixel (75 floating point multiplications and 75 floating point additions for a colour pixel, perhaps fewer if we can identify zeros and ones in the matrix) cannot all be done in registers on a Pentium.  The problem is that both cores are simultaneously accessing main memory <strong>all</strong> the time, and the bus cannot cope.
+</p><p>
+In a series of blog posts I hope to illustrate some ways to cope with this problem which involve managing registers, L1 and L2 caches properly.
+</p>
+
+
+
+

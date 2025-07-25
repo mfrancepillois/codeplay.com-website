@@ -1,0 +1,71 @@
+---
+id: 10
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__outer"
+redirect_from:
+  - /kb/10
+layout: products/offload/kb/view
+---
+<p>The __outer keyword is used on pointers within an Offload&trade; block context.
+</p>
+<pre><code>offloadThread_t handle = __offload()
+{
+	__outer int * ptr;
+};
+</code></pre><p>In the above example, ptr is an outer pointer - it points to main memory rather than local memory. The ptr variable can be assigned to any data that resides on the main memory, but will throw an error if a local memory pointer is being assigned to it.
+</p>
+<pre><code>offloadThread_t handle = __offload()
+{
+	__outer int * ptr1;
+	int foo = 42;
+	int * ptr2;
+	ptr1 = &amp;foo; // fails at compile time, because address of foo is a local memory pointer
+	ptr2 = &amp;foo; // succeeds at compile time, types are the same
+	ptr2 = ptr1; // fails at compile time, because pointer types are different!
+};
+</code></pre><p>Within an Offload&trade; context, the compiler will try to deduce what the pointer type is by what is being assigned to it.
+</p>
+<pre><code>int outerFoo = 42;
+offloadthread_t handle = __offload()
+{
+	int * ptr1 = &amp;outerFoo; // is deduced as an outer pointer
+	int innerFoo = 42;
+	int * ptr2 = &amp;innerFoo; // is deduced as an inner pointer
+};
+</code></pre><p>The __outer keyword is also used to denote a main memory this pointer on __offload function specializations.
+</p>
+<pre><code>struct MyType
+{
+	int foo()
+	{
+		return 13;
+	}
+
+	__offload int foo()
+	{
+		return 42;
+	}
+
+	__offload int foo() __outer
+	{
+		return 53;
+	}
+}
+
+static void func()
+{
+	MyType outerBar;
+	int outerFoo = outerBar.foo(); // returns 13
+	offloadThread_t handle = __offload()
+	{
+		int localFoo = outerBar.foo(); // returns 53
+		MyType localBar;
+		localFoo = localBar.foo(); // returns 42
+	};
+}
+</code></pre><p>The example above shows you the power of Offload&trade; - allowing different specializations of functions for main memory and local memory.
+</p>
+
+

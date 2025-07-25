@@ -1,0 +1,49 @@
+---
+id: 109
+url: lldb-mi-driver---part-1-introduction
+user_id: 649
+date: 2014-08-08T18:50:49.7200Z
+category: blogs
+title: "LLDB MI Driver - Part 1: Introduction"
+showOnFrontPage: 0
+views: 612
+tags: LLDB,LLDB-MI,C++,Eclipse,Debuggers
+redirect_from:
+  - /portal/lldb-mi-driver---part-1-introduction
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <strong>Part 1: Intro</strong></li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-2-setting-up-the-driver' | relative_url }}">Part 2: Setting Up the Driver</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-3-the-design' | relative_url }}">Part 3: The Design</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-4-how-to-add-a-command' | relative_url }}">Part 4: How to Add a Command</a></li>
+</ul><h2>1 Introduction</h2>
+<p>The <a href="https://sourceware.org/gdb/current/onlinedocs/gdb/GDB_002fMI.html">Machine Interface</a> (MI) Driver is a standalone executable that sits between a client IDE (a GUI debugger for example) and a debugging API (<a href="http://lldb.llvm.org">LLDB</a>), translating MI commands into equivalent LLDB actions. It also listens to events from the debugger such as “hit a breakpoint” and translates the event into an appropriate MI response for the client to interpret. This allows IDEs that would normally drive the GNU Debugger (GDB), or other back ends that understand the MI commands, to work with LLDB, with very similar functionality.
+</p>
+<p>
+The MI Driver was designed to work on the following OS platforms:</p><ul>
+<li> Linux</li>
+<li> Mac OS X</li>
+<li> Windows</li>
+</ul>
+<p>
+Written in C++ and using the C++11 Standard Template Library, the MI Driver is a multi-threaded application available to other platforms, using an appropriate compiler. It was developed for one of Codeplay's clients and kindly released to the <a href="http://llvm.org/">LLVM</a> community under the University of Illinois Open Source License.
+</p><h2>2 The LLVM Community</h2>
+<p>At the time of writing this blog, the MI Driver implements the most commonly used MI commands, but does not yet cover all of the commands in the MI specification. Therefore, it may not work correctly with MI clients that are using commands, arguments, or options that are not yet implemented. Hence, the code has been released to the community so that it may become more robust in its use with other clients.
+</p><h2>3 The Aim of This Blog Series</h2>
+<p>The aim of this blog series is to provide an insight into various aspects of the MI Driver so that it is better understood, should anyone want to implement more features or make improvements to it.
+</p><h2>4 Source Code Location and Latest Updates</h2>
+<p>The source code for the MI Driver can be found in the tools/lldb-mi directory, within the <a href="http://lldb.llvm.org/source.html">LLDB repository</a>. See the <a href="http://llvm.org/viewvc/llvm-project/lldb/trunk/tools/lldb-mi/MIReadMe.txt?view=co">MIReadMe.txt</a> in the repository for the currently implemented set of MI commands and a list of improvements that have been made.
+</p>
+<p>
+Using the MI Driver command line arguments &quot;–interpreter –help&quot; together will print out help.
+</p><h2>5 Conclusion</h2>
+<p>This blog post, the first in a series of posts on the MI Driver, has provided a basic introduction. For more information on usage, the design, and the implementation, see the subsequent posts in this series:
+</p><ul>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-2-setting-up-the-driver' | relative_url }}">Part 2: Setting Up the Driver</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-3-the-design' | relative_url }}">Part 3: The Design</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-4-how-to-add-a-command' | relative_url }}">Part 4: How to Add a Command</a></li>
+</ul>
+

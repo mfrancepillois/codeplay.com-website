@@ -1,0 +1,364 @@
+---
+---
+
+
+/*! * Copyright (C) 2020 Codeplay Software Limited * All Rights Reserved. * * @author Scott Straughan */
+html {
+    --nav-height: 80px;
+}
+
+nav {
+    position: fixed;
+    height: var(--nav-height);
+    z-index: 999999;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-bottom: #dbdbdb 1px solid;
+    font-size: 0.96rem;
+    background-color: rgba(255, 255, 255, .9);
+    color: #000;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+nav > div {
+    position: relative;
+}
+
+
+nav.alt {
+    background-color: rgba(0, 0, 0, .86);
+    color: #fff;
+    border-bottom: 0;
+}
+
+nav.fancy {
+    border-bottom: 0;
+    background-color: rgba(0, 0, 0, .86);
+    color: #fff;
+}
+
+body[data-scrollposition='0'] nav.fancy {
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+}
+
+nav li a i {
+     margin-right: .5rem;
+ }
+
+body[data-scrollposition='0'] nav {
+    position: absolute;
+}
+
+.cs nav .wrapper {
+    padding: 0;
+}
+
+main.fancy #page-content-padder,
+body[data-scrollposition='0'] main.fancy #page-content-padder {
+    height: 0;
+}
+
+main.fancy .splash {
+    padding-top: calc(190px) !important;
+}
+
+@media screen and (min-width: 800px) {
+    .cs nav .wrapper {
+        padding: 0 2rem;
+    }
+
+    body[data-scrollposition='0'] nav.fancy {
+        --nav-height: 190px;
+        background-color: transparent;
+    }
+
+    body[data-scrollposition='0'] nav.fancy .nav-items {
+        grid-template-rows: 190px auto !important;
+    }
+
+    body[data-scrollposition='0'] nav.fancy li.menu > ol > li:hover > div {
+        top: 160px;
+    }
+
+    body[data-scrollposition='0'] nav.fancy li.menu > ol > li.drop:hover:after {
+        bottom: 70px;
+    }
+}
+
+
+
+nav * {
+    box-sizing: border-box;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+nav .logo-image {
+    width: 140px;
+    height: 30px;
+    background-image: url({{ '/assets/images/codeplay-logo-black.svg' | relative_url }});
+}
+nav.alt .logo-image {
+    background-image: url({{ '/assets/images/codeplay-logo.svg' | relative_url }});
+}
+nav.fancy .logo-image {
+    background-image: url({{ '/assets/images/codeplay-logo.svg' | relative_url }});
+}
+nav .nav-items {
+    display: grid;
+    height: 100%;
+    grid-template-columns: 80px auto;
+    grid-template-rows: 80px auto;
+    grid-template-areas: "burger logo" "menu menu";
+    margin: 0;
+}
+nav .nav-items .menu a {
+    padding: 1rem 1.6rem;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+nav .nav-items .nav-item-centered {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+}
+nav .nav-items .burger {
+    grid-area: burger;
+    border-right: rgba(255, 255, 255, .1) 1px solid;
+}
+nav .nav-items .burger a {
+    padding: 0;
+    justify-content: center;
+}
+nav .nav-items .burger i {
+    font-size: 2rem;
+    font-weight: bold;
+}
+nav .nav-items .logo {
+    grid-area: logo;
+}
+nav .nav-items .menu {
+    grid-area: menu;
+}
+nav .nav-items .menu > ol > li > a {
+    opacity: 0.7;
+}
+nav .nav-items .menu a:hover, nav .nav-items .menu li.selected > a {
+    background-color: rgba(255, 255, 255, .2);
+}
+nav .nav-items .menu > ol > li:hover > a, nav .nav-items .menu > ol > li.selected > a {
+    opacity: 1;
+    background-color: transparent;
+}
+nav .nav-items .menu > ol > li.selected > a {
+    font-weight: bold;
+}
+nav .logo img {
+    width: 140px;
+    height: 100%;
+}
+nav #nav-burger-checkbox {
+    display: none;
+}
+nav .nav-items .social {
+    display: none;
+}
+nav .menu a h1 > img {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 1rem;
+}
+nav li.menu > ol > li:last-of-type {
+    display: none;
+}
+@media screen and (max-width: 800px) {
+    nav > .wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    nav .menu {
+        padding: 1rem 0 4rem 0;
+        border-top: rgba(255, 255, 255, .1) 1px solid;
+        height: calc(100vh - var(--nav-height));
+        overflow: auto;
+        background-color: rgba(0, 0, 0, .9);
+        color: white;
+    }
+    nav .menu > ol > li > a {
+        padding-left: 2rem;
+    }
+    nav .menu > ol > li > ol > li > a {
+        padding-left: 3rem;
+    }
+    nav .menu > ol > li > ol > li > ol > li > a {
+        padding-left: 4rem;
+    }
+    nav .menu > ol > li > ol > li > ol > li > ol > li > a {
+        padding-left: 5rem;
+    }
+    nav .logo {
+        margin-left: 2rem;
+    }
+    nav .burger label {
+        transition: 0.4s all;
+        cursor: pointer;
+    }
+    nav #nav-burger-checkbox:checked ~ .menu {
+        display: inherit !important;
+    }
+    nav #nav-burger-checkbox:not(:checked) ~ .menu {
+        display: none !important;
+    }
+    nav #nav-burger-checkbox:checked ~ .burger label {
+        transform: rotate(90deg);
+    }
+}
+@media screen and (min-width: 800px) {
+    nav {
+        --nav-height: 90px;
+    }
+    nav .menu a h1 {
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+    nav .logo a {
+        padding-left: 0;
+    }
+    nav .burger {
+        display: none;
+    }
+    nav .nav-items {
+        grid-template-columns: 220px auto auto;
+        grid-template-rows: 90px auto;
+        grid-template-areas: "logo menu social";
+    }
+    nav li.menu > ol > li > ol {
+        display: none;
+    }
+    nav li.menu > ol {
+        display: flex;
+        flex-direction: row;
+        height: 100%;
+    }
+    nav li.menu > ol > li > div {
+        transition: 0.4s all;
+        display: none;
+    }
+    nav li.menu > ol > li {
+    }
+    nav li.menu > ol > li.focused:after {
+        content: '';
+        position: relative;
+        left: calc(50% - 20px);
+        bottom: 40px;
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-bottom: 20px solid #000;
+        clear: both;
+    }
+    nav li.menu > ol > li.focused > div {
+        display: block;
+        visibility: visible;
+        position: absolute;
+        width: 100%;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 1);
+        padding: 6rem 0;
+        top: 90px;
+        color: #fff !important;
+    }
+
+    nav li.menu > ol > li:hover > div > ol {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-gap: 2rem;
+    }
+    nav li.menu ol > li > div > ol > li > a {
+        border-radius: 12px;
+    }
+    nav li.menu > ol > li > ol > li > a > div.image {
+        display: flex;
+        flex-direction: row;
+    }
+    nav li.menu > ol > li > ol > li > a > div.image > div > img {
+        background-color: rgba(0, 0, 0, .3);
+        width: 94px;
+        height: 50px;
+        display: block;
+        float: left;
+        overflow: hidden;
+        margin-right: 1rem;
+    }
+    nav.large:not(.scrolled) {
+        background-color: transparent !important;
+        padding-top: 40px;
+        height: 200px;
+        --nav-height: 200px;
+    }
+    nav.large:not(.scrolled) li.selected {
+        font-weight: bold !important;
+    }
+}
+@media screen and (min-width: 1035px) {
+    nav .nav-items .social {
+        display: block;
+    }
+}
+@media screen and (min-width: 1240px) {
+    nav li.menu > ol > li:last-of-type {
+        display: block;
+    }
+}
+@media screen and (max-width: 940px) and (min-width: 800px) {
+    nav .nav-items {
+        grid-template-columns: auto auto auto;
+    }
+    nav .logo {
+        padding-right: 1rem;
+    }
+}
+nav ::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+nav ::-webkit-scrollbar {
+    width: 6px;
+    background-color: transparent;
+}
+nav ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, .3);
+}
+.nav-items a h1 {
+    font-size: 110%;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.nav-items a p {
+    opacity: 0.5;
+    line-height: 130%;
+}
+.cs nav .technology-boxes {
+    margin-top: 1rem;
+}
+.cs nav .technology-boxes > * > * {
+    background-color: #444;
+    color: #ccc;
+}
+.cs nav .technology-boxes > * > * > * {
+    padding: 0.5rem 1rem;
+    font-size: 90%;
+}
+
+.cs nav .social-icons {
+    float: right;
+    height: 100%;
+}

@@ -1,0 +1,39 @@
+---
+id: 72
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "class Local<>"
+redirect_from:
+  - /kb/72
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p><p>
+The Local class template is instantiated within Offload contexts. It creates a local store and will DMA PPU data into local store on construction and DMA it back to main memory on destruction. This provides a very convenient way of caching data referenced by a pointer variable for example. Overloaded operators such as operator* and operator-&gt; enable processing data in the local store without further code changes.
+</p>
+
+<p>
+<strong>Usage</strong>
+</p>
+<pre><code>int DoSomeWork(ParamsBlock* parameters)
+{
+	liboffload::data::Local&lt;ParamsBlock&gt; localParams(parameters); // constructor dmas data into store
+	parameters-&gt;param1 = 1; // causes a software-cache write
+	localParams-&gt;param1 = 2; // write happens on local store
+	// localParams data will be written to main memory as it leaves the function scope.
+}
+</code></pre>
+<p>
+<strong>Limitations</strong>
+</p><p>
+The __outer PPU pointer passed to the constructor must be aligned to 16 bytes, or naturally aligned if size is &lt; 16.
+</p><p>
+Reference types are not supported.
+</p><p>
+<strong/>
+</p>
+
+
+
+

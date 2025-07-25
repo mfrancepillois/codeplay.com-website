@@ -1,0 +1,73 @@
+---
+id: 51
+category: offload
+date: 2013-05-24T17:43:58.7200Z
+date_updated: 0
+title: "Offload C++ in a Nutshell"
+url: offload-c-in-a-nutshell
+description:
+redirect_from:
+  - /company/documents/offload-c-in-a-nutshell
+layout: company/documents/view
+---
+<p>The following source code shows the essence of the Offload™ System: A section of code is marked out as an __offload block which runs on the SPU. (Note the this article uses Cell processor terminology. For generality, SPU denotes an accelerator core, whereas PPU denotes the main processor core).
+</p>
+<pre>
+void func1()
+{
+	/*do something*/
+}
+
+void func2()
+{
+	/*do something*/
+}
+
+int main()
+{
+	__offload
+	{
+		func1(); //compiles func1 and all functions it calls to run on the SPU
+	}
+
+	func2(); m/ runs on the PPU
+}
+</pre><p>
+func1 is executed on the SPU whereas func2 is called and executed on the PPU. Note that this particular example shows a synchronous __offload block as func2 is executed after func1. It is also possible to declare asynchronous __offload blocks that transfer control back to the PPU straight away, so the __offload block and code following the block could run simultaneously. There are other optional parameters to the __offload blocks related to virtual methods, callbacks and performance of data access.
+</p><p>
+Since the code for both PPU and SPU are in the same translation unit, the compiler automatically performs separate compilation of PPU and SPU code, generates data transfers between PPU an SPU and synchronizes PPU and SPU code. For very complex code (especially with many pointers) or in situations where more control is needed over what parts of a program are offloaded, Offload™ C++ provides a handful of language extensions (usually based on GNU attribute syntax) to aid offloading. The underlying concepts are described in detail in the Offload™ Language Specification document.
+</p><h2>Hiding language extensions inside macros</h2><p>The steps to introduce __offload blocks are incremental and non-intrusive.The Offload™ C++ language extensions can easily be hidden away in macros so that the code can still be compiled with compilers that do not support Offload™ C++. The following example defines the OFFLOAD macro to be the __offload keyword on Offload™ C++ compilers (which predefine __offloadcplusplus), and to nothing on other compilers.
+</p>
+<pre>
+#ifdef __offloadcplusplus
+	#define OFFLOAD __offload
+#else
+	#define OFFLOAD
+#endif
+
+void func1()
+{
+	/*do something*/
+}
+
+void func2()
+{
+	/*do something*/
+}
+
+int main()
+{
+	OFFLOAD //defines an __offload block on compilers that support them
+	{
+		func1();
+	}
+
+	func2();
+}
+</pre><p>
+Using Offload™ C++ compilers func1 runs on SPU and func2 on PPU whereas using compilers without Offload™ C++ both functions run on the PPU. The semantics and the behaviour of this program stay the same!
+</p>
+
+
+
+

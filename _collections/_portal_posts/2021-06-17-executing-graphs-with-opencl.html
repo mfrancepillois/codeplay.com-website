@@ -1,0 +1,23 @@
+---
+title: "Executing Graphs with OpenCL&trade;"
+date: 2021-06-17T09:01:00.760000+00:00
+category: videos
+layout: portal/portal-article-view
+user_id: 2032
+thumbnail: /assets/images/portal/article-images/executing-graphs-with-opencl.jpg
+---
+
+<iframe width="560"
+        height="315"
+        data-requiresCookieAcceptance="true"
+        data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/W_Olmy99Odo"></iframe>
+
+<br /><br />
+<p><b>Presented at IWOCL and SYCLcon 2021</b></p>
+
+<p>For several decades, graph and dataflow programming models have been niche topics limited to a small number of highly specialized domains. In recent years, however, the machine learning (ML) revolution and the proliferation of ML libraries has made graph programming accessible to even novice programmers. Before, a beginner programmer may have talked about writing a number-guessing game; today the programmer will describe training an off-the-shelf neural network — a type of graph — for handwriting recognition.
+</p>
+<p>There is growing demand from industry and individual users to run programs that are based on ML graphs. This demand is being met by hardware vendors, who are designing increasingly heterogeneous accelerator devices that can efficiently execute graphs. Since its creation, OpenCL has been a key API for bridging the gap between user applications and accelerator hardware. The question, then, is whether OpenCL is an appropriate API for this new breed of graph software running on these new, highly heterogeneous accelerators. Does OpenCL have the expressive power required to describe graphs to graph accelerator hardware?
+</p>
+<p>In this technical presentation, we will argue that the answer is yes, OpenCL is sufficiently expressive to allow an ML library to describe an execution graph, and it is sufficiently powerful to execute that graph on a graph accelerator. We will use graphs from real applications to demonstrate the possibility of data dependency tracking using OpenCL events and memory buffers. We will show how built-in kernels can be used to simplify scheduling to the device. Where appropriate, the presentation will be supported by lessons learned from Codeplay’s ComputeAorta OpenCL implementation.
+</p>

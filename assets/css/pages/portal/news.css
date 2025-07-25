@@ -1,0 +1,145 @@
+---
+---
+
+.paginator {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.paginator > div:nth-child(1) {
+    text-align: left;
+}
+
+.paginator > div:nth-child(2) {
+    text-align: right;
+}
+
+section#news #news-list > a > div:nth-of-type(1) > div {
+    background-image: url({{ '/assets/images/portal/no-thumbnail-placeholder.png' | relative_url }});
+}
+
+
+
+#news-list {
+    padding: 2rem 0 2rem 0;
+}
+
+iframe {
+    height: 100%;
+    width: 100%;
+}
+
+#twitter-feed {
+    height: 100%;
+    min-height: 500px;
+}
+
+section#news {
+    padding-top: 1rem;
+}
+
+
+
+
+
+#search-panel {
+    background-color: #efefef;
+    padding: 1rem 0;
+    position: relative;
+}
+
+#search-panel div.wrapper {
+    display: grid;
+    grid-template-columns: 100%;
+}
+
+#search-panel div.wrapper > div:nth-of-type(1),
+#search-panel div.wrapper > div:nth-of-type(2) a {
+    display: none;
+}
+
+@media screen and (min-width: 1080px) {
+    #search-panel div.wrapper {
+        grid-template-columns: 65% 35%;
+    }
+
+    #search-panel div.wrapper > div:nth-of-type(1) {
+        display: block;
+    }
+
+    #search-panel div.wrapper > div:nth-of-type(2) {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    #search-panel div.wrapper > div:nth-of-type(2) a {
+        display: inline-block;
+    }
+}
+
+#search-panel input {
+    display: inline-block;
+    width: 100%;
+    min-width: 300px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 2px 2px 3px 1px #ccc;
+    color: #333;
+    padding: 1rem 1rem 1rem 75px;
+    border: 0;
+    background-image: url({{ '/assets/images/portal/search.png' | relative_url }});
+    background-repeat: no-repeat;
+    background-position: 0 center;
+    box-sizing: border-box;
+    margin-right: 1rem;
+
+}
+
+@media screen and (min-width: 1080px) {
+    #search-panel input {
+        width: 50%;
+        transition: .3s all;
+    }
+
+    #search-panel input:focus {
+        width: 100%;
+    }
+}
+
+#search-panel ul {
+    display: flex;
+    list-style: none;
+    font-size: .8rem;
+    margin: 0;
+    height: 100%;
+    align-items: center;
+}
+
+#search-panel ul li {
+    color: #494949;
+    border-radius: 6px;
+    margin-right: .5rem;
+}
+
+#search-panel ul li i {
+    font-size: 20px;
+    vertical-align: bottom;
+    margin-right: .3rem;
+}
+
+#search-panel ul li.selected,
+#search-panel ul li:hover {
+    background-color: #ccc;
+    color: black;
+}
+
+#search-panel ul li a {
+    padding: .6rem .8rem;
+    display: block;
+}
+
+section#news #news-list .tag {
+    float: right;
+}
+

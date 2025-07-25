@@ -1,0 +1,193 @@
+---
+title: "Introduction To SYCL"
+date: 2014-03-28T19:51:04.360000+00:00
+category: blogs
+id: 91
+url: introduction-to-sycl
+user_id: 607
+showOnFrontPage: 0
+views: 3276
+tags: SYCL,OpenCL
+redirect_from:
+  - /portal/introduction-to-sycl
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/article-images/6395df8c0ee9776866fb4eec709ba5bc.png
+---
+
+<p style="background-color: red; color: white; padding: 2rem;">
+This blog post is out of date but provides some context on the history of SYCL. If you'd like to use SYCL, try ComputeCpp, the Codeplay implementation of the SYCL standard. You can also find a SYCL Developer Guide <a href="https://developer.codeplay.com/products/computecpp/ce/guides/sycl-guide">on our website here.</a> <br></p>
+
+<p>The provisional SYCL™ 1.2 specification was recently announced at the Game Developers Conference 2014 and is now available for everyone to look at and give feedback on.
+</p>
+<p>
+This is the first in a series of blog posts that will be released by Codeplay in order to help develop a better understanding of exactly what SYCL is, how it works and how C++ and OpenCL™ developers can benefit from it.
+</p>
+<p>
+This blog post aims to provide a more detailed description of the main features of SYCL by answering frequently asked questions.
+</p>
+<p>
+SYCL 1.2 is still a provisional specification, therefore it is subject to change based upon the feedback of potential developers and implementers, so any constructive feedback is appreciated.
+</p>
+<p>
+If you are interested in learning about SYCL in further detail or would like to provide feedback, the full SYCL 1.2 specification and the Khronos™ Group forums can be found <a href="http://khronos.org/opencl/sycl">here</a>.
+</p>
+<p>
+<strong>What Is SYCL?</strong>
+</p>
+<p>
+SYCL is a specification which defines a single source C++ programming layer that is built on top of OpenCL. This allows developers to leverage C++ features on the range of heterogeneous devices supported by OpenCL, providing a foundation for creating efficient, portable and reusable middleware libraries and applications. The SYCL specification consists of two tightly coupled components: a C++ runtime library and a SYCL device compiler. The runtime library contains an abstraction layer built on top of the core OpenCL runtime APIs and interoperable data structures for sharing between host and device code.
+</p>
+<p>
+<strong>Why Should I Use SYCL?</strong>
+</p>
+<p>
+SYCL is aimed at developers who want to create OpenCL applications and libraries using C++ features. SYCL's compact and seamless interface means that it is much quicker and simpler to create and execute accelerated code than traditional OpenCL. Additionally its single source programming model and support for C++ features allows developers to create powerful, performance portable template libraries that can take advantage of a wide range of heterogeneous hardware.
+</p>
+<p>
+<strong>How Can I Get SYCL?</strong>
+</p>
+<p>
+SYCL is a royalty-free standard meaning that anyone can implement it, although currently there is no public implementation of SYCL available. Codeplay is currently developing the only announced implementation, and is looking for partners that could potentially be involved in an alpha test to provide additional feedback for the specification, however we cannot know if other organizations or individuals are implementing SYCL unannounced.
+</p>
+<p>
+<strong>What C++ Features Does SYCL Provide?</strong>
+</p>
+<p>
+One of the major benefits that SYCL provides is to enable developers to write OpenCL kernels using a subset of C++ features. As SYCL 1.2 is built on top of OpenCL 1.2, the subset of C++ features supported by SYCL is defined by the set of features supported by OpenCL 1.x devices. SYCL can be built on top of SPIR™, however the specification does not mandate it, any binary format supported by an OpenCL implementation can be target by a SYCL implementation.
+</p>
+<p>
+Examples of C++ features supported in the current SYCL 1.2 specification are: templates, classes, operator overloading, static polymorphism and lambdas.
+</p>
+<p>
+Examples of features that cannot be supported in the current SYCL 1.2 specification are: function pointers, dynamic memory allocation, dynamic polymorphism, pointer struct members, runtime type information, exception handling and static variables.
+</p>
+<p>
+<strong>How Does SYCL Manage The Complexities Of OpenCL?</strong>
+</p>
+<p>
+SYCL is capable of hiding a large amount of the complexities of OpenCL, substantially reducing the amount of host-side code needed over traditional OpenCL. At the same time, SYCL enables developers to continue using all OpenCL features via different parts of the SYCL API. This means that as a developer you can choose to use as much or as little of the SYCL interface as you like, matching the requirements of your application.
+</p>
+<p>
+<strong>How Does SYCL Handle Memory Management?</strong>
+</p>
+<p>
+In SYCL, memory management is encapsulated within a higher-level abstraction that separates the storage and access of data. Just like in OpenCL, buffer and image objects are used to maintain data that is to be enqueued to a device, however in SYCL, a buffer or image object can maintain multiple OpenCL buffers and images and en-queuing is performed by accessor objects. This allows the host-side runtime to perform dependency tracking between kernel functions and therefore provide better synchronisation.
+</p>
+<p>
+<strong>How Does SYCL Handle Synchronization?</strong>
+</p>
+<p>
+In SYCL work is scheduled using command groups, which represent a single unit of work that is placed on a queue to be executed on a device. A command group consists of a kernel function defined by a kernel function enqueue API and input and outputs defined by accessor objects.
+</p>
+<p>
+Synchronisation is performed on buffer and image objects. When an accessor is declared, the data maintained by the buffer or image object that the accessor points to is copied (or mapped) to the device the command group is en-queuing to. This data is then copied (or mapped) back to the host either when the buffer or image object is destroyed or when a specific host accessor object is constructed. If neither of these occur, then the data remains on the device across command groups. Additional synchronisation can be achieved using event objects which can be retrieved from one command group object and passed as a wait list to another.
+</p>
+<p>
+<strong>What Options Does SYCL Provide For Parallelism?</strong>
+</p>
+<p>
+In SYCL there are four ways in which a kernel function can be executed.
+</p>
+<p>
+Work Group Data Parallel: a kernel function is executed using an OpenCL "nd range". An nd range specifies a 1, 2 or 3 dimensional grid of work items that each executes the kernel function, which are executed together in work groups. The nd_range consists of two 1, 2 or 3 dimensional ranges: the global work size (specifying the full range of work items) and the local work size (specifying the range of each work group). In this execution mode, synchronization within a group can be performed using barriers.
+</p>
+<p>
+Basic Data Parallel: a kernel function is executed with a single range specifying the global work size and the local size is then determined by the SYCL host-side runtime. In this mode, there is no synchronization within workgroups.
+</p>
+<p>
+Single Task: a kernel function is executed just once, this is effectively the same as executing an nd range of global work size { 1, 1, 1 }.
+</p>
+<p>
+Hierarchical Data Parallel: a kernel function executes in a work group data parallel way, but SYCL provides an alternative multi leveled syntax for defining this form of parallelism. The hierarchical syntax consists of an outer parallel for work group loop that is executed for each work group in the nd range and an inner parallel for work item loop that is executed for each work item in the work group. The hierarchical syntax is a clearer way of writing parallel OpenCL code as it highlights the nature of the paralleism.
+</p>
+<p>
+<strong>What Does Single Source Mean For Developers?</strong>
+</p>
+<p>
+SYCL is a single source programming model, this means that a developer can write a single C++ template function which will create both host CPU code and device code. This enables the programming model to provide seamless integration of SYCL kernel functions with the host-side application as well as type safety across host and device.
+</p>
+<p>
+<strong>What Would A SYCL Work Flow Look Like?</strong>
+</p>
+<p>
+The SYCL specification defines a single source programming model. However, the specific compilation flow has deliberately been left open to allow implementors to choose how to implement SYCL device compilers. The SYCL specification suggests two possible compilation solutions: a single compiler solution and a multi compiler solution.
+</p>
+<p>
+For a single compiler solution, a SYCL compiler would compile the source files for the host CPU as well as for the device in a single pass and would handle the storing of the kernel binaries internally.
+</p>
+<p>
+A multi compiler solution would work by having a two phase compilation work flow. Firstly, the SYCL device compiler would compile a source file and output a stub header file. This stub header file would contain the binaries for all kernel functions in a format supported by OpenCL such as SPIR, as well as the glue functionality for instructing the SYCL host-side runtime how to set the arguments and execute the kernel functions. Secondly, the same source file would be compiled by a standard host compiler such as GCC or VisualC. When the source file is compiled by the host compiler the generated stub header file is included, therefore embedding the kernel binaries into the final application and making them available to the SYCL host-side runtime. For example:
+</p>
+<p>
+     sycl-device-compiler source_file.cpp -o"sycl_stub_header.h"
+</p>
+<p>
+     gcc -c -DSYCLHEADER="sycl_stub_header.h" source_file.cpp
+</p>
+<p>
+This allows developers to use their existing CPU compilers for the host code and use a separate SYCL device compiler for the kernel functions. This is the compilation model that Codeplay's implementation follows.
+</p>
+<p>
+<strong>Can I Use SYCL In My Existing Tool Chain?</strong>
+</p>
+<p>
+Yes. SYCL is designed to be as flexible as possible when it comes to integration within new or existing tool chains. In the case of a multi compiler work flow, any C++ host compiler can be integrated with a SYCL device compiler providing the SYCL implementation supports it.
+</p>
+<p>
+<strong>Can I Still Use Vendor Specific Extensions In SYCL?</strong>
+</p>
+<p>
+Yes. Any vendor specific extensions that are available in OpenCL are still available in SYCL.
+All OpenCL intrinsics can be used within SYCL kernels just as developers would do in an OpenCL kernel.
+Portability and host execution can be ensured using preprocessor definitions.
+</p>
+<p>
+<strong>Can I Port My Existing OpenCL Kernels To SYCL?</strong>
+</p>
+<p>
+Yes. SYCL provides two ways in which developers can port existing OpenCL C kernel functions.
+</p>
+<p>
+Firstly, SYCL has an OpenCL C host-side target, which is gives all the benefits of SYCL such as memory management and dependency tracking whilst allowing the kernel functions to be defined by traditional OpenCL C kernels.
+</p>
+<p>
+Secondly, SYCL has full interoptability with OpenCL meaning that at any point in a SYCL application, the equivalent OpenCL object can be retrieved from any SYCL object, allowing the developers to use it with traditional OpenCL API functions. Additionally, SYCL objects feature constructors which take OpenCL objects, however in some cases the developer is responsible for maintaining consistency between OpenCL objects and SYCL objects.
+</p>
+<p>
+<strong>Can SYCL Work Without An OpenCL Implementation?</strong>
+</p>
+<p>
+Yes. SYCL also specifies a host device, which executes SYCL kernels as long as they are written in host-compatible C++, so any kernel not containing vendor extensions or non-core features will be capable of executing on the host CPU. In order to do this developers would still need to include the SYCL header files and link with the SYCL and OpenCL runtime libraries during the compilation of an application. However, the final application users do not need an OpenCL device, as SYCL will fall back to the host CPU if one cannot be found.
+</p>
+<p>
+<strong>How Can I Debug SYCL Code?</strong>
+</p>
+<p>
+SYCL kernel functions are standard C++, therefore a SYCL kernel function can execute on the host CPU allowing developers to use traditional debuggers to debug their code. Implementers of SYCL may choose to provide additional debugging capabilities or tools out with the SYCL specification.
+</p>
+<p>
+<strong>Will SYCL Be As Efficient As OpenCL?</strong>
+</p>
+<p>
+The SYCL specification has been designed so that the overhead posed by the SYCL host-side runtime over the underlying OpenCL implementation is minimal and that there is no overhead to the kernel functions themselves.
+</p>
+<p>
+<strong>Will SYCL Support Future Versions of OpenCL?</strong>
+</p>
+<p>
+Yes. Similarly to the SPIR specification, SYCL will aim to closely follow the latest OpenCL specification. The current SYCL specification supports OpenCL 1.2, however future versions of SYCL will aim to support OpenCL 2.0 and onwards, therefore enabling additional features for both the host-side runtime APIs and kernel functions. The SYCL workgroup are actively working on an OpenCL 2.0 version of SYCL.
+</p>
+<p>
+<strong>What OpenCL Devices Will Be Compatible With SYCL?</strong>
+</p>
+<p>
+This is implementation specific, a SYCL implementation may target only specific OpenCL devices, all OpenCL devices that support SPIR or all OpenCL devices. The most standard compliant way of implementating SYCL would be to use SPIR, which would therefore work on the growing number of devices which support SPIR.
+</p>
+<p>
+<strong>Can I Integrate SYCL With OpenGL Or DirectX?</strong>
+</p>
+<p>
+Yes. The OpenCL - OpenGL interop is supported within the SYCL host-side runtime, while other forms of interop are supported as part of the OpenCL - SYCL interop.
+</p>
+<p>
+Khronos, SPIR and SYCL are trademarks of the Khronos Group Inc. OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos.</p>

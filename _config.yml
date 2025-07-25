@@ -1,0 +1,88 @@
+# Settings
+title: Codeplay Software Ltd
+url: https://codeplay.com
+email: info@codeplay.com
+description: >-
+  Codeplay is internationally recognized for expertise in Heterogeneous Systems, and has many years of experience in
+  the development of Compilers, Runtimes, Debuggers, Test Systems, and other specialized tools.
+
+destination: _site/codeplay.com-website
+baseurl: codeplay.com-website
+
+# Default version hash
+version_cache_hash: v6
+
+# Google
+recaptcha_site_key: 6LfCFQkTAAAAAKVrgUrrhPf6_oF5NnDbgNQYEd8c
+
+# Plugins
+plugins:
+  - jekyll-timeago
+  - jekyll-redirect-from
+  - jekyll-sitemap
+
+highlighter: none
+
+# Collection Setup
+collections_dir: _collections
+collections:
+  authors:
+  old_documents:
+    output: true
+    permalink: /company/documents/:title
+  portal_posts:
+    output: true
+    permalink: /portal/:categories/:year/:month/:day/:title
+  careers:
+    output: true
+    permalink: /company/careers/:name
+  offload_kb:
+    output: true
+    permalink: /products/offload/kb/:title
+
+# Hide on builds
+exclude:
+  - JEKYLL_ENV
+  - README.md
+  - Dockerfile
+  - scripts
+  - SECURITY.md
+  - CODE_OF_CONDUCT.md
+  - CONTRIBUTING.md
+  - LICENSE.txt
+
+# Don't generate json file on build
+redirect_from:
+  json: false
+
+jekyll_timeago:
+  depth: 1
+
+# Site configuration for the Jekyll 3 Pagination Gem
+pagination:
+  enabled: true
+  debug: false
+  collection: 'news'
+  per_page: 20
+  permalink: '/:num/' # Pages are index.html inside this folder (default)
+  title: ':title - page :num'
+  limit: 0
+  sort_field: 'date'
+  sort_reverse: true
+  category: 'posts'
+  tag: ''
+  locale: ''
+  trail:
+    before: 2
+    after: 2
+  extension: html
+  indexpage: 'index'
+
+# We need to make this root so we can include from _includes, _scss and more
+includes_dir: "/"
+
+sass:
+  style: compressed
+
+include:
+  - .htaccess

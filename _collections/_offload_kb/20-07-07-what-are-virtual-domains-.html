@@ -1,0 +1,48 @@
+---
+id: 132
+category: faq
+date: 2020-07-07T17:23:34.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "What are Virtual Domains?"
+redirect_from:
+  - /kb/132
+layout: products/offload/kb/view
+---
+<p>Virtual domains enable calls to PPU virtual methods and PPU callbacks from the SPU. A virtual domain is a list of functions specified by the programmer and attached to an offload block. This domain tells the compiler to explicitly offload the functions in that list to SPU. If a virtual method or callback is invoked inside this offload block (or the functions it calls), that domain is used to call the correct offloaded method. Failure to attach a correct domain may result in runtime errors (See <a href="{{ '/kb/77' | relative_url }}">/kb/77.html</a> and <a href="{{ '/kb/78)' | relative_url }}">/kb/78).html</a>.
+</p><p>
+The following example illustrates the use of domains:
+</p>
+<pre><code>struct dev
+{
+	virtual void f(){}
+	virtual void f(int){}
+};
+
+void test()
+{
+	__blockingoffload [dev::f] // both overloads dev::f are in the domain
+	{
+		ptr-&gt;f();
+	}
+	__blockingoffload [(void(dev::*)(int)) &amp;dev::f] //offloading f(int) only
+	{
+		ptr-&gt;f(0);
+	}
+}
+</code></pre><p>A more complex example of a domain declaration is this:
+</p>
+<pre><code>__offload
+[
+	( void (*)			(int * ,int __outer * ,test *)) &amp; fptrtest,  //offload fptrtest with signature &quot;void(int*,int __outer*, test*)
+	( void (test::*)	(int __outer * , int * ))&amp; test::f,
+	( void (test::*)	(int * , int __outer * )) &amp; test::f,
+	( void (test::*)	(int * , int __outer * )) &amp; test::f this // offload method test::f with signature &quot;void(int*,int __outer*)&quot; with a local (SPU) this pointer
+]
+</code></pre><p>A useful command line option to help building the correct domain by inspecting the vcall/callback call-sites is -offloadshowptrcalls (See <a href="{{ '/kb/82' | relative_url }}">/kb/82.html</a>) which prints the signature used at the call-sites.
+</p><p>
+The compiler is able to issue warnings on wrong or incomplete domain declarations in many situations. See <a href="{{ '/kb/97' | relative_url }}">/kb/97.html</a>, <a href="{{ '/kb/98' | relative_url }}">/kb/98.html</a>, <a href="{{ '/kb/99' | relative_url }}">/kb/99.html</a> and <a href="{{ '/kb/100' | relative_url }}">/kb/100.html</a> for reference. If any of those warnings occur, the offloaded code is likely to cause the runtime error described in <a href="{{ '/kb/77 ' | relative_url }}">/kb/77 .html</a> and <a href="{{ '/kb/78' | relative_url }}">/kb/78.html</a>.
+</p><p>
+More details and examples on domains can be found in the Offload language specification document and the systems manual, both of which are part of the latest Offload release.
+</p>
+
+

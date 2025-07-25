@@ -1,0 +1,20 @@
+header {
+    padding-top: 2rem;
+}
+
+.recruitment-notice {
+    background-color: #e8dfb4;
+    padding: 2rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+.recruitment-notice * {
+    padding: 0;
+    margin: 0;
+}
+
+.recruitment-notice h1 {
+    font-size: 1rem;
+    font-weight: bold;
+}

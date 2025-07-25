@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.og/1999/xhtml">
+<head>
+	<meta charset="utf-8">
+	<meta name="author" content="Codeplay Software Ltd."/>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+	<meta http-equiv="cache-control" content="public, max-age=2592000"/>
+	<meta name="description" content="Codeplay is internationally recognized for expertise in Heterogeneous Systems, and has many years of experience in the development of Compilers, Runtimes, Debuggers, Test Systems, and other specialized tools."/>
+	<meta name="keywords" content="codeplay compilers debuggers opencl sycl khronos c++ engineering careers heterogeneous profiling profilers debugging compiling scotland scottish computer vision adas vulkan spir tensorflow"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+	
+	<title>Codeplay - The Heterogeneous System Experts</title>
+	<link rel="shortcut icon" type="image/x-icon" href="/public/images/global/favicon.ico"/>
+	<link rel="stylesheet" type="text/css" href="/public/css/global/notificationpopup.min.css?v=2">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:200,300,400,600" />
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500" rel="stylesheet"/>
+	<link rel="stylesheet" href="/public/css/global/index.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/responsive.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/animations.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/panels.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/navigation.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/loadingbar.min.css?v=2" type="text/css"/>
+	<link rel="stylesheet" href="/public/css/global/forms.min.css?v=2" type="text/css"/>
+			<link rel="stylesheet" href="/public/css/global/popupdialog.min.css?v=2" type="text/css"/>
+			<link rel="stylesheet" href="/public/css/home/index/index.min.css?v=1?v=2" type="text/css"/>
+		<script>var IN_DEBUG_MODE = true;</script>
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script
+            src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.loadingbar-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.panelmanager-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.navigationbarmanager-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.notificationpopup-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.animations-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/jquery.copyright-1.0.0.min.js"></script>
+	<script type="text/javascript" src="/public/js/global/initalizer.min.js"></script>
+			<script type="text/javascript" src="https://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+			<script type="text/javascript" src="/public/js/global/jquery.popupdialog-1.0.0.min.js"></script>
+			<script type="text/javascript" src="/public/js/global/jquery.tabmanager-1.0.0.min.js"></script>
+			<script type="text/javascript" src="/public/js/home/index/index.min.js?v=1"></script>
+			<script type="text/javascript" src="/public/js/global/jquery.dotdotdot.min.js"></script>
+			<script type="text/javascript" src="/public/js/global/jquery.cycle.all.js"></script>
+	
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-852623194"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'AW-852623194');
+    </script>
+</head>
+
+<body>
+
+<!-- Global header -->
+<header>
+	<!-- The top level navigation bar that provides access to the home page and main menu. -->
+	<nav class="target" data-mode="expanded">
+		<ul>
+			<li>
+				<div>
+					<a data-switchable="enabled" href="/" id="logo"></a>
+				</div>
+			</li>
+
+			<li>
+				<ul>
+                    <li id="developerPanel">
+                        <a href="https://developer.codeplay.com" target="_blank">
+                            <div>
+                                <div class="menuButton" data-switchable="enabled" id="devButton" title="Go to the homepage"></div>
+                            </div>
+                            <div>
+                                <h1>Developer Site</h1>
+                                <p>If you are a developer, click here to visit our developer site.</p>
+                            </div>
+                        </a>
+                    </li>
+					<li>
+						<a href="/"><div class="menuButton" data-switchable="enabled" id="homeButton" title="Go to the homepage"></div></a>
+					</li>
+					<li>
+													<a href="http://127.0.0.1:8081/login?client_id=0oahtus59w9hMZ0TU0h7&amp;redirect_uri=http%3A%2F%2F127.0.0.1%2Fauthenticate%2F"><div class="menuButton" data-switchable="enabled" id="loginButton" title="Login to your account"></div></a>
+											</li>
+					<li>
+						<a href=""><div class="menuButton" data-switchable="enabled" id="menuButton" title="Show the main menu"></div></a>
+						<ul>
+							<li>
+								<a href="/products/">Products</a>
+								<ul>
+                                    <li>
+                                        <a data-tags="acoran" href="/products/acoran/"><img src="/public/images/global/mainmenu/acoran.png">
+                                        <h2>Acoran</h2>
+                                        <p>Codeplay's Acoran platform integrates all the industry standard technologies.</p></a>
+                                    </li>
+									<li>
+										<a data-tags="computeaorta products gpu dsp cpu aorta" href="/products/computesuite/computeaorta"><img src="/public/images/global/mainmenu/productsaorta.png">
+										<h2>ComputeAorta&trade;</h2>
+										<p>At the heart of Codeplay's compute technology, implementing OpenCL&trade;, SPIR&trade;, HSA&trade;, and Vulkan&reg;.</p></a>
+									</li>
+									<li>
+										<a data-tags="computecpp products sycl cpp c++" href="/products/computesuite/computecpp"><img src="/public/images/global/mainmenu/productscomputecpp.png">
+										<h2>ComputeCpp&trade;</h2>
+										<p>Enables easy integration of C++ applications into complex heterogeneous compute systems, with SYCL&trade;.</p></a>
+									</li>
+									<li>
+										<a data-tags="application products computesuite app" href="/products/computesuite/app"><img src="/public/images/global/mainmenu/productscomputesuiteapp.png">
+										<h2>ComputeSuite&trade; for Application Developers</h2>
+										<p>Enabling high-performance development with open standards.</p></a>
+									</li>
+									<li>
+										<a data-tags="computesuite automotive iso 26262 vision" href="/products/computesuite/automotive"><img src="/public/images/global/mainmenu/productscomputesuiteautomotive.png">
+										<h2>ComputeSuite&trade; for Automotive</h2>
+										<p>Open standards for safety-critical solutions.</p></a>
+									</li>
+									<li>
+										<a data-tags="products gpu dsp computesuite hardware hw" href="/products/computesuite/hardware"><img src="/public/images/global/mainmenu/productscomputesuitehardware.png">
+										<h2>ComputeSuite&trade; for Hardware Vendors</h2>
+										<p>Integrating the Power of a System-on-Chip.</p></a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="/services/">Services</a>
+								<ul>
+									<li>
+										<a data-tags="compilers gpu dsp gpu" href="/services/compilers/"><img src="/public/images/global/mainmenu/servicescompilers.png">
+										<h2>Compiler Development</h2>
+										<p>We provide advanced CPU, GPU, and DSP-based compiler services. We can build your compiler and help you hit performance targets.</p></a>
+									</li>
+									<li>
+										<a data-tags="debuggers cpu dsp gpu" href="/services/debuggers/"><img src="/public/images/global/mainmenu/servicesdebuggers.png">
+										<h2>Debugger Development</h2>
+										<p>We can build advanced debuggers for your platforms, using open-source solutions, to ease development of applications targeting your architecture.</p></a>
+									</li>
+									<li>
+										<a data-tags="profilers analysis" href="/services/profilers/"><img src="/public/images/global/mainmenu/servicesprofilers.png">
+										<h2>Profiler Development</h2>
+										<p>We can provide tools to profile your architecture and analyse its performance.</p></a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="/research/">Research</a>
+								<ul>
+									<li>
+										<a data-tags="carp research" href="/research#carp"><img src="/public/images/global/mainmenu/researchcarp.png">
+										<h2>CARP</h2>
+										<p>Improving the programmability of accelerated systems, particularly systems accelerated with GPUs, at all levels.</p></a>
+									</li>
+									<li>
+										<a data-tags="lpgpu research" href="/research#lpgpu"><img src="/public/images/global/mainmenu/researchlpgpu.png">
+										<h2>LPGPU</h2>
+										<p>Research into enabling a next generation of advanced graphics technologies for low-power devices.</p></a>
+									</li>
+									<li>
+										<a data-tags="peppher research" href="/research#peppher"><img src="/public/images/global/mainmenu/researchpeppher.png">
+										<h2>PEPPHER</h2>
+										<p>Research into performance portability and programmability for heterogeneous many-core architectures.</p></a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="/portal/">News and Social</a>
+								<ul>
+									<li>
+										<a data-tags="news latest" href="/portal/press-releases/"><img src="/public/images/global/mainmenu/socialpress.png">
+										<h2>Press Releases</h2>
+										<p>A combined list of  all our press releases old and new.</p></a>
+									</li>
+									<li>
+										<a data-tags="news latest" href="/portal/news/"><img src="/public/images/global/mainmenu/socialnews.png">
+										<h2>News</h2>
+										<p>The latest news and announcements from Codeplay.</p></a>
+									</li>
+									<li>
+										<a data-tags="blogs developer engineer latest" href="/portal/blogs/"><img src="/public/images/global/mainmenu/socialdevblogs.png">
+										<h2>Engineer Blogs</h2>
+										<p>Blogs from our engineers on our technology and the industry at large.</p></a>
+									</li>
+									<li>
+										<a data-tags="portal social facebook interact" href="https://facebook.com/codeplaysoft/" target="_blank"><img src="/public/images/global/mainmenu/socialfacebook.png">
+										<h2>Facebook</h2>
+										<p>The official Codeplay page on Facebook!</p></a>
+									</li>
+									<li>
+										<a data-tags="portal social twitter" href="https://twitter.com/codeplaysoft" target="_blank"><img src="/public/images/global/mainmenu/socialtwitter.png">
+										<h2>Twitter</h2>
+										<p>Follow us on Twitter!</p></a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="">Company &amp; Careers</a>
+								<ul>
+									<li>
+										<a data-tags="about timeline bio blurb info" href="/company/about"><img alt="about" src="/public/images/global/mainmenu/companyabout.png">
+										<h2>About</h2>
+										<p>Click here to read about our company, view our timeline and follow links for more useful info.</p></a>
+									</li>
+									<li>
+										<a data-tags="awards winners success" href="/company/awards"><img alt="awards business company" src="/public/images/global/mainmenu/companyawards.png">
+										<h2>Awards</h2>
+										<p>We have won a number of awards over the years for our dedication and innovative work in our industry.</p></a>
+									</li>
+									<li>
+										<a data-tags="careers jobs internships graduate company" href="/company/careers/"><img src="/public/images/global/mainmenu/companycareers.png">
+										<h2>Careers</h2>
+										<p>Codeplay is always looking for talented individuals to join our team.</p></a>
+									</li>
+									<li>
+										<a data-tags="company documents technology sieve offload" href="/company/documents/"><img src="/public/images/global/mainmenu/companydocument.png">
+										<h2>Documents Archive</h2>
+										<p>Codeplay has been creating innovative technology for a number of years. Here you can view technical material on our legacy products.</p></a>
+									</li>
+									<li>
+										<a data-tags="logo media presspack company downloads" href="/company/mediapacks"><img src="/public/images/global/mainmenu/companypresspacks.png">
+										<h2>Media Packs</h2>
+										<p>If you would like to use our resources in media, websites, or publications, download our press pack here.</p></a>
+									</li>
+									<li>
+										<a data-tags="partners companies qualcomm broadcom lpgpu universities company" href="/company/partners"><img src="/public/images/global/mainmenu/companypartners.png">
+										<h2>Partners</h2>
+										<p>We work closely with a number of customers, industrial and academic partners, and research bodies.</p></a>
+									</li>
+									<li>
+										<a data-tags="publications pdfs research company" href="/company/publicdomain"><img src="/public/images/global/mainmenu/companypublications.png">
+										<h2>Publications, Slideshows &amp; Videos</h2>
+										<p>Over the years we have produced a number of publications, videos and slide show presentations.</p></a>
+									</li>
+									<li>
+										<a data-tags="team ceo cto works jobs company photos" href="/company/team"><img src="/public/images/global/mainmenu/companyteam.png">
+										<h2>Team</h2>
+										<p>Codeplay is all about our team! You can find out more about us here.</p></a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="/support/">Contact</a>
+								<ul>
+									<li>
+										<a data-tags="contact support help email phone" href="/support/contact/"><img src="/public/images/global/mainmenu/contactcontact.png">
+										<h2>Contact Us</h2>
+										<p>If you would like to contact us directly, you can use our online web form. We will pass your message onto the most appropriate person in our team.</p></a>
+									</li>
+									<li>
+										<a data-tags="contact support faq frequently asked questions" href="/support/faq/"><img src="/public/images/global/mainmenu/contactfaq.png">
+										<h2>FAQ</h2>
+										<p>Do you have a question for us? We may have already answered it in our Frequently Asked Questions section!</p></a>
+									</li>
+									<li>
+										<a data-tags="contact support office map" href="/support/contact/map.html"><img src="/public/images/global/mainmenu/contactmap.png">
+										<h2>Office Map</h2>
+										<p>Check the location of Codeplay's office via Google Maps.</p></a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</nav>
+</header>
+
+<!-- Main section -->
+<main>
+	<div id="hiring-panel">
+    <div>
+        <h3><a href="/portal/11-18-19-codeplay-software-announces-acoran-the-standards-based-platform-for-ai-programmers">Codeplay announces "Acoran"</a></h3>
+        <p>Acoran provides all the performance and programmability solutions that developers need to target accelerated
+            processors, delivering a software platform that accelerates a range of AI software on a wide range of
+            hardware platforms using industry standards.</p>
+    </div>
+</div>
+
+<!-- Splash Screen -->
+<section id="splash" class="splash video left">
+	<ul id="cycle">
+		<li>
+			<video muted="muted" autoplay loop>
+				<source src="/public/images/products/computesuite/hardware/index/splashbg.mp4" type="video/mp4">
+			</video>
+
+			<div class="wrapper">
+				<div>
+					<h1><a href="/products/computesuite/computecpp">Delivering standard programming models (OpenCL™, SYCL™, C++17) to SoC.</a></h1>
+					<h2>Delivering a range standard programming models (OpenCL™, SYCL™, C++17) on a System-on-Chip to unleash the full potential of your hardware.</h2>
+				</div>
+			</div>
+		</li>
+		<li>
+			<video muted="muted" autoplay loop>
+				<source src="/public/images/products/computesuite/application/index/splashbg.mp4" type="video/mp4">
+			</video>
+
+			<div class="wrapper">
+				<div>
+					<h1><a href="/products/computesuite/application">Enabling SoC manufacturers to unlock their hardware's potential for developers.</a></h1>
+					<h2>ComputeSuite for Application Developers integrates the power of the System-on-Chip to unlock its hardware potential for application developers.</h2>
+				</div>
+			</div>
+		</li>
+	</ul>
+
+	<ul id="focus">
+		<li>
+			<img src="/public/images/home/index/splash-icon-1.png" alt="Automotive" />
+			<h3><a href="/products/computesuite/automotive">View ComputeSuite for Automotive <small>(ISO 26262)</small></a></h3>
+		</li>
+		<li>
+			<img src="/public/images/home/index/splash-icon-2.png" alt="Hardware Vendors" />
+			<h3><a href="/products/computesuite/hardware">View ComputeSuite for Hardware Vendors</a></h3>
+		</li>
+		<li>
+			<img src="/public/images/home/index/splash-icon-3.png" alt="Application Developers" />
+			<h3><a href="/products/computesuite/application">View ComputeSuite for Application Developers</a></h3>
+		</li>
+	</ul>
+</section>
+
+<!-- Tools section -->
+<section id="tools">
+	<div class="wrapper">
+		<header>
+			<h1>ComputeSuite&trade; Solutions</h1>
+			<h2>Our compute solutions for heterogeneous devices.</h2>
+		</header>
+
+		<ul class="columns side-by-side">
+			<li>
+				<ul>
+					<li>
+						<h3><a href="/products/computesuite/hardware/">For Hardware Vendors</a></h3>
+					    <p>ComputeSuite provides a common standards-based software environment for all of the
+                           cores on a System-on-Chip (SoC). Software developers can rapidly deploy
+                           applications to maximize the performance and minimize power consumption through
+                           exploiting the capabilities of all the cores on an SoC.</p>
+					</li>
+					<li>
+						<h3><a href="/products/computesuite/app/">For Application Developers</a></h3>
+                        <p>ComputeSuite provides software developers with the tools to increase performance
+                           and reduce power consumption of their software. By being based on open standards,
+                           ComputeSuite ensures maximum flexibility for software developers to deploy on the
+                           widest range of platforms now and in the future.</p>
+					</li>
+					<li>
+						<h3><a href="/products/computesuite/automotive/">For Automotive</a></h3>
+                        <p>For semiconductor companies wanting to add ISO 26262-compliant computer vision
+							platforms to their roadmaps, ComputeSuite for Automotive will deliver the highest
+							reliability, as demanded in the safety-critical automotive environment.</p>
+					</li>
+				</ul>
+			</li>
+			<li class="image-column">
+				<img class="fadeWhenInView" src="/public/images/home/index/devices.png" alt="Laptop" />
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Renesas section -->
+<section id="renesas">
+	<a href="/portal/12-09-17-open-standard-software-frameworks-facilitate-development-using-renesas-rcar-socs">
+		<div>
+			<div class="wrapper">
+				<img src="/public/images/home/index/renesas-partners.png" alt="Codeplay and Renesas Team Up" />
+				<h1>Renesas Electronics and Codeplay Collaborate on OpenCL™ and SYCL™ for ADAS Solutions</h1>
+				<p>Renesas Electronics Corporation (TSE:6723), a premier supplier of advanced semiconductor solutions, and Codeplay Software Ltd., experts in high-performance compilers and software optimization for multi-core processing, today announced their collaboration to deliver ComputeAorta™, Codeplay’s OpenCL open standard-based software framework for Renesas R-Car system-on-chips (SoCs).</p>
+				<p>The framework will be available first on R-Car H3 as a proof of concept, then focusing on R-Car V3M and other R-Car SoCs of the Renesas autonomyTM Platform for advanced driving assistance system (ADAS) and automated driving. The new framework is designed to support software development for the R-Car’s latest image recognition IP, the IMP-X5, a multi-threading core optimized for computer vision and cognitive processing. Codeplay will also provide R-Car with ComputeCpp™, an implementation of the SYCL™ open standard, enabling single source C++ software for high level and object-oriented programming.</p>
+				<p>The result of this collaboration provides developers with standard software development tools and support for a wide range of open source computer vision or open source deep learning software, such as TensorFlow™ library.</p>
+				<img src="/public/images/home/index/renesas-chip.png" alt="Renesas R-Car H3" />
+				<h2>Click <b>anywhere</b> around here to read the press-release.</h2>
+			</div>
+		</div>
+	</a>
+</section>
+
+
+<!-- Products section -->
+<section id="products">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/products/computesuite">The <img src="/public/images/home/index/products/computesuite.png" alt="ComputeSuite" /> Family</a></h1>
+			<h2>The complete heterogeneous system product solution.</h2>
+		</header>
+
+		<ul id="product-table">
+			<li>
+				<h1><a href="/products/computesuite/computeaorta"><img src="/public/images/home/index/products/computeaorta.png" alt="ComputeAorta" /></a></h1>
+				<a href="/products/computesuite/computeaorta#registerInterest"><button>Enquire Today</button></a>
+				<ul>
+					<li>Enables support for <strong>Vulkan&reg;, SPIR&trade;</strong> and <strong>OpenCL&trade;</strong></li>
+					<li>Designed to be a easy to use <strong>modular toolkit</strong></li>
+					<li>Supports multiple architectures (<strong>x86, ARM, MIPS</strong> and more)</li>
+					<li>Built on-top of <strong>LLVM</strong>, easily customizable</li>
+				</ul>
+			</li>
+			<li>
+				<h1><a href="/products/computesuite/computecpp"><img src="/public/images/home/index/products/computecpp.png" alt="ComputeCpp" /></a></h1>
+				<a href="/products/computesuite/computecpp"><button>Download CE Today</button></a>
+				<ul>
+					<li>Based on the SYCL&trade; open standard</li>
+					<li>For developers wishing to build C++ application targeting <strong>OpenCL</strong> devices</li>
+					<li>Growing level of architecture support</li>
+					<li>Enables <strong>portable</strong> algorithm development</li>
+					<li>C++17 support with Parallel STL</li>
+					<li>Works with <strong>TensorFlow&trade;</strong></li>
+				</ul>
+				<br />
+			</li>
+			<li>
+				<h1><img src="/public/images/home/index/products/visioncpp.png" alt="VisionCpp" /></h1>
+				<a href="https://github.com/codeplaysoftware/visioncpp" target="_blank"><button>View GitHub.com</button></a>
+				<ul>
+					<li>Super lightweight <strong>header-only</strong> library</li>
+					<li>Enables <strong>performance portability</strong> for heterogeneous platforms using C++</li>
+					<li>Written using <strong>SYCL&trade; 1.2</strong> to accelerate vision code on OpenCL devices</li>
+					<li><strong>Apache Version 2.0 License</strong></li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Services section -->
+<section id="services">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/services">Our Services</a></h1>
+			<h2>We can help you build, optimize and test your compiler or debuggers.</h2>
+		</header>
+		<ul class="columns image-columns">
+			<li>
+				<img src="/public/images/home/index/services/compilers.png"/>
+				<h3><a href="/services/compilers/">Compilers</a></h3>
+				<p> We can help you to build (from scratch or extend), optimize and verify your compiler.</a></p>
+			</li>
+			<li>
+				<img src="/public/images/home/index/services/debuggers.png"/>
+				<h3><a href="/services/debuggers">Debuggers</a></h3>
+				<p>Our team specialize in the development of fast, robust debuggers. We can fully develop your debugger or assist you in the development process.</p>
+			</li>
+			<li>
+				<img src="/public/images/home/index/services/profilers.png"/>
+				<h3><a href="/services/profilers/">Profilers</a></h3>
+				<p>Our team has extensive knowledge and experience in developing profilers for your heterogeneous hardware.</p>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Updates section -->
+<section id="updates">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/portal">News &amp; Engineer Blogs</a></h1>
+			<h2>The latest news and blog posts from our team.</h2>
+		</header>
+
+		<ul class="columns">
+						<li>
+				<h4>09/03/2018</h4>
+				<a href="/portal/03-09-18-lpgpu2-project-expands-codexl-for-sycl-profiling"><h3>LPGPU2 project expands CodeXL for SYCL profiling</h3></a>
+				<p>The AMD™ CodeXL™ project brought a number of capabilities to developers who are developing for </p>
+				<h4><img src="/public/uploaded/public/teamphotoillya.png" alt="" /> by Illya Rudkin</h4>
+			</li>
+						<li>
+				<h4>09/03/2018</h4>
+				<a href="/portal/03-09-18-buffer-reinterpret-viewing-data-from-a-different-perspective"><h3>Buffer Reinterpret: Viewing data from a different perspective</h3></a>
+				<p>SYCL developers are used to  strongly typed buffers, which ensure type safety for data manipulation </p>
+				<h4><img src="/public/uploaded/public/unknown.png" alt="" /> by Marios Katsigiannis</h4>
+			</li>
+						<li>
+				<h4>21/02/2018</h4>
+				<a href="/portal/02-21-18-talk-ai-with-codeplay-at-mobile-world-congress"><h3>Talk AI with Codeplay at Mobile World Congress</h3></a>
+				<p>Mobile World Congress (MWC) is still growing, and with over 100,000 attendees it literally takes </p>
+				<h4><img src="/public/uploaded/public/charlesmacfarlanesquare.jpg" alt="" /> by Charles Macfarlane</h4>
+			</li>
+						<li>
+				<h4>30/01/2018</h4>
+				<a href="/portal/01-30-18-getting-sycl-to-interact-with-opencl-code"><h3>Expert Post: Using Template Sorcery To Implement SYCL Interoperability</h3></a>
+				<p>
+  Whilst developing ComputeCpp, our implementation of the SYCL standard, we've come across some </p>
+				<h4><img src="/public/uploaded/public/577183a75d3af9d.jpg" alt="" /> by Christopher Di Bella</h4>
+			</li>
+					</ul>
+		<ul class="columns">
+						<li>
+				<h4>19/01/2018</h4>
+				<a href="/portal/01-19-18-passing-overload-sets-to-functions-in-cpp"><h3>Passing overload sets to functions in C++</h3></a>
+				<p>The engineers at Codeplay often share their expertise and learnings with the C++ community through </p>
+				<h4><img src="/public/uploaded/public/rod.jpg" alt="" /> by Rod Burns</h4>
+			</li>
+						<li>
+				<h4>17/01/2018</h4>
+				<a href="/portal/01-17-18-codeplay-hosting-aesin-s-adas-av-controls-meeting"><h3>Codeplay Hosting AESIN's ADAS & AV Controls Meeting</h3></a>
+				<p> 
+  
+    
+    
+
+
+
+
+The automotive industry is rapidly moving towards increased levels of </p>
+				<h4><img src="/public/uploaded/public/teamphotoillya.png" alt="" /> by Illya Rudkin</h4>
+			</li>
+						<li>
+				<h4>09/01/2018</h4>
+				<a href="/portal/01-09-18-codeplay-joins-misra-to-move-cpp-safety-standards-forward"><h3>Codeplay joins MISRA to move C++ safety standards forward</h3></a>
+				<p>Codeplay is pleased to announce it has joined the MISRA working group for C++ to help move the </p>
+				<h4><img src="/public/uploaded/public/teamphotoillya.png" alt="" /> by Illya Rudkin</h4>
+			</li>
+						<li>
+				<h4>21/12/2017</h4>
+				<a href="/portal/12-21-17-alternative-machine-learning-algorithms-using-sycl-and-opencl"><h3>Alternative machine learning algorithms using SYCL and OpenCL</h3></a>
+				<p>Classification is a common use-case for machine learning algorithms and is often achieved using </p>
+				<h4><img src="/public/uploaded/public/unknown.png" alt="" /> by Romain Biessy</h4>
+			</li>
+					</ul>
+	</div>
+</section>
+
+<!-- Events section -->
+<section id="events">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/portal/events/">Events We're Attending</a></h1>
+			<h2>Some of the upcoming events that Codeplay are attending.</h2>
+		</header>
+
+		<ul class="columns">
+							<li>
+					<img src=""  style="max-width:200px;" />
+					<a href="https://www.codeplay.com/portal/codeplayisattendingautosens2016"><h3>AutoSens 2016 </h3></a>
+					<h4>25/07/2032</h4>
+					<h4>Brussels, Belgium </h4>
+				</li>
+					</ul>
+	</div>
+</section>
+
+<!-- Partners section -->
+<section id="partners">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/company/partners">Our Partners</a></h1>
+			<h2>A collection of our partners.</h2>
+		</header>
+
+		<ul class="grid six">
+			<li>
+				<div>
+					<a href="http://www.arm.com/" target="_blank"><img src="/public/images/home/index/partners/arm.png" alt="ARM"/></a>
+				</div>
+				<div>
+					<a href="http://www.broadcom.com/" target="_blank"><img src="/public/images/home/index/partners/broadcom.png" alt="Broadcom"/></a>
+				</div>
+				<div>
+					<a href="http://carp.doc.ic.ac.uk/external/" target="_blank"><img src="/public/images/home/index/partners/carp.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.imgtec.com/" target="_blank"><img src="/public/images/home/index/partners/imagination.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://lpgpu.org/" target="_blank"><img src="/public/images/home/index/partners/lpgpu2.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.realeyes.me/" target="_blank"><img src="/public/images/home/index/partners/realeyes.png" alt=""/></a>
+				</div>
+			</li>
+			<li>
+				<div>
+					<a href="https://www.qualcomm.com/" target="_blank"><img src="/public/images/home/index/partners/qualcomm.png" alt="Qualcomm"/></a>
+				</div>
+				<div>
+					<a href="http://www3.imperial.ac.uk/computing/" target="_blank"><img src="/public/images/home/index/partners/imperial.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.think-silicon.com/" target="_blank"><img src="/public/images/home/index/partners/thinkSilicon.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.bristol.ac.uk/" target="_blank"><img src="/public/images/home/index/partners/bristol.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.fixstars.com/" target="_blank"><img src="/public/images/home/index/partners/fixstars.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.movidius.com/" target="_blank"><img src="/public/images/home/index/partners/movidus.png" alt=""/></a>
+				</div>
+			</li>
+			<li>
+				<div>
+					<a href="http://www.ed.ac.uk/" target="_blank"><img src="/public/images/home/index/partners/edinburgh.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.tu-berlin.de/" target="_blank"><img src="/public/images/home/index/partners/tuberlin.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.gla.ac.uk/schools/computing/" target="_blank"><img src="/public/images/home/index/partners/glasgow.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://www.amd.org/" target="_blank"><img src="/public/images/home/index/partners/amd.png" alt="AMD"/></a>
+				</div>
+				<div>
+					<a href="http://www.scottish-enterprise.com/" target="_blank"><img src="/public/images/home/index/partners/scotgov.png" alt=""/></a>
+				</div>
+				<div>
+					<a href="http://aigamedev.com/" target="_blank"><img src="/public/images/home/index/partners/aigamedev.png" alt=""/></a>
+				</div>
+			</li>
+		</ul>
+	</div>
+</section>
+
+<!-- Research section -->
+<section id="research">
+	<div class="wrapper">
+		<header>
+			<h1><a href="/research">Research</a></h1>
+			<h2>Codeplay are involved in a number of research projects, working groups and collaborations.</h2>
+		</header>
+
+		<div class="tab-panel">
+			<ul>
+				<li>
+					<a href="#"><h3><img src="/public/images/home/index/research/khronos.png" alt="Khronos"/></h3></a>
+					<div>
+						<p>The Khronos&trade; Group is a not-for-profit, member-funded consortium focused on the creation of royalty-free open standards for parallel computing, graphics and dynamic media on a wide variety of platforms and devices. All Khronos members are able to contribute to the development of Khronos API specifications, are empowered to vote at various stages before public deployment, and are able to accelerate the delivery of their cutting-edge 3D platforms and applications through early access to specification drafts and conformance tests.</p>
+						<p>Within The Khronos Group, Codeplay is a major contributor to the working groups for OpenCL, SPIR&trade;, and SYCL.</p>
+						<p><b><a href="https://www.khronos.org/" target="_blank">Visit Website</a></b></p>
+					</div>
+				</li>
+				<li>
+					<a href="#"><h3><img src="/public/images/home/index/research/hipeac.png" alt=""/></h3></a>
+					<div>
+						<p>As part of the research coordination program, HiPEAC includes a new instrument, called Thematic Sessions. A Thematic Session is a natural evolution of the clusters and task forces in HiPEAC2, but more reactive and self-organized. In HiPEAC, any partner or member can propose a thematic session, on condition that it is related to the HiPEAC vision. A thematic session is comparable to an informal workshop. As an organizer, you will have to solicit contributions, but there should be no formal call for papers, neither a formal reviewing of the contributions. Proposers of a thematic session are encouraged to involve the FP7 projects and HiPEAC companies in the session they propose.</p>
+						<p><b><a href="https://www.hipeac.net/" target="_blank">Visit Website</a></b></p>
+					</div>
+				</li>
+				<li>
+					<a href="#"><h3><img src="/public/images/home/index/research/hsa.png" alt="HSA"/></h3></a>
+					<div>
+						<p>The Heterogeneous System Architecture (HSA) Foundation is a not-for-profit industry standards body focused on making it dramatically easier to program heterogeneous computing devices. The consortium comprises various software vendors, IP providers, and academic institutions and develops royalty-free standards and open-source software.</p>
+						<p>The HSA Foundation members are building a heterogeneous compute software ecosystem built on open, royalty-free industry standards and open-source software: the HSA runtimes and compilation tools are based on open-source technologies such as LLVM and GCC.</p>
+						<p>The HSA Foundation seeks to create applications that seamlessly blend scalar processing on the CPU, parallel processing on the GPU, and optimized processing on the DSP via high bandwidth shared memory access enabling greater application performance at low power consumption. The HSA Foundation is defining key interfaces for parallel computation utilizing CPUs, GPUs, DSPs, and other programmable and fixed-function devices, thus supporting a diverse set of high-level programming languages and creating the next generation in general-purpose computing.</p>
+						<p>Within The HSA Foundation, Codeplay is a major contributor to the working groups for the System Runtime and Tools.</p>
+						<p><b><a href="http://www.hsafoundation.com/" target="_blank">Visit Website</a></b></p>
+					</div>
+				</li>
+				<li>
+					<a href="#"><h3><img src="/public/images/home/index/research/vulkan.png" alt="Vulkan"/></h3></a>
+					<div>
+						<p>Vulkan&reg; is a graphics and compute API consisting of procedures and functions to specify shader programs, compute kernels, objects, and operations involved in producing high-quality graphical images, specifically color images of three-dimensional objects. Vulkan is also a pipeline with programmable and state-driven fixed-function stages that are invoked by a set of specific drawing operations.</p>
+						<p><b><a href="https://www.khronos.org/vulkan/" target="_blank">Visit Website</a></b></p>
+					</div>
+				</li>
+				<li>
+					<a href="#"><h3><img src="/public/images/home/index/research/spir.png" alt="SPIR"/></h3></a>
+					<div>
+						<p>SPIR-V is the first open standard, cross-API intermediate language for natively representing parallel compute and graphics and is incorporated as part of the core specification of both OpenCL 2.1 and OpenCL 2.2 and the new Vulkan graphics and compute API.</p>
+						<p>SPIR-V exposes the machine model for OpenCL 1.2, 2.0, 2.1, 2.2 and Vulkan - including full flow control, and graphics and parallel constructs not supported in LLVM. SPIR-V also supports OpenCL C and OpenCL C++ kernel languages as well as the GLSL shader language for Vulkan (under development).</p>
+						<p><b><a href="https://www.khronos.org/spir" target="_blank">Visit Website</a></b></p>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</section>
+
+<div style="display: none">qualcomm amd broadcom</div>
+
+<!-- Subscribe to Newsletter Popup Dialog -->
+<div id="newsletterSubscribe" class="popupDialog modalDialog">
+	<header>
+		<h1>Subscribe to Newsletter</h1>
+	</header>
+	<form method="post">
+		<div>
+			<ul>
+				<li>
+					<p>Please enter your email address into the box below to receive an ‘every so often’ newsletter containing product updates, meet-ups and events we are attending.</p>
+					<input type="text" name="emailAddress" placeholder="someone@someone.com"/>
+				</li>
+				<li>
+					<p>Please enter the CAPTCHA below.</p>
+					<div class="g-recaptcha" data-sitekey="6LfCFQkTAAAAAKVrgUrrhPf6_oF5NnDbgNQYEd8c"></div>				</li>
+			</ul>
+			<button>Subscribe</button>
+			<h3>We will never sell your details to anyone else. If you wish to un-subscribe, please click the relevant link in the newsletter email address.</h3>
+		</div>
+	</form>
+</div></main>
+
+<!-- Footer section -->
+<footer>
+	<div>
+		<ul>
+			<li>
+				<a target="_blank" href="http://www.facebook.com/codeplaysoft" title="Find us on Facebook!"><img src="/public/images/global/footer/facebook.png" alt="Facebook" /></a>
+			</li>
+			<li>
+				<a target="_blank" href="http://www.twitter.com/codeplaysoft" title="Follow us on Twitter!"><img src="/public/images/global/footer/twitter.png" alt="Twitter" /></a>
+			</li>
+			<li>
+				<a href="/support/contact" title="Contact us!"><img src="/public/images/global/footer/email.png" alt="Contact" /></a>
+			</li>
+		</ul>
+		<p>&copy; 2020 Codeplay Software Ltd.</p>
+		<div id="copyright"></div>
+	</div>
+	<div>
+		<ul>
+			<li>
+				<a href="/company/privacy">Privacy &amp; Cookie Policy</a>
+			</li>
+			<li>
+				<a href="/support/contact">Contact Us</a>
+			</li>
+		</ul>
+	</div>
+</footer>
+
+<!-- Inline script -->
+</body>
+</html>

@@ -1,0 +1,22 @@
+---
+id: 145
+category: case-studies
+date: 2020-07-07T17:23:34.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Caching Pointer Arguments"
+redirect_from:
+  - /kb/145
+layout: products/offload/kb/view
+---
+<p>Pointer arguments can be similarly cached. In the next example we assume that the first pointer parameter is dereferenced frequently inside func or functions it calls. Hence we could cache only the first argument (subject to the same issues described in the previous articles <a href="{{ '/kb/135' | relative_url }}">/kb/135.html</a>).
+</p>
+<pre><code>__offload()
+{
+	auto localptr = *ptrarg1; //DMA or SW cache read into a local
+	ptr-&gt;func(&amp;localptr,ptrarg2);//outer this pointer and local first argument
+	*ptrarg1 = localptr; //writing data back
+}
+</code></pre><p>Note that this example could also use cache classes described in <a href="{{ '/kb/136' | relative_url }}">/kb/136.html</a>.
+</p>
+
+

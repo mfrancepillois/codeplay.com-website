@@ -1,0 +1,26 @@
+---
+id: 83
+category: vectorc
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "The Risks of Parallelism"
+url: the-risks-of-parallelism
+description:
+redirect_from:
+  - /company/documents/the-risks-of-parallelism
+layout: company/documents/view
+---
+<p> You work for ages adapting your algorithm to run in parallel. You fill your code with threading or OpenMP or Sh, or HLSL or whatever else you can get hold of. You spend ages getting rid of nasty unexpected timing problems. And then, at the end of it all, it goes 2x slower.
+</p><p>
+You might think this is unusual, but apparently it isn't. It turns out that the more parallel your hardware, the harder it is to predict what the performance will be. I have seen code that runs very fast until you give it a big problem to solve, in which case it runs slowly. Or, code that runs very slow until you give it a big problem to solve, in which case it runs fast.
+</p><p>
+ For most of the parallel hardware available today, the memory latency is the most serious problem. DRAM latency is already a serious issue. Increasing the number of processor cores increases the effects of limited memory bandwidth and latency.
+</p><p>
+ The second big problem is to do with memory latency and bandwidth too. Access by a core to its local cache is very fast, so if you give a core a problem to solve that fits in its local memory then it's very fast. If you give a core a problem to solve that doesn't fit in its local memory then it is at least an order of magnitude slower. This can be complicated because data that is streamed in and out doesn't need to be in a local cache and is less affected by latency. So, you need to understand which of your data is being streamed in and out, and which is being constantly accessed via a cache. A good example is ray-tracing: the resolution of the scene isn't affected by the cache size, but the complexity of the scene is.
+</p><p>
+ The third big problem is Amdahl's Law. If you find a hot-spot that takes up 50% of your processing time, then the maximum possible speed-up you can get is 2x. So you then need to find another hot-spot that takes up a smaller percentage and parallelize that as well. As you find more and more hot-spots, you tend to find that the gain from parallelization is smaller for each new hot-spot, and that the amount of programming work required increases. You rapidly hit a law of diminishing returns.
+</p><p>
+ But the really big problem facing software developers right now is the uncertainty over the future of processor architecture. Multi-threaded shared-memory processors have traditionally only ever worked up to 4 cores. Beyond 4 cores the memory bottleneck of a shared-memory model holds back the system performance. So, developers investing large amounts of time and money in parallelizing for any existing processor architecture has to consider that there investment may be very short-lived and they have to switch to a completely new programming model in a few years time.
+</p>
+
+

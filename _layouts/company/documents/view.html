@@ -1,0 +1,32 @@
+---
+layout: page
+nav_style: alt
+stylesheets:
+  - /assets/css/pages/company/documents/view.css
+---
+
+<!-- Section: Document View -->
+<section id="document-view" class="reduce-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <a class="button image-button" href="{{ '/company/documents/' | relative_url }}">
+                    <i class="material-icons">arrow_back_ios</i>
+                    Back to List
+                </a>
+
+                <header>
+                    <h1>{{page.title}}</h1>
+                </header>
+
+                <div id="content">
+                    {{content}}
+                </div>
+            </div>
+            <div>
+                <h3>Share</h3>
+                {%- include _includes/share-buttons.html -%}
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,185 @@
+---
+layout: page
+nav_style: fancy
+title: Leader in Heterogeneous Compute Software Standards and Applied Research
+permalink: /company/research/applied-research
+stylesheets:
+  - /assets/css/pages/company/research/applied-research.css
+scripts:
+  - /assets/js/pages/company/research/applied-research.js
+---
+
+<!-- Section: Splash -->
+<section id="splash" class="splash">
+    <div class="splash-bg-loader" data-fade-to="0.2">
+        <img src="{{ '/assets/images/company/research/applied-research/splash.jpg' | relative_url }}" alt="Splash Image" />
+    </div>
+    <div class="wrapper">
+        <div>
+            <div>
+                <h1>Leader in Heterogeneous Compute Software Standards and Applied Research</h1>
+
+                <ul>
+                    <li>
+                        <a href="#performance-portability">
+                            <span class="material-icons">flight_takeoff</span> Enhancing Performance Portability
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#enabling-riscv-accelerators-in-hpc">
+                            <span class="material-icons">speed</span> Enabling RISC-V® Accelerators in HPC
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#optimizing-high-level-compiler-in-mlir">
+                            <span class="material-icons">memory</span> Optimizing High Level Compiler in MLIR
+                        </a>
+                    </li>
+                </ul>
+
+                <a class="button image-button call-to-action-button" href="#contact-us">
+                    <i class="material-icons">email</i> Contact Our Research Team
+                </a>
+            </div>
+        </div>
+        <div>
+            <img src="{{ '/assets/images/company/research/applied-research/splash.jpg' | relative_url }}" alt="Splash Image" />
+        </div>
+    </div>
+</section>
+
+<!-- Section: Performance Portability -->
+<section id="performance-portability">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <header>
+                    <h1>Enhancing Performance Portability</h1>
+                </header>
+                <p>With increasing heterogeneity in processor hardware, it is very crucial to be able to run
+                    the same code across different architectures. Even more important is to be able to
+                    port the applications without loss of performance. SYCL is a C++ based heterogenous
+                    programming model which has many compiler implementations and hence supports a
+                    wide variety of hardware platforms. It becomes imperative to write kernels which can
+                    achieve good performance on all these different platforms.</p>
+                <p>SYCL-BLAS and SYCL-DNN show an approach of writing modular SYCL kernels based on template
+                    meta programming. These kernels are templated on various hardware specific parameters
+                    like tile sizes, work group size, cache line size, etc. When deploying the code on a
+                    new hardware, these parameters can be tuned to achieve best performance.</p>
+
+                <a class="button image-button call-to-action-button" href="#contact-us">
+                    <i class="material-icons">email</i> Contact Us About This
+                </a>
+            </div>
+            <div>
+                <img src="{{ '/assets/images/company/research/applied-research/applied.png' | relative_url }}"
+                     alt="Performance Portability" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: RISC-V HPC -->
+<section id="enabling-riscv-accelerators-in-hpc">
+    <div class="wrapper">
+        <div class="columns content-with-side-content reverse">
+            <div>
+                <img src="{{ '/assets/images/company/research/applied-research/riscv.jpg' | relative_url }}"
+                     alt="RISC-V" />
+            </div>
+            <div>
+                <header>
+                    <h1>Enabling RISC-V® Accelerators in HPC</h1>
+                </header>
+                <p>RISC-V architecture provides a modular design of layered and extensible ISA. It provides
+                    flexibility to customize processors for a specific functionality. However, programming
+                    model support for RISC-V accelerators has been minimal due to its initial stages. At
+                    Codeplay, we provide an open standard way of offloading kernels to RISC-V accelerators
+                    using the Acoran stack. The Acoran stack consists of ComputeMUX which provides the
+                    driver interface required to run SYCL code on RISC-V cores, ComputeCPP which is a SYCL
+                    compiler and SYCL-BLAS and SYCL-DNN libraries which contain optimized kernels for
+                    common neural network operations. This architecture allows for running neural network
+                    ONNX models (with the SYCL backend for ONNX Runtime) on RISC-V accelerators. </p>
+
+                <a class="button image-button call-to-action-button" href="#contact-us">
+                    <i class="material-icons">email</i> Contact Us About This
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: High Level Compiler in MLIR -->
+<section id="optimizing-high-level-compiler-in-mlir">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <header>
+                    <h1>High Level Compiler Optimizations in MLIR </h1>
+                </header>
+                <p>Integrating of Codeplay’s leading SYCL compiler/runtime with the most recent open source
+                    MLIR version to provide a tool with a more flexible way of reasoning about programs
+                    so they can be more easily ported to different architectures. The implementation will be
+                    able to explore efficiently the space of possible transformations, without having to
+                    change the source of the program, so the tool can adapt it to better fit the
+                    hardware capabilities. </p>
+
+                <a class="button image-button call-to-action-button" href="#contact-us">
+                    <i class="material-icons">email</i> Contact Us About This
+                </a>
+            </div>
+            <div>
+                <img src="{{ '/assets/images/company/research/applied-research/mlir.png' | relative_url }}"
+                     alt="MLIR" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Contact Us -->
+<section id="contact-us">
+    <div class="wrapper">
+        <div class="columns content-with-side-content reverse">
+            <div>
+                <header>
+                    <h1>Contact Us</h1>
+                    <h2>To receive updates or to get in touch about our research projects, please fill in the adjacent
+                    form. We aim to respond to all queries within 2-3 working days.</h2>
+                </header>
+            </div>
+            <div>
+                <!-- After Form Sent -->
+                <div class="form-response notice">
+                    <a id="form-after-send" class="jump-anchor"></a>
+                    Your message has been sent successfully. We aim to respond to all messages within 2-3 working days.
+                </div>
+
+                <!-- Before Form Sent -->
+                <div id="form-before-send">
+                    <form id="contact"
+                          action="https://formspree.io/f/xvowrngy"
+                          method="POST"
+                          data-requiresCookieAcceptance="true">
+                        <label for="name">Your Name</label>
+                        <input type="text" name="name" id="name" placeholder="John Doe" required/>
+
+                        <label for="email">Your Email</label>
+                        <input type="text" name="email" id="email" placeholder="john@doe.com or +44 0123 123 2323"
+                               required/>
+
+                        <!-- Captcha -->
+                        <div class="g-recaptcha"></div>
+
+                        <!-- Redirect -->
+                        <input type="hidden" name="_next" value="{{page.url}}#form-after-send" />
+                        <input type="hidden" name="_subject" value="Applied Research Contact Request" />
+
+                        <button type="submit" class="button image-button">
+                            <span class="material-icons">send</span>
+                            Send Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

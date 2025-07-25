@@ -1,0 +1,288 @@
+---
+id: 290
+url: 01-30-18-getting-sycl-to-interact-with-opencl-code
+user_id: 845
+date: 2018-01-30T12:15:49.3600Z
+category: blogs
+title: "Expert Post: Using Template Sorcery To Implement SYCL Interoperability"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/01-30-18-getting-sycl-to-interact-with-opencl-code
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>
+  Whilst developing ComputeCpp, our implementation of the SYCL standard, we've come across some really interesting challenges. One of these is how we ensure C++ fundamental types are translated correctly from SYCL code through to OpenCL, retaining their correct size and signedness.<br>
+
+</p>
+
+<p>
+  The SYCL programming model brings together the C++ programming language and the OpenCL platform for programming heterogeneous systems, to provide the portability of OpenCL with modern C++. However for a particular feature of OpenCL; built-in math functions such as <code>abs()</code> or <code>max()</code>, this introduces an interesting challenge. As SYCL is a C++ programming model, these functions should provide a C++ interface which takes standard C++ types such as <code>char</code>, <code>int</code> or <code>long long</code>, but the interface for the OpenCL built-in functions take OpenCL types such as <code>cl_char</code>, <code>cl_int</code> and <code>cl_long</code>. The challenge arises because ISO C++ and OpenCL make different guarantees as to the sizes and signedness of the types. This means that the SYCL interface must map to the corresponding OpenCL interface in such a way as to the size and signedness of the parameters is maintained.
+</p>
+
+<p>If you've been writing C++ for a while, you probably know that the number of bytes in <code>short</code> through <code>long long</code> are implementation-defined. That means, given a few light constraints, it is up to the compiler to decide how many bytes are in each of the types. We're also promised that there are <em>at least</em> eight bits in a <code>char</code>, but nothing more is guaranteed by the C++ Standard. <code>char</code> is a distinct type to <code>signed char</code> and <code>unsigned char</code> (this is different to C, where the implementation decides <code>
+    char
+  </code>
+   will either be
+  <code>
+    signed char
+  </code>
+   or
+  <code>
+    unsigned char
+  </code>). Finally, <code>float</code>, <code>double</code>, and <code>long double</code> are also implementation defined, but usually map to IEEE 754 single-precision and double-precision floating-point numbers, respectively.</p>
+
+<p>This is problematic for OpenCL -- and hence SYCL -- as well as OpenGL. Since the details slightly differ for OpenCL and OpenGL, we'll focus on OpenCL and SYCL, and leave the OpenGL equivalent as an exercise for the reader.</p>
+<hr>
+
+<p>OpenCL C defines a number of scalar types:</p>
+<ul>
+  <li>
+    <code>cl_char</code> (8-bit signed integer)</li>
+  <li>
+    <code>cl_uchar</code> (8-bit unsigned integer)</li>
+  <li>
+    <code>cl_short</code> (16-bit signed integer)</li>
+  <li>
+    <code>cl_ushort</code> (16-bit unsigned integer)</li>
+  <li>
+    <code>cl_int</code> (32-bit signed integer)</li>
+  <li>
+    <code>cl_uint</code> (32-bit unsigned integer)</li>
+  <li>
+    <code>cl_long</code> (64-bit signed integer)</li>
+  <li>
+    <code>cl_ulong</code> (64-bit unsigned integer)</li>
+  <li>
+    <code>cl_half</code> (IEEE 754 half-precision floating-point)</li>
+  <li>
+    <code>cl_float</code> (IEEE 754 single-precision floating-point), and</li>
+  <li>
+    <code>cl_double</code> (IEEE 754 double-precision floating-point).</li>
+</ul>
+
+<p>These scalar types are quite well-defined by the specification; unlike C++, where many of the details are left to the implementation. Another interesting point to note is that OpenCL C does not have three character types: <code>cl_char</code> is a signed integral, and <code>cl_uchar</code> is an unsigned integral.</p>
+
+<p>Let's now define an OpenCL C function.</p>
+<pre><code>cl_int square(cl_int x)
+{
+   return x * x;
+}</code>
+</pre>
+
+<p>
+  The <code>square</code> function represents bindings between OpenCL C built-in functions and how they can be directly used in SYCL. OpenCL C built-in functions are overloaded, and thus need to be mangled. This example demonstrates CXX Itanium mangling, but it's possible to use other mangling specifications also. We manually mangle them (as shown below) because we're calling them from C++, and because we don't know the underlying definition of the <code>cl_*</code> types.
+  Since SYCL is a C++ programming model, we'd like to port the above code to C++ for general-purpose use. OpenCL provides a built-in <code>square</code> function for us to call.
+</p>
+<pre><code>// We use an `extern &quot;C&quot;` block to tell the compiler that the stuff inside has C-linkage, not C++-linkage.
+extern &quot;C&quot; {
+   // OpenCL C function names as the C++ compiler sees them
+   // These might be compiled to x86_64, SPIR, SPIR-V, or PTX, when using ComputeCpp.
+   cl_char _Zsquarei8(cl_char);
+
+   cl_short _Zsquaraei16(cl_short);
+   cl_int _Zsquarei32(cl_int);
+   cl_long _Zsquarei64(cl_long);
+   cl_half _Zsquaref16(cl_half);
+   cl_float _Zsquaref32(cl_float);
+   cl_double _Zsquaref64(cl_double);
+} // extern &quot;C&quot;
+
+namespace cl { namespace sycl {
+   namespace detail {
+      inline cl_char square(const cl_char x) noexcept
+      {
+         return ::_Zsquarei8(x);
+      }
+
+      inline cl_short square(const cl_short x) noexcept
+      {
+         return ::_Zsquarei16(x);
+      }
+
+      inline cl_int square(const cl_int) noexcept
+      {
+         return ::_Zsquarei32(x);
+      }
+
+      inline cl_long square(const cl_long) noexcept
+      {
+         return ::_Zsquarei64(x);
+      }
+   } // namespace detail
+
+   template &lt;typename T&gt;
+   T square(const T t) noexcept
+   {
+      return ::cl::sycl::detail::square(t);
+   }
+}} // namespace cl::sycl
+</code></pre>
+
+<p>Now, let's jump to a bit of user code that wants to employ this.</p>
+
+<pre><code>auto v = []{
+   constexpr auto size = 65535; // explained in the paragraph below
+   auto result = std::vector&lt;int&gt;(size, 0);
+   std::iota(begin(v), end(v), -size / 2);
+   return result;
+}();
+std::transform(std::par_unseq, begin(v), end(v), begin(v), cl::sycl::square&lt;int&gt;); </code></pre>
+
+<p>
+  This code will work when you're running on exactly one implementation (e.g. x86_64), because
+  <code>
+    int
+  </code>
+   will map to one of
+  <code>
+    cl_short
+  </code>
+  ,
+  <code>
+    cl_int
+  </code>
+  , or
+  <code>
+    cl_long
+  </code>
+  . If we add a second implementation (e.g. MSP430),
+  <code>
+    int
+  </code>
+   maps to different types when compiling with the same version of GCC. The C++ we've written is semantically valid for
+  <em>
+    one
+  </em>
+   implementation, when we know the details for the <em>implementation</em> we're coding against, but not for many. While 65535
+  <sup>
+    2
+  </sup>
+   fits in the range for an int on GCC-compiled x86_64 code, there is signed integral overflow on our MSP430; <a href="http://eel.is/c++draft/expr#pre-4">as prescribed by the C++ International Standard, this behavior is undefined[1]</a>. Furthermore, different implementations for the same target are not necessarily consistent. For example, both Clang and GCC on x86_64 treat <code>long</code> as an 8-byte integer, but <code>long</code> is only four bytes on MSVC++[3]!
+</p>
+
+<p>
+  How do we guard against such madness? By using templates, of course!
+</p>
+<pre><code>template &lt;typename T&gt;
+T square(const T t)
+{
+   return static_cast&lt;T&gt;(::cl::sycl::detail::square(::cl::sycl::detail::cpp_to_cl_cast(t)));
+}</code>
+</pre>
+
+<p>In reality, what we need to do is convert the parameter from its C++ type (which we can't control) to an OpenCL equivalent (which we can control), and then back to the original type (which the user expects). <code>cl_cast</code> is a bit tricky, so let's go slowly.</p>
+<pre><code>namespace cl { namespace sycl { namespace detail {<br>   // std::conditional_t is from C++14, but SYCL 1.2.1 targets C++11, so we need to define this ourselves.
+   template &lt;bool B, typename T, typename F&gt;
+   using conditional_t = typename std::conditional&lt;B, T, F&gt;::type;
+
+   template &lt;typename F&gt;
+   using opencl_floating_t =<br>      conditional_t&lt;sizeof(F) == 2, cl_half,<br>      conditional_t&lt;sizeof(F) == 4, cl_float,<br> cl_double&gt;&gt;;
+
+   template &lt;typename I, typename I8, typename I16,
+      typename I32, typename I64&gt;
+   using opencl_integer_t =
+      conditional_t&lt;sizeof(I) == 1, I8,
+      conditional_t&lt;sizeof(I) == 2, I16,
+      conditional_t&lt;sizeof(I) == 4, I32,<br>                                    I64&gt;&gt;&gt;;
+
+   template &lt;typename I&gt;
+   using opencl_signed_integer_t = opencl_integer_t&lt;I, cl_char, cl_short, cl_int, cl_long&gt;;
+
+   template &lt;typename I&gt;
+   using opencl_unsigned_integer_t = opencl_integer_t&lt;I, cl_uchar, cl_ushort, cl_uint, cl_ulong&gt;;
+
+   template &lt;typename T&gt;
+   using opencl_t =
+      conditional_t&lt;std::is_integral&lt;T&gt;::value,
+         conditional_t&lt;std::is_signed&lt;T&gt;::value,
+            opencl_signed_integer_t&lt;T&gt;, opencl_unsigned_integer_t&lt;T&gt;&gt;,
+            opencl_floating_t&lt;T&gt;<&gt;;</code></pre>
+
+<p>We have here a series of type functions that take your C++ fundamental type as a parameter, and deduce the equivalent OpenCL scalar type.</p>
+<ul>
+  <li>
+    <code>opencl_floating_point_t</code> uses <code>conditional_t</code> to work out if we've got a two-byte or a four-byte floating-point type. In the case that we have something other than a two-byte or four-byte floating-point number, we assume that it is eight-bytes. We'll come back to working out what happens if we have a larger type.</li>
+  <li>
+    <code>opencl_integer_t</code> is very much the same as <code>opencl_floating_point_t</code>, but because we have signed and unsigned types to worry about, we parameterize the types, and delegate the actual types to <code>opencl_signed_integer_t</code> and <code>opencl_unsigned_integer_t</code>.</li>
+  <li>
+    <code>opencl_t</code> is an abstraction over <code>opencl_floating_point_t</code> and <code>opencl_integer_t</code>. It helps simplify the next bit.</li>
+</ul>
+
+<p>Now that we've provided our type function that deduces the type the user wants, let's write our <code>cpp_to_cl_cast</code>.</p>
+<pre><code> template &lt;typename T&gt;
+   constexpr auto cpp_to_cl_cast(const T t) noexcept -&gt; opencl_t&lt;T&gt;
+   {
+      return static_cast&lt;opencl_t&lt;T&gt;&gt;(t);
+   }
+
+    }}} // namespace cl::sycl::detail
+</code></pre>
+
+<p>Wow, that was simple! All we've done is ask the compiler to work out which type we want. Turning on optimisations will also inline our <code>cpp_to_cl_cast</code>.
+</p>
+<hr>
+<h2>Constraining types</h2>
+
+<p>We've worked out a neat conversion function, but when we pass in our own type, we run into some serious compiler issues. Since we're choosing to stick with C++11 in this demo, the Concepts TS isn't available to us, and we need to do a bit more hacking using type functions.</p>
+
+<p>Let's now introduce a type function called <code>
+    enable_if
+  </code>. <code>enable_if&lt;B, T&gt;</code> takes a Boolean expression and a type, and behaves very much like a switch does. If the expression is <code>true</code>, then we get the type. If it isn't, then we do not.</p>
+
+<p>This <code>enable_if</code> type function lets us employ something called <em>Substitution Failure Is Not An Error</em> (SFINAE for short). In not so many words, this means that instead of getting an error when a template fails to substitute a parameter, it moves on to the next template. Only when there are no templates left, do we get an error. SFINAE is ugly, but until we're able to use Concepts, we don't have many options.</p>
+
+<pre><code>template &lt;typename T&gt;
+using opencl_t =
+   enable_if_t&lt;(std::is_integral&lt;T&gt;::value || std::numeric_limits&lt;T&gt;::is_iec559) &amp;&amp; sizeof(T) &lt;= 8,
+      conditional_t&lt;std::is_integral&lt;T&gt;::value,
+         conditional_t&lt;std::is_signed&lt;T&gt;::value, opencl_signed_integer_t&lt;T&gt;, opencl_unsigned_integer_t&lt;T&gt;&gt;,
+         opencl_floating_t&lt;T&gt;&gt;&gt;;</code></pre>
+
+<p>The constraint that we've imposed here is that <code>opencl_t</code> must be passed an integer or an IEEE 754 floating-point number, and that the parameter must be at most 8 bytes in size. You might be wondering just
+  <em>
+    where
+  </em>
+   the IEEE 754 check is being made: it turns out that there is a publication called IEC 559:1989, which is a publication identical to IEEE 754, but under the IEC banner[2]. Since C++ is an ISO/IEC International Standard, it makes sense that the C++ will refer to the IEC code, rather than the commonly known IEEE code (however frustrating this may be).
+</p>
+
+<p>We should probably add this to our square too, but that will be left as an exercise for the reader.</p>
+<h3>Character types with more than eight bits</h3>
+
+<p>C++11 mandates that <code>char</code> has at least eight bits, but implementations are permitted to have larger character types. OpenCL, and hence SYCL, doesn't play with this, so we add a constraint on this as well:</p>
+<pre><code>static_assert(CHAR_BIT == 8, "SYCL requires char to have exactly 8 bits.");</code>
+</pre>
+
+<p>Now that we've come to the end of the tutorial, you might be wondering how this all compiles. Thankfully, we can check out how various devices compile our code using Compiler Explorer. <a href="https://godbolt.org/g/rxvwCS">Our example</a>
+   has been compiled nine times:</p>
+<ul>
+  <li>GCC 7 for x86_64</li>
+  <li>Clang 5 for x86_64</li>
+  <li>GCC 6 for PowerPC 64</li>
+  <li>GCC 6 for MSP430</li>
+  <li>GCC 6 for ARM64</li>
+  <li>GCC 7 for ARM</li>
+  <li>Intel C++ Compiler 18 for x86_64</li>
+  <li>GCC 5 for MIPS 64</li>
+  <li>GCC 5 for MIPS</li></ul><br><ul>
+</ul>
+<h2>Conclusion</h2>
+
+<p>
+  You might think this is all a bit much, and when I first started, that's what I thought too. Once you consider that your code is going to run on many
+  <span>implementations</span>
+   and thus be compiled by many compilers, you need to start considering the flexible rules that C++ offers implementation developers. What your int maps to on your CPU might be different to your GPU, which might be different again to your MSP430-based device. People don't like to be told which types to use in cases where fundamental types are freely available, so requiring <em>everyone</em> to use <code>cl_int</code>, etc., is a bad idea. They might also have to work with other libraries that aren't related OpenCL (and so they don't use OpenCL scalar types). <code>cpp_to_cl_cast</code> is a nice way of letting us continue to use fundamental types consistently and still use OpenCL built-in functions.
+</p>
+
+<p>Fortunately, application programmers are protected by SYCL implementers: we implementers take the time out to write the conversion code, and give you the nice <code>cl::sycl::square</code> function to call. That's where all the magic happens.</p>
+
+<p>So in summary, if you're an application developer, you might have learnt a little about how SYCL works under the hood. If you're looking to implement SYCL, you might have found a way to get the compiler to do your lifting for you.</p>
+<h2>References</h2>
+<ol>
+  <li>ISO/IEC JTC1/SC22/WG21. N3337 Working Draft, Standard for Programming Language C++. §3.9/4, page 69. Published 2012-01-16. Retrieved from http://www.openstd.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf.</li>
+  <li>ISO/IEC JTC1/SC22/WG14. N1605 Information Technology — Programming languages, their environments, and system software interfaces — Floating-point extensions for C — Part 1: Binary floating-point arithmetic. Page iv. Published 2012-03-16. Retrived from: http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1605.pdf. Date retrieved: 2018-01-17.</li><li>Microsoft Developer Network. Fundamental Types (C++). Retrieved from: https://msdn.microsoft.com/en-us/library/cc953fe1.aspx. Date retrieved: 2018-01-29.</li></ol>
+
+

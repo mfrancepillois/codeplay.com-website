@@ -1,0 +1,22 @@
+---
+title: "Bringing SYCL&trade; to Ampere Architecture"
+date: 2021-06-17T09:01:00.760000+00:00
+category: videos
+layout: portal/portal-article-view
+user_id: 840
+thumbnail: /assets/images/portal/article-images/bringing-sycl-to-ampere.jpg
+---
+
+<iframe width="560"
+        height="315"
+        data-requiresCookieAcceptance="true"
+        data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/NVlLu1TW_ZM"></iframe>
+
+<br /><br />
+<p><b>Presented at IWOCL and SYCLcon 2021</b></p>
+
+<p>Codeplay has worked with the SYCL community, and Intel in particular, to deliver a CUDA open source back-end implementation for the SYCL DPC++ compiler, the Clang LLVM compiler project. This backend provides support for NVIDIA GPUs through the CUDA Driver API, rather than using OpenCL. SYCL applications built with this backend are in effect native CUDA applications. This poster presents new features that Codeplay is contributing to DPC++ to improve SYCL 2020 conformance and implement support for NVIDIA A100 Tensor Core GPUs. This is an ongoing project from Codeplay that will see further progress over the year, including support for modern CUDA features and overall performance improvements.</p>
+<p>SYCL 2020 is a significant step towards bringing C++ heterogeneous programming to all. It supports diverse applications, including HPC supercomputing centers, powerful machine learning frameworks, and creative and professional applications on embedded and desktop PCs. One of the key improvements of SYCL 2020 is the new backend model, which allows a SYCL implementation to target multiple heterogeneous APIs, including CUDA. This makes SYCL an attractive target for frameworks and libraries, allowing them to target a wide range of platforms without having to port and translate their code. Over the next year, Codeplay™ will help improve DPC++ by improving their CUDA backend and contributing new features from the SYCL 2020 provisional specification, including Universal Shared Memory (USM), reductions, subgroups, unnamed lambdas and in-order queue execution. Key among these new features is USM, a new pointer-based alternative to the buffer programming model that provides the ability to create allocations that are visible to both the device and the host. Although there is support for USM already upstream, our project aims to provide further testing and an stable interface. Codeplay will implement CUDA support for these new features and ensure that they are performant on the NVIDIA A100 platform and recent CUDA toolkit versions.</p>
+<p>As part of the contributions to the SYCL community in general, and the DPC++ CUDA backend in particular, Codeplay will also provide new extensions to SYCL 2020 and DPC++ that allow developers to take advantage of CUDA-specific APIs and features.</p>
+<p>These extensions will help developers deliver performance on the NVIDIA A100 platform. Planned extensions include new SYCL APIs that will expose the NVIDIA A100’s Tensor Cores and hardware-accelerated barriers. Codeplay will design and implement these new extensions, adding the necessary changes to DPC++’s CUDA backend and extending LLVM’s NVPTX backend to support the SM 80 architecture.</p>
+<p>Improving DPC++’s NVIDIA multi-GPU support will be essential for the NVIDIA A100. Codeplay will contribute support for multiple CUDA devices with different SYCL contexts, device-to-device memory transfers and group collective operations.</p>

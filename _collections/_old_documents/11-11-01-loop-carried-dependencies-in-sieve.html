@@ -1,0 +1,62 @@
+---
+id: 82
+category: sieve
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "Loop Carried Dependencies in Sieve"
+url: loop-carried-dependencies-in-sieve
+description:
+redirect_from:
+  - /company/documents/loop-carried-dependencies-in-sieve
+layout: company/documents/view
+---
+<p>Many of these simple dependencies can be removed by migrating the dependency to the iteration count, instead of previous iteration values. All of the OpenMP examples provided are from Michael's site (and the OpenMP Mailing list) so it may be a good idea to read his <a href="http://www.thinkingparallel.com/2007/05/02/parallel-programming-fun-with-loop-carried-dependencies/">article</a> first.
+</p>
+
+<p>
+<strong>Original, with carried dependency</strong><strong>Version with dependency on iteration</strong></p><pre>const double up = 1.1;
+double Sn=1000.0;
+double opt[N+1];
+int n;
+for (n=0; n&lt;=N; ++n) {
+	opt[n] = Sn;
+	Sn *= up;
+}
+</pre><pre>const double up = 1.1;
+double Sn, origSn=1000.0;
+double opt[N+1];
+int n;
+opt[0] = origSn;
+
+for (n=1; n&lt;=N; ++n) {
+	Sn = origSn * pow(up, n);
+	opt[n] = Sn;
+}
+Sn *= up;
+</pre><p>So a few simple changes transform a loop into one which can be parallelized easily. This method of eliminating dependencies is very common, and can become quite complex. In addition to this, the parallel version of the loop can be optimized so that the costly pow() call is performed once per work slice, thereafter using previous iterations we know are available.
+</p><p>
+An optimized version of the same loop is shown opposite with the OpenMP pragma intact. This version only calls pow() once to initialize the local Sn upon entry into the loop. This is accomplished using a condition on lastn, which has iteration n assigned to it. The first encounter with the conditional means lastn is initialized to the value outside the loop, allowing to choose the costly pow() path instead of a simple multiply.
+</p><p>
+In the end, there was actually a performance hit due to the fact the loop just does not perform enough computation to benefit from parallelism. There are many writes/reads too, which doesn't help considering how bandwidth limited X86 architectures are.
+</p>
+
+<p>
+<strong>OpenMP optimized version</strong></p><pre> const double up = 1.1; double Sn, origSn=1000.0; double opt[N+1]; int n, lastn; lastn = -2; #pragma omp parallel for private(n) firstprivate(lastn) lastprivate(Sn) for (n=0; n&lt;=N; ++n) { if (lastn != n - 1) { Sn = origSn * pow(up, n); } else { Sn *= up; } opt[n] = Sn; lastn = n; } Sn *= up;
+</pre>
+<p>
+<strong>An Implementation using Sieve C++</strong>
+</p><p>
+Now, after all that explanation, we get back to the point of this post. I read the article and instantly started hacking away on a Sieve version of the above example. One of the really big features of Sieve is that you can define your own Iterator and Accumulator classes. These classes will work on any platform, and are deterministic in nature due to the semantics employed by the system.
+</p>
+<pre>const double up = 1.1; double origSn = 1000.0; double Sn = origSn;  sieve { DPowIterator iSn(origSn, up); for (IntIterator n(0); n&lt;=N; ++n) { optSieve[n] = iSn; iSn.multiplyUp(); splithere; } Sn = iSn }
+</pre><p>I decided to explicitly define a splitpoint within the for loop so it will parallelize the loop iterations. IntIterator is your standard parallel integer iterator class, provided for you in Sieve library headers. DPowIterator I decided to create myself. The code for this is listed below.
+</p>
+<pre>iteratorclass DPowIterator { double m_val, m_power; public: inline immediate DPowIterator(double i, double p):  m_val(i), m_power(p) { }  inline update void setupValue(int i) { m_val *= pow(m_power, i); }  inline update void multiplyUp() { m_val *= m_power; }  inline immediate operator double() const { return val; } };
+</pre><p>This code results in the same behaviour as the optimized OpenMP example. Sieve Iterators are based upon tracking modifications to them; a call to the update multiplyUp() function will result in a modification delta of 1, calling the update setupValue() function will result in a delta of its integer parameter. Upon entering a Sieve fragment, Iterator update methods are called with relevant deltas. This regenerates the Iterator to a suitable state. This method of handling Iterators is incredibly powerful, resulting in the ability to create more than just simple integer Iterators - deterministic pseudo-random number generators are an example.
+</p><p>
+Those who have read the <a href="http://www.codeplay.com/downloads_public/sievepaper-2columns-normal.pdf">Sieve Whitepaper</a> or attended any of our presentations may notice some syntax changes in the code presented above. Immediate, update and splithere keywords are sieve extentions that will be revealed and explained in further detail soon.
+</p><p>
+This post was intended to show how a programmer can employ custom Sieve Iterator classes to improve the parallel potential of their code. Hopefully this has done this - we will be exploring Accumulator classes in future posts.
+</p>
+
+

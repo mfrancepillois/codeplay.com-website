@@ -1,0 +1,21 @@
+---
+id: 49
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadSetUSleepTime"
+redirect_from:
+  - /kb/49
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>int	offloadSetUSleepTime( unsigned int us);
+</code></pre><p>Sets globally the amount of time to sleep a PPU thread for when checking for an Offload thread to complete. PPU threads can sleep during a join operation when the Offload block requested is still active. More than one sleep operation may occur per Join call.
+</p><p>
+The argument us is in microseconds. Runtime accuracy is not provided.
+</p><p>
+A non-zero return value indicates an error.
+</p>
+
+

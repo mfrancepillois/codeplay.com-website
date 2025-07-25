@@ -1,0 +1,24 @@
+---
+id: 148
+category: offload-library
+date: 2020-07-07T17:23:34.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-warnouterthiscalls"
+redirect_from:
+  - /kb/148
+layout: products/offload/kb/view
+---
+<p>Non-static member methods (more precisely the SPU version the Offload compiler generates) called inside offload blocks on outer values will have an __outer this pointers. If that called method heavily processes data off the this pointer it will impact the performance of the offloaded code.
+</p><p>
+The -warnouterthiscalls option is useful to spot the &quot;root&quot; call so that it can be replaced with a call on a SPU-locally cached object instead. For example on the source code in <a href="{{ '/kb/147' | relative_url }}">/kb/147.html</a> the compiler prints these warnings:
+</p>
+<pre><code>*** WARNING: Outer this pointer passed to functions call: cross .
+--- In file: cross.cpp, at line: 18, column: 9
+       va$r = global.cross(global);
+*** WARNING: Outer this pointer passed to functions call: operator= .
+--- In file: cross.cpp, at line: 18, column: 9
+       va$r = global.cross(global);
+</code></pre><p>The first warning is generated for calling vec3::cross on the PPU variable global, and the second warning come from the assignment to the PPU variable var which calls the compiler-generated assignment operator.
+</p>
+
+

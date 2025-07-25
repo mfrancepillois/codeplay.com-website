@@ -1,0 +1,18 @@
+---
+category: news
+date: '2024-07-30T15:26:10.061388'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+title: Updates to oneAPI Plugin for AMD GPUs & Optimizations to Plugin for NVIDIA
+  GPUs Available
+user_id: 1
+---
+
+
+<h3 style="text-align: center;">Heterogeneous programming made easier with updates to oneAPI Plugins for AMD and NVIDIA GPUs</h3>
+<p>For our AMD Plugin in this release, we have implemented an experimental version of SYCL™ Graph. Previously only available for Intel and NVIDIA GPUs, this extension can now be utilized on AMD GPUs and we encourage any feedback on this experimental feature to be provided via our <a href="https://support.codeplay.com/" target="_blank">Discourse forum</a>. SYCL Graph allows developers to batch their offload kernels into graph commands, reducing CPU “busywork” and creating opportunities for greater performance by submitting a single graph rather than many individual kernels. SYCL Graph will map to CUDA® Graphs, OpenCL Commander Buffers and Command Lists in Level Zero and Vulkan. </p>
+<p>We have also introduced numerous fixes and optimizations as part of this full release, and the changelog for our AMD Plugin <a href="https://developer.codeplay.com/products/oneapi/amd/2024.2.0/guides/changelog-amd#changelog" target="_blank">can be read in full here</a>. </p>
+<p>oneAPI for NVIDIA GPUs has also seen improvements as part of the 2024.2.0 release. Specifically, C++ atomics using sequentially consistent memory ordering is now supported, giving developers finer control over the execution of their code. The full changelog for our oneAPI NVIDIA GPU plugin <a href="https://developer.codeplay.com/products/oneapi/nvidia/2024.2.0/guides/changelog-nvidia" target="_blank">can be found here</a>. </p>
+

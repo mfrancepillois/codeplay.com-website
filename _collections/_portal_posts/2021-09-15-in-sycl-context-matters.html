@@ -1,0 +1,20 @@
+---
+title: "In SYCL&trade;, Context Matters"
+date: 2021-09-15T09:01:00.760000+00:00
+category: videos
+layout: portal/portal-article-view
+user_id: 840
+thumbnail: /assets/images/portal/article-images/in-sycl-context-matters.jpg
+---
+
+<iframe width="560"
+        height="315"
+        data-requiresCookieAcceptance="true"
+        data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/3AESFkehoxg"></iframe>
+
+<br /><br />
+<p><b>SYCL Summer Sessions 2021</b></p>
+<p><b>Thomas Applencourt, Argonne National Laboratory</b></p>
+
+<p>In SYCL, contexts are used for memory isolation. This is a common source of error, mainly when using SYCL2020 Unified Shared Memory. In particular, a kernel submitted to a queue (Q1 for example) can only access memory that has been allocated in the same context as the one used to create Q1.</p>
+<p>This 30min talk will illustrate those contexts subtleties via small reproducers extracted from real-life examples and provide recommendations on how one can avoid those pitfalls.</p>

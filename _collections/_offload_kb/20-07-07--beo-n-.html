@@ -1,0 +1,18 @@
+---
+id: 16
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-BEO[n]"
+redirect_from:
+  - /kb/16
+layout: products/offload/kb/view
+---
+<p>Offload outputs C code which is then compiled by PPU GCC and SPU GCC to generate an object file. The -BEO[n] option passes the optimization level n to SPU GCC and PPU GCC.
+</p><p>
+It can often be useful to compile the C code output by Offload with a specific optimization level, for example where the SPU binary is growing too large. We provide the compiler option &ndash;BEO[n] (n being the optimization level), that has the standard GCC optimization levels, &ndash;BEO0, -BEO1, -BEO2, -BEO3 &amp; -BEOs. This comes in handy as it means you can compile an example with &ndash;O3 &ndash;BEOs, which turns all the Offload optimizations on, but compiles the code we generate with space in mind, allowing some examples that would not necessarily fit in the SPU with its restrictions of binary size, to fit.
+</p><p>
+Different optimization levels can be applied to SPU GCC and PPU GCC by using the -BEppuopt and -BEspuopt option (<a href="{{ '/kb/17' | relative_url }}">/kb/17.html</a>) respectively.
+</p>
+
+

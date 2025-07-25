@@ -1,0 +1,439 @@
+---
+id: 106
+url: lldb-mi-driver---part-4-how-to-add-a-command
+user_id: 649
+date: 2014-08-08T18:35:36.7200Z
+category: blogs
+title: "LLDB MI Driver - Part 4: How to Add a Command"
+showOnFrontPage: 0
+views: 177
+tags: LLDB,LLDB-MI,C++,Eclipse,Debuggers
+redirect_from:
+  - /portal/lldb-mi-driver---part-4-how-to-add-a-command
+thumbnail: /assets/images/portal/article-images/e8269449c79bdd9df89055ad497d7cf5.png
+layout: portal/portal-article-view
+---
+
+<p><strong>Articles in this series</strong> </p><ul>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-1-introduction' | relative_url }}">Part 1: Intro</a></li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-2-setting-up-the-driver' | relative_url }}">Part 2: Setting Up the Driver</a> </li>
+<li> <a href="{{ '/portal/lldb-mi-driver---part-3-the-design' | relative_url }}">Part 3: The Design</a> </li>
+<li> <strong>Part 4: How to Add a Command</strong></li>
+</ul><h2>1 Introduction</h2>
+<p>One of the design requirements for the Machine Interface (MI) Driver was to make it straightforward to add a new command class to the code base, while minimising interference with other code. This blog post explains how to do that; first giving some background into how and why the command system is set up as it is, then showing how to implement a command and get it operating. Following that is a description of how to get a command to parse its arguments and retrieve the values. Finally, section 4 shows examples of the different types of MI command arguments and how they are handled, and section 5 describes what to do should a command fail. If you are reading this for the first time, it is recommended to read all of the sub-sections in the order shown.
+</p>
+<p>
+I recommend that you read <a href="lldb-mi-driver---part-3-the-design">Part 3</a> of the MI Driver blog, &quot;The Design&quot;, as it gives a high level overview of the driver, and how an MI command is handled.
+</p>
+<p>
+This blog assumes that you have already downloaded the MI Driver code and build files from the <a href="http://lldb.llvm.org/source.html">LLDB repository</a> and can successfully build and run the MI Driver. The application of a command described here is based on version 1.0.0.6/7, but it is envisaged that the instructions given should cover future versions with little or few changes.
+</p><h2>2 Command Design</h2>
+<p>Figure 1 shows a UML diagram of the command class and its association with other parts of the MI Driver.
+</p>
+<p>
+<img src="{{ '/assets/images/portal/article-images/e8269449c79bdd9df89055ad497d7cf5.png' | relative_url }}" alt="Figure 1: Command UML diagram"/>
+</p>
+<p>
+<strong>Figure 1: Command UML diagram</strong>
+</p>
+<p>
+Your command is very likely to have to work with some parts shown in the diagram, though it does not have to. The simplest command is a class derived from <strong>CMICmdBase</strong>, overriding the <strong>Execute()</strong>  and <strong>Acknowledge()</strong>  functions, which does nothing in the Execute function and outputs “Done” in the Acknowledge function:
+</p>
+<pre>bool CMICmdCmdMyClass::Execute( void )
+{
+	// Do nothing
+	return MIstatus::success;
+}
+
+bool CMICmdCmdMyClass::Acknowledge( void )
+{
+	const CMICmnMIResultRecord miRecordResult( m_cmdData.strMiCmdToken,
+	                                           CMICmnMIResultRecord::eResultClass_Done );
+	m_miResultRecord = miRecordResult;
+
+	return MIstatus::success;
+}
+</pre>
+
+<p>
+This will form the MI response:
+</p>
+<p>
+<strong>3^Done</strong>
+</p>
+<p>
+The components (as shown in Figure 1) that your command's code may have direct interaction with are:
+</p><ul>
+<li> The LLDB Debugger (CMICmnLLDBDebugger)</li>
+<li> The debugging session information (CMICmnLLDBDebuggerSession). Holds and shares state information between commands being executed.</li>
+<li> The Logger (CMICmnLog). It writes status and debug information to a file.</li>
+<li> The MI Response formation classes. These aid the formatting of the MI response text.</li>
+<li> The command argument parsing classes. These aid the parsing of arguments or options that your command may require.</li>
+</ul>
+<p>
+The other components shown in the diagram are for reference only, as your command's code will not need direct contact with those parts.
+</p>
+<p>
+Generally, the rule for implementing a command is that work is only carried out in the Execute() function, and results of that work are turned into an MI response only in the Acknowledge() function. While this is not strictly required, other than for consistency, it does allow scope for future development, should it arise.
+</p><h2>3 Creating a New Command Class</h2>
+<p>The steps below create and implement a simple command like the one above:
+</p><ol>
+<li> Create a new class in an existing command interface and implementation file, or create new interface and implementation files. The files should have the same name as the command.</li>
+<li> In the Execute() function just return MIstatus::success. A success tells the Command Invoker that the command successfully completed its task. On receipt of a success status from the Execute() function, the Invoker calls the command's Acknowledge function. Should the Execute() function return MIstatus::failure instead, an error message is formed and reported to the MI Driver Log file via the Invoker.</li>
+<li> The Acknowledge() function should ideally return MIstatus::success, along with the completed MI response, as described in the previous section.</li>
+<li> Your command must also have, or set, the following:<ul>
+<li> The MI command text or command name that the Command Interpreter and Factory match to the MI text from the client i.e. “trace-status”.</li>
+<li> A ::CreateSelf() function. The Command Factory uses this static method to create a new instance of your command class.</li>
+<li> The command base class variable m_pSelfCreatorFn is assigned the address of the ::CreateSelf() function.</li></ul></li>
+<li> Register the command class with the Command Factory in the MICmdCommands.cpp file.</li>
+<li> Compile the MI Driver with the new code.</li>
+<li> From the command line run the MI Driver with the long option –interpreter.</li>
+<li> Type in the following to verify that your command has been implemented:<br/><strong>1-info-gdb-mi-command &lt;Your MI command&gt;</strong><br/><br/>The MI Driver should respond as follows if implemented correctly:<br/><strong>1^done,command={exists=”true”}<br/>1^Done</strong> </li>
+<li> You are now ready to implement the body of your command.</li>
+</ol><h2>4 Parsing Command Arguments</h2>
+<p>A command may parse either arguments or options as described in the <a href="https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI.html">MI Specification</a>
+ to assist in carrying out its task. In order to do this, your command class needs to override and implement the ParseArg() function. The ParseArg() function is called by the Command Invoker prior to calling the command's Execute() function. In the ParseArg() function the CMICmdArgXXX classes are used to define the arguments or options that the command will accept. The definitions are then validated against the text passed in with the MI command. If the validation and retrieving of argument values is successful, the ParseArg() function will return MIstatus::success and the Command Invoker will proceed to call the command object's Execute() function. Alternatively, if the arguments, options, or their values do not match the argument's definitions then the ParseArg() function will return MIstatus::failure, and a report is sent to the Log file describing the problem.
+</p>
+<p>
+Argument definitions can also be set so that they output a warning (to the Log file) when they receive arguments or options that are recognized but not handled by the command (see the CMICmdArgValXXX's constructors). This allows you to track an incoming MI command that has options which you really should handle but are currently ignoring. If you have not set up a command to accept an option that it should handle, it will not be recognized during parsing, triggering a failure report to the effect that an unrecognized option was specified. Using the CMICmdArgXXX set of classes disallows a command from ignoring arguments or options.
+</p>
+<p>
+The MI specification indicates that there are about 10 types of command arguments or options that can be handled. The CMICmdArgXXX set of classes can handle the following types of input:
+</p><ul>
+<li> Type string and quoted text value</li>
+<li> Type number value</li>
+<li> A list of N values of a specific type<ul>
+<li> Specific number of values</li>
+<li> Any number of values</li>
+<li> Type file path</li></ul></li>
+<li> --longOption<ul>
+<li> Without a value</li>
+<li> With a value</li>
+<li> Specific number of values</li>
+<li> Any number of values</li></ul></li>
+<li> -s hort option<ul>
+<li> Without a value</li>
+<li> With a value</li>
+<li> Specific number of values</li>
+<li> Any number of values</li></ul></li>
+<li> There is little or no notion of the order of the arguments from left to right</li>
+<li> However, for some commands the order of options is important i.e. the 5th value is the thread ID, the 6th is depth. If you miss parsing the 5th value then the depth becomes the thread ID, which is wrong.</li>
+</ul>
+<p>
+The CMICmdArgValXXX set of classes are:
+</p><table><tr><th>Class </th><th>Meaning </th></tr><tr><td>CMICmdArgValConsume </td><td> Recognize particular option and just ignore it </td></tr><tr><td>CMICmdArgValFile </td><td> Look for a string representing a file path </td></tr><tr><td>CMICmdArgValListOfN </td><td> Look for a list of values of specific type </td></tr><tr><td>CMICmdArgValNumber </td><td> Look for a numerical string </td></tr><tr><td>CMICmdArgValOptionLong </td><td> Look for a word beginning with '--' </td></tr><tr><td>CMICmdArgValOptionShort </td><td> Look for a word beginning with '-' </td></tr><tr><td>CMICmnArgValString </td><td> Look for the next word or quoted set of words </td></tr><tr><td>CMICmnArgValThreadGrp </td><td> Look for a word that indicates it is a thread group i.e. “i1” </td></tr></table>
+<p>
+The CMICmdArgSet class carries out the parsing of the MI command's options that are held in a CMICmdArgContext object.
+</p><h3>4.1 Simple Command Option Parsing</h3>
+<p>Using an existing command in the MI Driver as an example, the command <strong>info-gdb-mi-command</strong> takes one string argument, which is the name of the command. On retrieving the value of the argument, the command queries the MI Driver: “Is this command implemented?”
+</p>
+<p>
+The code below shows the command overriding and implementing the ParseArgs() function.
+</p><pre>bool CMICmdCmdSupportInfoMiCmdQuery::ParseArgs( void )
+{
+	bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValString( m_constStrArgCmdName, true, true ) ) );
+	if( bOk &amp;&amp; !m_setCmdArgs.Validate( m_cmdData.strMiCmd,CMICmdArgContext( m_cmdData.strMiCmdOption ) ))
+	{
+		SetError( CMIUtilString::Format( MIRSRC( IDS_CMD_ERR_ARGS ), m_cmdData.strMiCmd.c_str(),
+		          m_setCmdArgs.GetErrorDescription().c_str() ) );
+		return MIstatus::failure;
+	}
+
+	return bOk;
+}
+</pre>
+<p>
+Using the class CMICmdArgSet, an aggregate of the command, a string argument is being added to the list of arguments that this command will look for (in this case there is only one argument). The CMICmdArgValString constructor defines whether the argument is mandatory and is handled by the command. In the case that an unhandled optional argument was present, a warning would be generated.
+</p>
+<p>
+Many of the CMICmdArgValXXX classes have different constructors that tell the object and the validation process how to parse and validate a particular argument. Once all the arguments or options are defined, the command then parses and validates the command's options text. The code below shows an example of extracting the value of an argument found in the command options text, and using it to ask whether the MI command is implemented.
+</p><pre>bool CMICmdCmdSupportInfoMiCmdQuery::Execute( void )
+{
+	CMICMDBASE_GETOPTION( pArgNamedCmdName, String, m_constStrArgCmdName );
+	const CMIUtilString &amp; rCmdToQuery( pArgNamedCmdName-&gt;GetValue() );
+	const MIuint nLen = rCmdToQuery.length();
+	const CMICmdFactory &amp; rCmdFactory = CMICmdFactory::Instance();
+	if( (nLen &gt; 1) &amp;&amp; (rCmdToQuery[ 0 ] == '-') )
+		m_bCmdFound = rCmdFactory.CmdExist( rCmdToQuery.substr( 1, nLen - 1 ).c_str() );
+	else
+		m_bCmdFound = rCmdFactory.CmdExist( rCmdToQuery );
+
+	return MIstatus::success;
+}
+</pre>
+<p>
+The first line in the function is a preprocessor macro that hides error handling code for the case where an argument name is used that is not recognized by the CMICmdValSet object. The second line shows the command retrieving the value for the argument named 'CmdName'.
+</p>
+<p>
+The argument name is used to match the text name of the argument in the incoming MI command. In the case above, the argument name is defined in the class's constructor as “command-name”, as described in the MI specification.
+</p>
+<p>
+If the MI command under query has been found in the Command Factory, the command's Acknowledge() function creates the MI response:
+</p>
+<p>
+<strong>3^done,command={exists=”true”}</strong>
+</p><h3>4.2 File Path Arguments</h3>
+<p>Using another example, the command -file-exec-and-symbols takes a file path as an argument. The code below shows the code implemented in the MI Driver to look for this type of argument. If the argument did not look like a file path, an error would be returned to the Command Invoker.
+</p>
+<p>
+The MI command sent to the CMICmdFileExecAndSymbols command looks like:
+</p>
+<p>
+<strong>-file-exec-and-symbols /home/user/myapplication</strong>
+</p>
+<p>
+The MI Driver Arg class is: CMICmdArgValFile
+</p>
+<p>
+The ParseArgs() code is:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValFile( m_constStrArgNamePathDir, true, true ) ) );
+</pre>
+<p>
+The Execute() code is:
+</p><pre>CMICMDBASE_GETOPTION( pArgPathDir, File, m_constStrArgNamePathDir );
+const CMIUtilString &amp; strWkDir( pArgPathDir-&gt;GetValue() );
+</pre><h3>4.3 Numerical Arguments</h3>
+<p>The MI command sent to the CMICmdThreadInfo command looks like:
+</p>
+<p>
+<strong>-thread-info [thread-id]</strong>
+</p>
+<p>
+As described in the MI specification, the square brackets ('[]') indicate that the argument is optional and is numerical. The second parameter in the CMICmdArgValNumber constructor is a bool, which is set to true if the argument is mandatory or false if it's optional.
+</p>
+<p>
+The MI Driver Arg class: CMICmdArgValNumber
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValNumber( m_constStrArgNameThreadId, false, true ) ) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgThreadId, Number, m_constStrArgNamedThreadId );
+MIuint nThreadId = 0;
+m_bSingleThread = false;
+if( pArgThreadId-&gt;GetFound() &amp;&amp; pArgThreadId-&gt;GetValid() )
+{
+	m_bSingleThread  = true;
+	nThreadId = static_cast&lt; MIuint &gt;( pArgThreadId-&gt;GetValue() );
+}
+</pre><h3>4.4 Long Options</h3>
+<p>The MI command sent to the CMICmdExecNext command looks like:
+</p>
+<p>
+<strong>-exec-next –threadId 1</strong>
+</p>
+<p>
+Note that the MI specification declares that, for this command, the long option accepts only one numerical value. This will be specified in the argument definition.
+</p>
+<p>
+The MI Driver Arg class: CMICmdArgValOptionLong
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValLong( m_constStrArgNameThread, true, true,
+                                                     CMICmdArgValListBase::eArgValTypeNumber, 1 ) ) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgThread, OptionLong, m_constStrArgThread );
+MIuint64 nThreadId = UINT64_MAX;
+if( !pArgThread-&gt;GetExpectedOption&lt; CMICmdArgValNumber, MIuint64 &gt;( nThreadId ) )
+{
+	SetError( CMIUtilString::Format( MIRSRC( IDS_CMD_ERR_OPTION_NOT_FOUND ),
+	                                 m_cmdData.strMiCmd.c_str(), m_constStrArgThread.c_str() ) );
+	return MIstatus::failure;
+}
+</pre><h3>4.5 Short Options</h3>
+<p>The MI command sent to the CMICmdVarEvaluateExpression command looks like:
+</p>
+<p>
+<strong>-var-evaluate-expression [-f format-spec] name</strong>
+</p>
+<p>
+Here we have an optional argument preceded by a mandatory argument. The argument definitions are searched for in the order that the definitions were added to the CMICmdArgSet object.
+</p>
+<p>
+The MI Driver Arg class: CMICmdArgValOptionShort
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgFormatSpec, false, false,
+                                                            CMICmdArgValListBase::eArgValType_String, 1 ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValString( m_constStrArgName, true, true ) ) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgName, String, m_constStrArgName );
+CMICMDBASE_GETOPTION( pArgFormatSpec, OptionShort, m_constStrArgFormatSpec );
+CMIUtilString strFormat;
+if( pArgFormatSpec-&gt;GetExpectedOption&lt; CMICmdArgValString, CMIUtilString &gt;( strFormat ) )
+{
+	SetError( CMIUtilString::Format( MIRSRC( IDS_CMD_ERR_OPTION_NOT_FOUND ),
+	                                 m_cmdData.strMiCmd.c_str(), m_constStrArgFormatSpec.c_str() ) );
+	return MIstatus::failure;
+}
+const CMIUtilString &amp; rVarObjName( pArgName-&gt;GetValue() );
+</pre>
+<p>
+The above code is an example only.
+</p><h3>4.6 Thread Group Argument</h3>
+<p>A thread group argument has a value that looks like “i2”. The MI command sent to the CMICmdListThreadGroups command looks like:
+</p>
+<p>
+<strong>-list-thread-groups [ --available ] [ --recurse 1 ] [ group ... ] [ i1 ]</strong>
+</p>
+<p>
+Here we have an optional argument 'group' that takes an arbitrary list of numbers, followed by the thread group.
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValOptionLong( m_constStrArgNamedAvailable, false, false )) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionLong( m_constStrArgNamedRecurse, false, false,
+                                                             CMICmdArgValListBase::eArgValType_Number, 1 )) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValListOfN( m_constStrArgNamedGroup, false, false,
+                                                          CMICmdArgValListBase::eArgValType_Number )) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValThreadGrp( m_constStrArgNamedThreadGroup, false, true )) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgThreadGroup, ThreadGrp, m_constStrArgNamedThreadGroup );
+const MIint nThreadGrp = pArgThreadGroup-&gt;GetFound() ? pArgThreadGroup-&gt;GetValue() : -1;
+</pre>
+<p>
+Because the command is only handling the thread group argument, the other arguments are not retrieved in the Execute() function.
+</p><h3>4.7 A Command That Parses Many Arguments</h3>
+<p>The MI command sent to the CMICmdBreakInsert command looks like:
+</p>
+<p>
+<strong>-break-insert [ -t ] [ -h ] [ -f ] [ -d ] [ -a ] [ -c condition ] [ -i ignore-count ] [ -p thread-id ] [ location ]</strong>
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedTempBrkPt, false, true )) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedHWBrkPt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedPendinfBrkPt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedDisableBrkPt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedTracePt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedConditionalBrkPt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedInoreCnt, false, false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValOptionShort( m_constStrArgNamedRestrictBrkPtToThreadId, false,
+                                                              false ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValString( m_constStrArgNamedLocation, false, true ) ) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgTempBrkPt, OptionShort, m_constStrArgNamedTempBrkPt );
+CMICMDBASE_GETOPTION( pArgLocation, String, m_constStrArgNamedLocation );
+CMICMDBASE_GETOPTION( pArgIgnoreCnt, OptionShort, m_constStrArgNamedInoreCnt );
+CMICMDBASE_GETOPTION( pArgPendingBrkPt, OptionShort, m_constStrArgNamedPendinfBrkPt );
+CMICMDBASE_GETOPTION( pArgDisableBrkPt, OptionShort, m_constStrArgNamedDisableBrkPt );
+CMICMDBASE_GETOPTION( pArgConditionalBrkPt, OptionShort, m_constStrArgNamedConditionalBrkPt );
+CMICMDBASE_GETOPTION( pArgRestrictBrkPtToThreadId, OptionShort, m_constStrArgNamedRestrictBrkPtToThreadId );
+m_bBrkPtEnabled = !pArgDisableBrkPt-&gt;GetFound();
+m_bBrkPtIsTemp = pArgTempBrkPt-&gt;GetFound();
+m_bBrkPtIsPending = pArgPendingBrkPt-&gt;GetFound();
+m_bBrkPtCondition = pArgConditionalBrkPt-&gt;GetFound();
+m_bBrkPtThreadId = pArgRestrictBrkPtToThreadId-&gt;GetFound();
+if( pArgLocation-&gt;GetFound() )
+	m_brkName = pArgLocation-&gt;GetValue();
+</pre>
+<p>
+The above is an example based on the real code. Because the command is only handling some of the arguments, the other arguments are not retrieved in the Execute() function. Ideally, the command should handle all of the arguments and options specified.
+</p><h3>4.8 A Command with an Arbitrary Number of Arguments</h3>
+<p>The MI command sent to the CMICmdBreakCondition command looks like:
+</p>
+<p>
+<strong>-break-condition number expr</strong>
+</p>
+<p>
+This command looks simple enough, but is complicated by the fact that the 'expr' argument can be a single word, a list of words, or words surrounded by a set of quotes. For example:
+<br/><br/>
+A+B		? This is one word = one string<br/>
+“A + B”	? This a quoted set of words = one string<br/>
+A + B	? This is several words = three separate strings<br/>
+</p>
+<p>
+We know that there must be at least one word present, otherwise the argument parsing would report an error. So, CMICmdValArgString is used and set to mandatory. The argument can be formed of a set of words surrounded by quotes, so the CMICmdValArgString is also set with 'handle quotes'. However, the expression argument can also be given to the command as a set of words not surrounded by quotes. This means that we have to handle a List of N arguments of type String as well. To deal with this, we define both a mandatory string argument and also an optional List of N strings. Though the definition list below initially seems to handle additional arguments, the final two definitions work together to handle an unquoted set of words.
+</p>
+<p>
+The ParseArgs() code:
+</p><pre>bool bOk = m_setCmdArgs.Add( *(new CMICmdArgValNumber( m_constStrArgNamedNumber, true, true ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValString( m_constStrArgNamedExpr, true, true, true, true ) ) );
+bOk = bOk &amp;&amp; m_setCmdArgs.Add( *(new CMICmdArgValListOfN( m_constStrArgNamedExprNoQuotes, true, false,
+                                                          CMICmdArgValListBase::eArgValType_StringQuotedNumber ) ) );
+</pre>
+<p>
+The Execute() code:
+</p><pre>CMICMDBASE_GETOPTION( pArgNumber, Number, m_constStrArgNamedNumber );
+CMICMDBASE_GETOPTION( pArgExpr, String, m_constStrArgNamedExpr );
+m_nBrkPtId = pArgNumber-&gt;GetValue();
+m_strBrkPtExpr = pArgExpr-&gt;GetValue();
+m_strBrkPtExpr += GetRestOfExpressionNotSurroundedInQuotes();
+</pre>
+<p>
+As we can see above, the expression string m_strBrkPtExpr is made up of the mandatory part and any additional words added on.
+</p>
+<p>
+All of the examples so far have shown us only how to retrieve a single value for a given argument or option. However, there are also cases where we need to retrieve a list of values for a given argument. The argument definition List of N type above is such a case. The code below shows the GetRestOfExpressionNotSurroundedInQuotes() function that is called in the code above.
+</p><pre>CMIUtilString CMICmdCmdBreakCondition::GetRestOfExpressionNotSurroundedInQuotes( void )
+{
+	CMIUtilString strExpression;
+
+	CMICmdArgValListOfN * pArgExprNoQuotes = CMICmdBase::GetOption&lt; CMICmdArgValListOfN &gt;(
+		m_constStrArgNamedExprNoQuotes );
+	if( pArgExprNoQuotes != nullptr )
+	{
+		CMIUtilString strExpression;
+		const CMICmdArgValListBase::VecArgObjPtr_t &amp; rVecExprParts( pArgExprNoQuotes-&gt;GetExpectedOptions() );
+		if( !rVecExprParts.empty() )
+		{
+			CMICmdArgValListBase::VecArgObjPtr_t::const_iterator it = rVecExprParts.begin();
+			while( it != rVecExprParts.end() )
+			{
+				const CMICmdArgValString * pPartExpr = static_cast&lt; CMICmdArgValString * &gt;( *it );
+				const CMIUtilString &amp; rPartExpr = pPartExpr-&gt;GetValue();
+				strExpression += &quot; &quot;;
+				strExpression += rPartExpr;
+
+				// Next
+				++it;
+			}
+			strExpression = strExpression.Trim();
+		}
+	}
+
+	return strExpression;
+}
+</pre>
+<p>
+The code above is the most explicit way to retrieve a list's values. The list type classes provide helper functions to simplify your code without the need to use the command base class function GetOption(). Some example helper functions are:
+</p>
+<p>
+CMICmdArgValListOfN::GetExpectedOption( … )		? Retrieve the first argument in the list<br/>
+CMICmdArgValListOfN::GetExpectedOptions( … )	? Retrieve the whole container of values
+</p>
+<p>
+These functions are commonly used in various commands.
+</p><h2>5 Command Error Handling</h2>
+<p>As you may have noticed from earlier examples, a command can fail by returning MIstatus::failure. This can be returned from the functions ParseArgs(), Execute() and Acknowledge(). Should a command return failure, the Command Invoker will try to retrieve an error status description message from that command and send it on to the stderr stream or Log file. It is important for all commands to set an error message upon failure.
+</p>
+<p>
+An example of a command setting an error message is shown below.
+</p><pre>if( bOk &amp;&amp; !m_setCmdArgs.Validate( m_cmdData.strMiCmd, argCntxt ) )
+{
+	SetError( CMIUtilString::Format( MIRSRC( IDS_CMD_ERR_ARGS ), m_cmdData.strMiCmd.c_str(),
+	                                 m_setCmdArgs.GetErrorDescription().c_str() ) );
+	return MIstatus::failure;
+}
+</pre>
+<p>
+Note that there is a distinction between a command failing due to incorrect arguments or errors in its own implementation, and a command working as expected but with its task returning a negative result. In the latter case, the command should not return a failure status.
+</p>
+<p>
+Also note that the error descriptions are not hard-coded strings, but use the CMICmnResources Package to retrieve a string with a specified resource ID. This is because all text in the MI Driver that is seen by the end user is held in the Resources Package. In the future, should the messages require localisation, this can be handled by the Resources Package without the need to change the code in the commands.
+</p><h2>6 Conclusion</h2>
+<p>This blog post has concluded the series on the MI Driver, covering the implementation of commands. The reader should now be able to add simple commands of their own if necessary. Thanks for reading, and we hope that you found the series useful! If you have any comments, please feel free to use the comment thread below. We'd love to hear about your experiences with the MI Driver!
+</p>
+

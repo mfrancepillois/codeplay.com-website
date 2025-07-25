@@ -1,0 +1,56 @@
+---
+id: 152
+category: vectorc
+date: 2013-05-24T17:30:09.7200Z
+date_updated: 0
+title: "VectorC{EE}"
+url: vectorcee
+description:
+redirect_from:
+  - /company/documents/vectorcee
+layout: company/documents/view
+---
+<p><strong>VectorC{EE} has been discontinued and is no longer available. Support enquiries from existing licensees will still be accepted however.</strong>
+</p><h2>VectorC {EE} Overview</h2><p>VectorC{EE} optimizes existing PlayStation®2 software using software pipelining, memory access reduction and vectorization. You can quickly and easily improve the performance of your existing game engine by recompiling with VectorC{EE}. You can also write portable, easy to maintain code with VectorC{EE} that still gives maximum speed.
+</p><h2>VectorC {EE} features:</h2><ul><li> CodeWarrior compatibility/integration</li>
+<li> Visual Studio 6 and .NET compatibility/integration.</li>
+<li> Automatic software pipelining - doubles the speed of most small loops</li>
+<li> Memory access reduction</li>
+<li> Advanced Instruction Scheduler</li>
+<li> Intelligent prefetching</li>
+<li> Uncached stores</li>
+<li> Portable intrinsic functions</li>
+<li> Autovectorization targeting Multi Media Instructions (MMI)</li>
+<li> Autovectorization for VU0 ‘macro mode’ instructions</li>
+<li> Faster MIPS calling conventions</li>
+<li> Support for established in-line assembly syntax</li>
+<li> Schedules in-line assembly</li>
+<li> Interactive Optimizer utility</li>
+</ul>
+<h2>Performance Comparison</h2><p>This simple skinning loop was implemented and compiled using, GCC 2.95.3, CodeWarrior and VectorC{EE}.
+</p>
+<pre>for (i=0; i
+ pos1 = SkinBones [SkinVerts [i].bone1].viewtransform * pos;
+ pos2 = SkinBones [SkinVerts [i].bone2].viewtransform * pos;
+ pos = SkinVerts [i].bone1factor * pos1
+ + SkinVerts [i].bone2factor * pos2;
+ SkinVerts [i].transformed = pos;
+}
+</pre>
+<table><tr><th> </th><th>VectorC{EE} </th><th>CodeWarrior with Intrinsics </th><th>CodeWarrior with Inline Assembly </th><th>GCC 2.95.3 with Inline Assembly</th></tr><tr><td> Cycle Counts </td><td> 438,274 </td><td>1,055,416 </td><td>910,220 </td><td>816,058</td></tr><tr><td> % improvement using VectorC{EE} </td><td> </td><td> 140% </td><td> 107% </td><td> 86%</td></tr></table>
+<h2>VectorC{EE} Concept</h2><p>The PlayStation®2 contains a MIPS-derived CPU with a number of functional enhancements, known as the Emotion Engine® Core. VectorC {EE} is a standard C/C++ compiler which targets the EE Core with the same ‘Smart Compiler’ vectorizing technology proven on the x86 platform. Unlike competing compilers, VectorC {EE} is not a generic MIPS compiler; rather it is designed specifically to exploit the unique strengths of the PlayStation®2 hardware.
+</p><p>
+VectorC{EE} 2.1 is compatible with CodeWarrior and GCC 2.9x. You can use VectorC{EE} in CodeWarrior, Visual Studio and makeiles.
+</p><p>
+With the development of ever more ambitious games with increasingly complex gameplay, the demands upon the PlayStation®2’s Emotion Engine are becoming yet greater over time. Similarly the challenges for PS2 game programmers in achieving adequate performance are also increasing.
+</p><p>
+In addition to the cutting edge autovectorization features, VectorC{EE} is a potent MIPS compiler. Dedicated to the specific architecture of the EE Core, VectorC{EE} utilises enhanced instruction scheduling and extensive memory optimization such as intelligent prefetching and uncached stores.
+</p>
+ <h2> Superior Performance</h2><p>The goal of VectorC {EE} is not only to provide superior performance over GCC for standard C/C++ code but also to allow more rapid development of adequately optimized game code for inclusion in tomorrow’s cutting-edge PlayStation®2 games.
+</p><p>
+VectorC {EE} can autovectorize standard C/C++ source programs and generate highly optimized code including Multi Media Instructions (MMI), one of the EE Core’s unique features. VectorC {EE} is also capable of autovectorizing for the co-processor vector unit (VU0) by outputting embedded macro-mode instructions. Using this facility, complex programs can gain the computational power of VU0 without the need to write separate micro-mode programs.
+</p><p>
+While VectorC {EE} compiles standard C/C++, a few extra language features have been added to help the optimizer know when to apply its most powerful transformations. These transparent features are identical across all VectorC compilers and do not change the meaning of the code. Effectively these additions provide the developer with the ability to obtain performance close to the maximum capabilities of the hardware without resorting to assembly language.
+</p>
+ <h2>The Interactive Optimizer</h2><p>Another unique aspect of VectorC {EE} is the included Interactive Optimizer application. Codeplay ‘Smart Compiler’ technology provides advice back to the developer on how performance gains may be made from the source code, either by changing the source code or embedding the provided extra language features. The goal of the Interactive Optimizer is to provide an easy mechanism to view this advice and to modify the compiler settings and source code in order to maximize the performance of the output code. </p>
+

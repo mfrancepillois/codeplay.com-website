@@ -1,0 +1,51 @@
+{% capture emptyline %}
+{% endcapture %}
+{% capture tabs %}    {% endcapture %}
+{{tabs}}<meta name="twitter:card" content="summary" />
+{{tabs}}<meta name="twitter:site" content="@codeplaysoft" />
+{{tabs}}<meta name="twitter:creator" content="@codeplaysoft" />
+{{emptyline}}
+
+{%- if layout.title or page.title -%}
+
+{%- if page.title -%}
+{{tabs}}<meta property="og:title" content="{{page.title | truncate:70 | escape}}" />
+{%- else -%}
+{{tabs}}<meta property="og:title" content="{{layout.title | truncate:70 | escape}}"/>
+{%- endif -%}
+
+{{emptyline}}
+
+{%- endif -%}
+
+{%- if page.collection == 'portal_posts' or page.collection == 'careers' -%}
+{{tabs}}<meta property="og:description" content="{{page.content | strip_html | strip_newlines | truncate:160 }}" />
+{%- else -%}
+{{tabs}}<meta property="og:description" content="{{site.description}}" />
+{%- endif -%}
+
+{{emptyline}}
+
+{%- if layout.thumbnail or page.thumbnail -%}
+
+{%- if page.thumbnail -%}
+{{tabs}}<meta property="og:image" content="{{site.url}}{{page.thumbnail}}" />
+{%- else -%}
+{{tabs}}<meta property="og:image" content="{{site.url}}{{layout.thumbnail}}" />
+{%- endif -%}
+
+{{emptyline}}
+
+{%- endif -%}
+
+{%- if page.collection == 'portal_posts' -%}
+{{tabs}}<meta property="og:type" content="article" />
+{%- else -%}
+{{tabs}}<meta property="og:type" content="website" />
+{%- endif -%}
+
+{{emptyline}}
+
+{%- if page.url -%}
+{{tabs}}<meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+{%- endif -%}

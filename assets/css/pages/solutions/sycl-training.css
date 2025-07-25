@@ -1,0 +1,81 @@
+---
+---
+
+section#splash #splash-img {
+	 display: inline-block;
+	 width: 645px;
+	 height: 520px;
+}
+ section#our-training-program {
+	 background-color: #f35a1c;
+	 color: #efefef;
+}
+ #packages div.content {
+	 padding: 4rem;
+}
+ #packages div.action {
+	 background-color: #e0e0e0;
+	 padding: 2rem 4rem;
+}
+ #packages div.action .button {
+	 width: 100%;
+	 text-align: center;
+}
+ #packages > * {
+	 background-color: white;
+	 display: grid;
+	 grid-template-rows: auto auto;
+	 box-shadow: 0px 0px 16px -2px rgba(0, 0, 0, 0.1);
+}
+ #packages h1 {
+	 font-size: 1.8rem;
+	 font-weight: bold;
+}
+ #packages h2 {
+	 margin-top: 1rem;
+}
+ #packages h3 {
+	 margin-top: 0.4rem;
+	 margin-bottom: 2rem;
+}
+ #packages ul {
+	 padding: 0;
+	 margin: 2rem 0 0 0;
+	 list-style-image: url({{ '/assets/images/solutions/sycl-training/trick.png' | relative_url }});
+	 list-style-position: inside;
+}
+ #packages ul > li {
+	 padding: 0.3rem 0;
+	 vertical-align: middle;
+}
+ #sycl-package-popup {
+	 width: 1000px;
+	 max-width: 1000px;
+	 height: auto;
+}
+ #sycl-package-popup .columns {
+	 height: 100%;
+	 grid-column-gap: 0;
+}
+ #sycl-package-popup .columns > div {
+	 padding: 3rem;
+}
+ #sycl-package-popup .columns > div:nth-child(1) {
+	 background-color: #f35a1c;
+	 color: #efefef;
+}
+ #sycl-package-popup .columns > div:nth-child(1) h2 {
+	 opacity: 0.7;
+}
+ @media screen and (min-width: 600px) {
+	 #sycl-package-popup-sent {
+		 height: 330px;
+	}
+}
+ #sycl-package-popup-sent > div {
+	 padding: 4rem;
+}
+ #sycl-package-popup-sent button {
+	 width: 100%;
+}
+

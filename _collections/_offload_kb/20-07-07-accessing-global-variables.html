@@ -1,0 +1,33 @@
+---
+id: 31
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Accessing Global Variables"
+redirect_from:
+  - /kb/31
+layout: products/offload/kb/view
+---
+<p>Any coder who has written an SPU job before knows the problems of trying to access global PPU variables from the SPU. Offload provides a much simpler mechanism for accessing PPU globals.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+#include &lt;RendererDebug.h&gt;
+extern RendererDebugState gDbgRenderer;
+int global = 42;
+
+static void func()
+{
+	__blockingoffload()
+	{
+		int local = global; // local has the value 42!
+		if (gDbgRenderer.drawState)
+		{
+			Renderer::DrawLine(....);
+			//.....
+		}
+	};
+}
+</code></pre><p>Any global variables that the Offload compiler can see can be linked against, including extern variables defined in other translation units.
+</p>
+
+

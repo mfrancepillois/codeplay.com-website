@@ -1,0 +1,91 @@
+---
+category: blogs
+date: '2024-05-08T14:02:44.642728'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/article-images/screenshot-2024-05-08-at-10-24-31.png
+title: Codeplay @ IWOCL 2024
+user_id: 2018288
+---
+
+<p>The Windy City of Chicago was host to the 12th iteration of the IWOCL conference in April 2024, gathering members of
+    the SYCL and OpenCL communities from very different backgrounds. This conference is the perfect setting for Khronos
+    working groups members, implementers and users to share their experience and knowledge, pushing the boundaries of
+    what is achievable within these ecosystems.</p>
+<p>SYCL itself has always been tightly linked to Codeplay, given its focus in our community as one of the main drivers
+    of its development. This way, Codeplay was a proud sponsor of IWOCL 2024 and also put its grain of sand to organize
+    the conference as a Khronos member.</p>
+<p>The conference started on Monday with the HackFest session chaired by Intel's Sri Ramkrishna and sponsored by Intel
+    and Codeplay. This year's HackFest was a great point of contact between users and SYCL experts including HackFest
+    mentors Tom Deakin, from University of Bristol and SYCL Working Group Chair; Aksel Alpay, from Heidelberg University
+    and creator of AdaptiveCpp; Thomas Applencourt, from Argonne National Laboratory and SYCL Advisory Panel Chair; and
+    our own Hugh Delaney. We were glad to see more and more developers using SYCL in their projects and even porting
+    their CUDA codebases to SYCL using existing semi-automatic tools. This is the case of <a
+            href="https://www.intel.com/content/www/us/en/developer/articles/technical/syclomatic-new-cuda-to-sycl-code-migration-tool.html">SYCLomatic</a>,
+    whose adoption among developers signifies its viability and the improvements it has gone through in the last twelve
+    months. This first session set the tone of collaboration and openness for the rest of the conference. As one of the
+    highlights of the day, we were all witnesses of the partial eclipse taking place that day in the Chicago sky.</p>
+<p><img src="{{ '/assets/images/portal/article-images/whatsapp-image-2024-04-10-at-22-46-55.jpeg' | relative_url }}" /><br/></p>
+<p><img src="{{ '/assets/images/portal/article-images/20240408-140442.jpg' | relative_url }}" alt=""/><br/></p>
+<p>Tuesday was the Advanced SYCL Tutorial Day, presented by Aksel Alpay, Thomas Applencourt and Abhishek Bagusetty, from
+    Argonne National Laboratory, and Codeplay's Hugh Delaney, who also chaired the tutorial. The tutorial covered
+    advanced topics such as concurrency using in-order and out-of-order queues; using multiple devices within SYCL;
+    using advanced SYCL features such as group algorithms, reduction operators and atomics; optimizing memory access
+    patterns for GPUs; as well as using math libraries like <a
+            href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html">oneMKL</a> within SYCL.
+    Attendees came from a diverse range of backgrounds, with many attendees being familiar with other GPU programming
+    APIs such as CUDA or OpenCL. As such they were keen to discuss their experiences in developing SYCL applications.
+    There was also plenty of open discussion where presenters of the tutorial, being either SYCL implementers or SYCL
+    application developers, advised attendees on how to extract maximum performance from their SYCL applications, or
+    resolve any issues they were facing. The SYCL tutorial was followed by a reception in which Khronos provided SYCL
+    T-shirts and attendees could share their views and experiences.</p>
+<p><img src="{{ '/assets/images/portal/article-images/screenshot-2024-05-08-at-10-24-31.png' | relative_url }}"/><br/></p>
+<p>The rest of the days of the conference, Wednesday and Thursday, were allocated for conference sessions. The first
+    three slots were reserved for keynotes, in which OpenCL, SYCL and SYCL SC working groups could give the community an
+    update on their progress throughout the year and what is to come. On the SYCL side, Tom Deakin shared ongoing plans
+    for <a href="https://discourse.llvm.org/t/rfc-add-sycl-programming-model-support">SYCL upstreaming to LLVM</a>, gave
+    an update on <a href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compiler.html">Intel's
+        DPC++</a> as the first SYCL 2020-conformant implementation and hinted an upcoming SYCL version codenamed SYCL
+    Next. Marking the anniversary of the SYCL SC announcement, Codeplay's Hugh Delaney and Víctor Pérez presented the
+    ongoing efforts in the specification of a new Khronos standard for safety critical systems based on SYCL, which will
+    enable heterogeneous computing on safety critical industries such as automotive or medical.</p>
+<p>Among all of the many interesting talks, I would personally like to highlight a few of them:</p>
+<ul>
+    <li><a href="https://dl.acm.org/doi/10.1145/3648115.3648130">Evaluation of SYCL's Different Data Parallel
+        Kernels</a>, Marcel Breyer from University of Stuttgart, taking home the Outstanding Short Paper or Technical
+        Talk Award and discussing performance differences when using different APIs for submitting kernels on DPC++ and
+        AdaptiveCpp.
+    </li>
+    <li><a href="https://dl.acm.org/doi/10.1145/3648115.3648117">AdaptiveCpp Stdpar: C++ Standard Parallelism Integrated
+        Into a SYCL Compiler</a>, Aksel Alpay from University of Heidelberg, on an stdpar implementation using SYCL.
+    </li>
+    <li><a href="https://dl.acm.org/doi/10.1145/3648115.3648136">SimSYCL: A SYCL Implementation Targeting Development,
+        Debugging, Simulation and Conformance</a>, Fabian Knorr from University of Salerno, introducing <a
+            href="https://github.com/celerity/SimSYCL">SimSYCL</a>, a new library-only SYCL implementation, and taking
+        home the Outstanding Full Paper Award.
+    </li>
+    <li>SYCL Bindless Images, Sean Stirling from Codeplay, introducing an improved <a
+            href="https://github.com/intel/llvm/blob/757f8ec6551c2874aaa484dacb5bedba87ffcbbc/sycl/doc/extensions/experimental/sycl_ext_oneapi_bindless_images.asciidoc">images
+        API for SYCL</a>.
+    </li>
+    <li>An Online Compiler for SYCL Kernels and Some Related Ideas, James Brodman from Intel, introducing <a
+            href="https://github.com/intel/llvm/blob/757f8ec6551c2874aaa484dacb5bedba87ffcbbc/sycl/doc/extensions/experimental/sycl_ext_oneapi_kernel_compiler.asciidoc">DPC++'s
+        exciting kernel compiler extension</a>.
+    </li>
+</ul><p>Best part is all of these talks are available in the <a href="https://www.iwocl.org/iwocl-2024/program/">IWOCL
+    website</a> and <a href="https://www.youtube.com/watch?v=ayn_m_yfUCU&amp;list=PL46sP9LM8GsyYYyujARU3s1xaS9Kv2TZq">YouTube</a>,
+    both slides and video recording of the presentations. For a more in-depth look, feel free to take a look at the <a
+            href="https://dl.acm.org/doi/proceedings/10.1145/3648115">conference proceedings</a>.</p>
+<p>As usual, the IWOCL poster session lead to interesting discussion. Several posters told user stories on porting CUDA
+    codebases to SYCL using SYCLomatic, such as <a href="https://dl.acm.org/doi/10.1145/3648115.3648122">Lessons Learned
+        Migrating CUDA to SYCL: A HEP Case Study with ROOT RDataFrame</a>, by Jolly Chen from University of Amsterdam
+    and CERN, obtaining the Outstanding Poster Award. Codeplayers Victor Perez and Hugh Delaney also presented in-house
+    developments on new SYCL features available as DPC++ extensions, bringing improvements to runtime instantiation of
+    SYCL kernels via the new <a href="https://dl.acm.org/doi/10.1145/3648115.3648126">private_alloca API</a>, and <a
+            href="https://dl.acm.org/doi/abs/10.1145/3648115.3648637">extensions to the SYCL 2020 host_task</a> feature.
+</p>
+<p><img src="{{ '/assets/images/portal/article-images/20240410-161421.jpg' | relative_url }}"/><br/></p>
+<p>After this great experience in IWOCL, we can only thank once more the organizers for their great work bringing SYCL
+    people together once again and making our time in the city as easy as possible.<br/></p>
+

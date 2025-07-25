@@ -1,0 +1,39 @@
+---
+id: 19
+url: how-cpp-amp-could-benefit-from-call-graph-duplication
+user_id: 73
+date: 2011-08-15T18:43:21.7200Z
+category: news
+title: "How C++ AMP could benefit from call-graph duplication"
+showOnFrontPage: 0
+views: 355
+tags:
+redirect_from:
+  - /portal/how-cpp-amp-could-benefit-from-call-graph-duplication
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>C++ AMP (Accelerated Massive Parallelism) is an exciting upcoming open specification by Microsoft for programming heterogeneous systems including GPUs. While no specification document has been released yet, various elements of the language have already been described in <a href="http://ecn.channel9.msdn.com/content/DanielMoth_CppAMP_Intro.pdf">presentation slides</a> and other blogs.  A key feature of C++ AMP are lambda functions that run on the accelerator. Those lambda functions are declared with the restrict(direct3d) keyword to tell them apart from normal C++0x lambda functions. Daniel Moth states in <a href="http://ecn.channel9.msdn.com/content/DanielMoth_CppAMP_Intro.pdf">his slides</a> that restrict(direct3d) imposes some restrictions, most notably that functions declared with the restrict(direct3d) keyword can only call other restrict(direct3d) functions. This implies that all functions called from inside a restrict(direct3d) function must be annotated with that keyword which can be tedious in large code bases. Creating whole libraries of restrict(direct3d) functions may well be justified for performance reasons because some functionality may be implemented differently between host and GPU (perhaps using intrinsics), but many functions may just stay the same except for the restrict(direct3d) keyword, so there may be a lot of source code duplication required (unless the functions are defined using macros). For example some developers may want to use functionality from the Boost Utility or MPL library inside restrict(direct3d) functions. These libraries house a lot of purely compile-time features many of which rely on overload resolution, so functions would all have to be declared using the restrict(direct3d) keyword, but are otherwise no different than the host functions. For example, the abstract.hpp header from the boost library would be to be extended with the following restrict(direct3d) declarations to make the is_class type_trait class work inside the restrict(direct3d) code:
+</p>
+<pre>    template &lt;class U&gt; ::boost::type_traits::yes_type is_class_tester(void(U::*)(void));
+    template &lt;class U&gt; ::boost::type_traits::no_type is_class_tester(...);
+//the next two overloads are required for C++ AMP
+    template &lt;class U&gt; ::boost::type_traits::yes_type is_class_tester(void(U::*)(void)) restrict(direct3d);
+    template &lt;class U&gt; ::boost::type_traits::no_type is_class_tester(...) restrict(direct3d);
+
+template &lt;typename T&gt;
+struct is_class_impl
+{
+        BOOST_STATIC_CONSTANT(bool, value =
+        (::boost::type_traits::ice_and&lt;
+            sizeof(is_class_tester&lt;T&gt;(0)) == sizeof(::boost::type_traits::yes_type),
+            ::boost::type_traits::ice_not&lt; ::boost::is_union&lt;T&gt;::value &gt;::value
+        &gt;::value)
+        );
+};
+</pre>
+<p>Call-graph duplication removes this restriction and no code changes to this header were required. The compiler would be able to automatically generate the restrict(directed) is_class_tester overloads.   Call-graph duplication has been implemented in the <a href="{{ '/games/offload/' | relative_url }}">Offload C++ compiler</a> which was used on several AAA PS3 games. Instead of using restrict(direct3d) the Offload compiler supports the __offload keyword which is used to declare a function for an accelerator core (The PDF with the Offload language specification can be found <a href="{{ '/public/uploaded/public/OffloadLanguageExtensions.pdf' | relative_url }}">here</a>). Inside an __offload function normal non-annotated function can be called, the compiler automatically generates the appropriate functions (see my <a href="{{ '/blogs/uwe/How+Offload+Cpp+works+-+every+function+is+a+template' | relative_url }}">previous blog about how Offload works)</a>.
+</p>
+
+

@@ -1,0 +1,57 @@
+section#splash {
+    background: rgb(178,3,106);
+    background: linear-gradient(225deg, rgba(178,3,106,1) 0%, rgba(26,0,111,1) 100%);
+    color: #fff;
+}
+
+
+
+section#splash a {
+    color: inherit;
+}
+
+section#splash img {
+    max-width: 645px;
+    width: 100%;
+}
+
+section#splash ul {
+    list-style: none;
+    margin-top: 1rem;
+}
+
+section#splash ul a {
+    display: block;
+    padding: .7rem;
+}
+
+section#splash ul a:hover {
+    text-decoration: underline;
+}
+
+section#splash ul li:not(:last-of-type) {
+    border-bottom: rgba(255, 255, 255, .2) 1px solid;
+}
+
+section#splash ul span {
+    font-size: 2rem;
+    vertical-align: middle;
+}
+
+
+section:not(.splash) .button,
+section:not(.splash) button {
+    background: rgb(178,3,106);
+    background: linear-gradient(225deg, rgba(178,3,106,1) 0%, rgba(26,0,111,1) 100%);
+}
+
+
+@media screen and (min-width: 900px) {
+    .cs .columns.content-with-side-content {
+        grid-template-columns: 60% auto;
+    }
+}
+
+.cs .columns.content-with-side-content:not(.reverse) > div:nth-of-type(2) {
+    text-align: right;
+}

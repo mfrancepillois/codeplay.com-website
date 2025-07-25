@@ -1,0 +1,82 @@
+---
+category: blogs
+date: '2024-04-15T10:47:18.188975'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/news/2024-04-15-codeplay-cgo-2024/thumbnail.jpg
+title: Codeplay @ CGO 2024
+user_id: 8218
+---
+
+<p>At the beginning of March 2024, Codeplay's home town Edinburgh was host to the four co-located conferences HPCA, CGO,
+    CC and PPoPP. This blog-post is a short recap of our experience at the four conferences.</p>
+<p>Topic-wise, the four conferences complement each other very nicely: HPCA covers new developments in the area of
+    high-performance computer architecture, including accelerators such as GPUs. PPoPP on the other hand is all about
+    the software-side of heterogeneous and parallel programming. And finally, CC and CGO discuss what connects the two -
+    the compilers that map the parallel and heterogeneous programs to the hardware to achieve the best performance
+    possible.</p>
+<p>With these topics, the conferences are also a perfect match to Codeplay's mission to enable users to make the best of
+    their hardware for AI and HPC tasks through an open software ecosystem. Therefore, Codeplay was proud to sponsor and
+    support this event and support the open ecosystem. For us, this conference is particularly important for gathering
+    and networking with individuals and organizations from across Scotland and the UK. This has only been reinforced by
+    the news that <a href="https://www.ed.ac.uk/news/2023/edinburgh-to-lead-new-era-of-uk-supercomputing">Edinburgh is
+        set to become home to an exascale supercomputer</a>, pioneering the way forward for exascale computing within
+    the UK.</p>
+<p>The conferences kicked off with workshops on Saturday morning. The workshop organizers had done a great job of
+    putting together exciting programs for each of their workshops with topics ranging from RISC-V processors to LLVM
+    &amp; MLIR to machine learning benchmarking infrastructure, and rooms were packed with interested participants.</p>
+<p>Saturday afternoon also saw the kickoff of the CC conference with a keynote by Michael O'Boyle from Edinburgh
+    University. He talked about some of the fascinating work done in his group over the years, focusing on their work to
+    discover patterns in code that are amendable to offloading or parallelization through techniques such as program
+    synthesis, described in a number of research articles including their paper on <a
+            href="https://arxiv.org/abs/2310.04196" target="_blank">mlirSynth</a>.</p>
+<p>Sunday's program was again a combination of workshops and the CC conference, with the latter starting the day with an
+    interesting keynote by Albert Cohen talking about the connection between performance engineering and compilers.</p>
+<p>A highlight among the workshops of the day was the C4ML workshop, where the organizers had put together a strong
+    program for a very interactive workshop, with talks about improvements to the MLIR infrastructure by Martin Lücke,
+    an overview of the triton-shared project by Microsoft's Ian Bearman that aims to connect Triton to other MLIR-based
+    compilation flows, and Renato Golin from Intel Labs demonstrating how upstream MLIR can be used to build an ML
+    compilation flow with strong performance on Intel CPUs. Slides from the talks are available from the
+    <a href="https://www.c4ml.org/" target="_blank">workshop website</a>.</p>
+<p>During the remaining days of the conference from Monday through Wednesday, the main programs of the PPoPP, CGO and
+    HPCA conferences was held in parallel. Every day was opened by a keynote, with Derek Chiou giving an insight into
+    their research on improving cloud architecture and Kunle Olukotun talking about dataflow architectures for AI
+    foundation models. The last keynote by Nir Shavit presented some of the fundamental differences between today's AI
+    model architectures and the human brain and how compression techniques such as sparsity can help to make those
+    architectures resemble the brain more closely.</p>
+<p>Among the papers presented during the remaining sessions of each day there were a lot of interesting works, far too
+    many to mention all of them here. In brief, some of my personal highlights include:</p>
+
+<ul>
+    <li>"A Framework for Fine-Grained
+        Synchronization of Dependent GPU Kernels" by Abhinav Jangda et al., discussing how finer-grained synchronization
+        for the wavefronts of dependent large matrix multiplications on GPUs can enable significant performance
+        improvements in LLM inference (<a href="https://arxiv.org/abs/2305.13450" target="_blank">preprint</a>).
+    </li>
+    <li>"Representing Data Collections in an SSA Form" by Tommy McMichen et al., describing how data structures (think
+        `std::vector`) can be mapped into SSA form to enable the compiler to reason about individual entries of those
+        data structures (<a href="http://mcmichen.cc/files/MEMOIR_CGO_2024.pdf" target="_blank">preprint</a>).
+    </li>
+    <li>"oneDNN Graph Compiler: A Hybrid Approach for High-Performance Deep Learning Compilation" by our colleagues from
+        Intel led by Jianhui Li, combining compiler techniques with kernels tuned for high-performance to compile deep
+        neural network graphs (<a href="https://arxiv.org/abs/2301.01333">preprint</a>). Their work even won one of the
+        distinguished paper awards, congratulations on this achievement!
+    </li>
+</ul>
+
+<p>We at Codeplay also presented our paper on building an MLIR-based SYCL compiler as part of CGO's main program, you
+    can find more information on that work in a <a
+            href="https://codeplay.com/portal/blogs/2024/02/09/experiences-building-an-mlir-based-sycl-compiler">previous
+        blog-post</a> and the preprint linked in the post there.</p>
+<p>Next to that, we also gave a talk in the C4ML workshop on Sunday, discussing how enabling C++ compilation in MLIR can
+    enable the re-use of a lot of ML-focused optimizations developed in the MLIR framework for ML and HPC codes written
+    in C++. Slides from that talk are also available from the <a href="https://www.c4ml.org/" target="_blank">workshop
+        website</a>.</p>
+<p>The technical program was rounded up by a poster reception on Sunday evening and a great banquet at the Scottish
+    National Museum, which not only came with delicious food but also the opportunity to stroll through the museum's
+    exhibits. Those social events as well as the coffee breaks and the "hallway track" gave us plenty of opportunity to
+    exchange with academic researchers and our colleagues from industry.</p>
+<p>We can only congratulate the organizers on a very successful conference, with more than 700 participants (a 30%
+    increase over 2023)!</p>
+

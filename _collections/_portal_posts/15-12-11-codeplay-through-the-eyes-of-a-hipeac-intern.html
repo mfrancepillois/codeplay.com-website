@@ -1,0 +1,53 @@
+---
+id: 165
+url: codeplay-through-the-eyes-of-a-hipeac-intern
+user_id: 802
+date: 2015-12-11T20:46:31.3600Z
+category: blogs
+title: "Codeplay Through the Eyes of a HiPEAC Intern"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/codeplay-through-the-eyes-of-a-hipeac-intern
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>My name is Antonio Vilches, and I am a Ph.D. Student in the Computer Architecture department at Universidad de Malaga (Spain). I'm researching programming patterns for Heterogeneous Systems. I'm not only focused on raw performance, my aims are to reduce energy consumption and balance workloads  while executing on Heterogeneous Systems composed of CPUs and GPUs.
+</p>
+<p>
+I have been at Codeplay for three awesome months, where I have been working as a HiPEAC Intern. I had the opportunity to meet a group of highly talented people and work in a multi-skilled team of ninja developers. However, the most exciting experience is the way they share knowledge between them and how they keep going towards their objectives. I have already learnt more about the industry in three months than my university has taught me in a number of years, and this is because they all form an incredible team at Codeplay. In just three months, I have met some of the nicest people, have learnt a lot about the computing industry and have gained real experience of working in a team. Thus, for all those reasons and for many more...
+</p>
+<p>
+Thanks for having me, Codeplay Software. It has been a pleasure!
+</p><h2>Parallel STL project</h2>
+<p>During my time at Codeplay, I have been working on a research project called Parallel STL. It is an implementation of the Technical Specification for C++ Extensions for Parallelism, current document number N4352. This technical specification describes a set of requirements for implementations of an interface that computer programs written in the C++ programming language may use to invoke algorithms with parallel execution. In practice, this specification (that is aimed at the next ISO C++ 17) offers the opportunity for users to specify execution policies to traditional STL algorithms, which will enable the execution of those algorithms in parallel.
+</p>
+<p>
+Parallel STL is a really promising project that aims to bring productivity to C++ developers worried about performance.We have developed our implementation on top of SYCL™. Thus, we can execute STL algorithms on each device that offers SYCL support. In order to do that, we introduced a new execution policy called sycl_policy. This execution policy allows the execution of current STL algorithms on SYCL devices. Let's see an example: the following code block shows a STL for_each algorithm that performs the square pow of each element.
+</p><pre> int main(){
+  ...
+  std::for_each( begin(v1), end(v1),
+    [=](float &amp;val) { return val * val; });
+  };
+  ...
+  return 0;
+}
+</pre>
+<p>
+The Parallel STL project implements an extended interface of the current STL algorithm. Thus, by just adding a first extra parameter (the sycl_policy), we are able to run the algorithm in parallel on each SYCL device. The following code shows an usage example, first the user has to declare a SYCL queue (It will discover the default accelerator), later the user can declare a sycl_policy by passing the previous queue.  Finally, the user can invoke the for_each algorithm by passing the policy as first parameter.
+</p><pre> int main(){
+  ...
+  cl::sycl::queue q;
+  sycl::sycl_policy&lt;class ForEach&gt; snp(q);
+  std::experimental::parallel::for_each(snp, begin(v1), end(v1),
+    [=](float val) { return val + val * val; }
+  };
+  return 0;
+}
+</pre>
+<p>
+This project aims to provide ease of use to C++ developers that need to meet some performance requirements but also need productivity. So, developers can use our implementation to accelerate their code with only minimal changes to it.
+</p>
+

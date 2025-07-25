@@ -1,0 +1,70 @@
+---
+id: 124
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Using SPA With Offload™"
+redirect_from:
+  - /kb/124
+layout: products/offload/kb/view
+---
+<p>Using the Offload&trade; compiler does not stop you from doing all the funky SPU tricks you could have ever dreamed of. The Offload&trade; compilers intention is simply to get code onto the SPU quickly and with type safety.
+</p><p>
+<div class="ps3">
+Content has been removed.
+</div>
+</p>
+
+
+<pre><code>#include &lt;liboffload&gt;
+
+int func()
+{
+	int result;
+	int bar1 = 13;
+	__blockingoffload()
+	{
+		int bar2 = 42;
+		result = foo1(bar2);
+		result += foo2(&amp;bar2);
+		result += foo3(&amp;bar1);
+	};
+	return result;
+}
+</code></pre><p>In the above example, we are trying to call three functions, foo1, foo2 &amp; foo3 from within an Offload&trade; block. For arguments sake, say we want to write each of these three functions in SPA, for performance reasons. The first step is to change the code like so:
+</p>
+<pre><code>#include &lt;liboffload&gt;
+
+extern &quot;C&quot; __offload int foo1(int);
+extern &quot;C&quot; __offload int foo2(int * );
+extern &quot;C&quot; __offload int foo3(__outer int * );
+
+int func()
+{
+	int result;
+	int bar1 = 13;
+	__blockingoffload()
+	{
+		int bar2 = 42;
+		result = foo1(bar2);
+		result += foo2(&amp;bar2);
+		result += foo3(&amp;bar1);
+	};
+	return result;
+}
+</code></pre><p>We have added three extern &quot;C&quot; __offload definitions to the code. Each of these definitions is telling the compiler there is an external method, using C calling conventions (e.g. no mangling of the function name!) that can be called only from the SPU. the Offload&trade; compiler will generate prototype functions for the SPU code to link against these functions.
+</p>
+
+
+
+<p>
+<div class="ps3"></p><p>
+Content has been removed.
+</div>
+</p>
+
+<p>
+To link an Offload&trade; block against an SPU object file we need to put the SPU object file into an archive, by using spu-lv2-ar. For this example, lets say we generate libSPA.a. To link this into the Offload&trade; block we add -BEspuL&quot;C:pathtolibSPA&quot; -BEspulSPA to the command line (see <a href="{{ '/kb/125' | relative_url }}">/kb/125.html</a> &amp; <a href="{{ '/kb/126' | relative_url }}">/kb/126.html</a> for more details).We've just linked our type-safe, easily offloaded Offload&trade; block to SPA, with relatively little effort! Offload&trade; can be linked against any SPU archive in this manner too, but crucially only against extern &quot;C&quot; functions - functions that are not mangled. Care should be taken when passing __outer pointer arguments into these functions, as once passed to code not going through the Offload&trade; compiler the pointer loses its type safety.
+</p>
+
+

@@ -1,0 +1,927 @@
+---
+id: 222
+url: 12-09-16-the-view-from-nov-2016-cpp-standard-meeting-issaquah
+user_id: 829
+date: 2016-12-09T15:48:22.3600Z
+category: blogs
+title: "The view from Nov 2016 C++ Standard Meeting Issaquah"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/12-09-16-the-view-from-nov-2016-cpp-standard-meeting-issaquah
+thumbnail: /assets/images/portal/article-images/aa17628bb2a6eebe5a6f1cfc7eee7c59.png
+layout: portal/portal-article-view
+---
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">I attended
+  the Issaquah meeting with plans to address the C++ 17 National
+  body comments. Upon arrival, I was also asked to chair the
+  Evolution Working Group as the chair was delayed in arrival. I
+  will describe in this post some of the thinking process involved
+  in such a role.<br /></span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><span style=
+		  "color: rgb(0,0,0);text-decoration: none;">I compiled a slide
+  deck of
+	  <!--[CDATA[all features in C++17 updated from the Issaquah meeting]]-->
+   that describes <a target="_blank" href="https://www.codeplay.com/public/uploaded/public/Cpp17update-from-Issaquah.pdf">all the new and changed features based on the
+  Issaquah meeting</a>. There is also a video embedded below that was
+  recorded at the final plenary session at Meeting C++, where more
+  than 700 people attended. It provides an update of the
+  presentation in the slides linked above. I also presented this to
+  600 people as a keynote on Heterogeneous Computing in C++ at
+  code::dive in Poland the day immediately after the C++ Standard
+  meeting.&nbsp;</span></span>
+</p>
+
+<p>
+  <iframe width="560"
+          height="315"
+          data-requiresCookieAcceptance="true"
+          data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/R8eNB-FBIoc"></iframe>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">It is a
+  sign of the stability of the C++17 CD that there were
+  significantly less comments than the two combined C++11 CDs. The
+  chart below shows how the various releases of C++11, 14, and 17
+  rank in terms of how many comments were submitted from the
+  various Nations.&nbsp;</span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+</p>
+
+<p>
+  <img src=
+		  "/assets/images/missing-image.png" />
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">The next
+  charts show their distribution for this release by Nations, and
+  through the various working groups. As usual the US submitted the
+  most, but we also had comments from Spain, GB, Canada, Finland,
+  France, Russia, Japan, and Switzerland. I worked most of this
+  summer helping to deliver the Canadian comments as its Head of
+  Delegation, while also involved now with the UK comments. This
+  involves reviewing the <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4604.pdf">
+  C++17 CD</a> <span style=
+			  "color: rgb(0,0,0);text-decoration: none;">page by
+  page</span>.</span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">The
+  comments are coded by 2 letter country designation with CH being
+  Switzerland. There is the official comment paper which
+  accumulates each Nation's comments, similar to the United
+  Nations.<br /></span>
+</p>
+<ul>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0488r0.pdf">
+    P0488R0</a> WG21 Working paper: NB Comments, ISO/IEC CD
+    14882</span>
+  </li>
+</ul>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">and a Late
+  paper which we still accepted and processed (though there is no
+  guarantee that would normally happen):<br /></span>
+</p>
+<ul>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0489r0.pdf">
+    P0489R0</a> WG21 Working paper: Late Comments on CD
+    14882</span>
+  </li>
+</ul>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">In
+  reality, most of the people who comment on these drafts already
+  attend the Standard meetings and are familiar with the issues.
+  Some National Bodies are very organized, with work load spread
+  out between teams with assignment to review specific chapters,
+  while others work on a more ad-hoc basis. Belonging to both the
+  Canadian and the UK delegation currently, and used to working
+  within the US delegation, I see all forms and everything in
+  between.<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;"><img src=
+		  "/assets/images/missing-image.png" /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Most of
+  the comments by far were aimed at Library and LEWG, while
+  Evolution had about 60, and SG1 had about 20.<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;"><img src=
+		  "/assets/images/missing-image.png" /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">If you
+  recall from my last <a href=
+			  "https://wongmichael.com/2016/06/29/c17-all-final-features-from-oulu-in-a-few-slides/">
+  trip report from the C++ Standard Oulu</a> meeting in June, there
+  was some diverging opinion about several key feature inclusions
+  and exclusions in C++17. So it is no surprise that their
+  disappointment was repeated through the National Body (NB)
+  Comments. In turn, some nations put in defensive comments
+  pre-emptively to balance out the opposition.<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">There were
+  many opposing comments from several NBs asking variously to add
+  back or remove concepts/unified call syntax/default comparison,
+  inline variables, and many other issues that were viewed as
+  contentious (note many of the features have links in the
+  downloadable slides). T<span style=
+			  "color: rgb(0,0,0);text-decoration: none;">hese issues were
+  decided on Monday first thing in full plenary to see if there was
+  any increase in consensus and could be changed from what was
+  already in the draft. We have got used to this as the best way to
+  deal with these potentially contentious issues early, so as not
+  to waste committee time working on them. It would be a waste of
+  time to do that, only to have them voted down if people had
+  already decided, when that time could be better advancing
+  something else.</span><br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">The
+  following votes were taken immediately in the Monday plenary
+  involving Evolution of C++ language design:<br /></span>
+</p>
+<ul>
+  <li>ES 4, US 2, Late5: Add back concepts (all or part): 22 for,
+  24 against adding; no consensus (will not discuss) <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>ES 5, US 68: Add back unified call syntax <span class=
+		  "twikiNewLink"><a href=
+		  "http://wiki.edg.com/bin/edit/Wg21issaquah2016/P0301R0?topicparent=Wg21issaquah2016.EvolutionWorkingGroup;nowysiwyg=1"
+		  rel="nofollow">P0301R0</a></span> : many against adding, no
+    consensus (will not discuss) <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>ES 7, US 5, US 69, RU 5, Late7, Late14: Add back default
+  comparisons <span class="twikiNewLink"><a href=
+			  "http://wiki.edg.com/bin/edit/Wg21issaquah2016/P0221R2?topicparent=Wg21issaquah2016.EvolutionWorkingGroup;nowysiwyg=1"
+			  rel="nofollow">P0221R2</a></span> (all or part): 16 against
+    adding, borderline, will discuss but it will be an uphill
+    battle <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>ES 1, US 65, Late13: remove inline variables ( <span class=
+		  "twikiNewLink"><a href=
+		  "http://wiki.edg.com/bin/edit/Wg21issaquah2016/P0386R2?topicparent=Wg21issaquah2016.EvolutionWorkingGroup;nowysiwyg=1"
+		  rel="nofollow">P0386R2</a></span> ): 29 against removal (it
+    stays, will not discuss)
+  </li>
+</ul>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;">&nbsp;</span>The other
+  set are Library issues:
+</p>
+<ul>
+  <li>GB 44, FI 5: Remove elementary string conversions <a class=
+		  "twikiLink" href=
+		  "http://wiki.edg.com/bin/view/Wg21issaquah2016/P0067R4">P0067R4</a>:
+  1 for removal, will discuss <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>US 18, US 70: remove dynamic exception specifications
+  <span class="twikiNewLink"><a href=
+		  "http://wiki.edg.com/bin/edit/Wg21issaquah2016/P0003R4?topicparent=Wg21issaquah2016.EvolutionWorkingGroup;nowysiwyg=1"
+		  rel="nofollow">P0003R4</a></span> : 1 against removal, will
+    discuss <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>US 22, CA 11, Late11: Add in std::byte <span class=
+		  "twikiNewLink"><a href=
+		  "http://wiki.edg.com/bin/edit/Wg21issaquah2016/P0298R1?topicparent=Wg21issaquah2016.EvolutionWorkingGroup;nowysiwyg=1"
+		  rel="nofollow">P0298R1</a></span> :2 against adding, will
+    discuss <span style=
+			  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+  </li>
+  <li>ES 6, US 21, US 67, Late8, Late10: Add in operator dot
+  <a class="twikiLink" href=
+		  "http://wiki.edg.com/bin/view/Wg21issaquah2016/P0252R2">P0252R2</a>:
+  30 against adding: will not discuss
+  </li>
+</ul>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><span style=
+		  "color: rgb(0,0,0);text-decoration: none;">The only issue that
+  had mild consensus for a possible change was adding default
+  comparison operator, removing elementary string conversion,
+  removing dynamic exception specification, and adding std::byte as
+  these all squeaked by with a low number of negative votes.
+  Everything else stays as is after the morning poll</span></span>
+  meaning that, while they were the only ones up for discussion the
+  rest of the week, they would need very compelling reasons to be
+  changed.
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Thanks to
+  ViIle and Jens as they had already separated all the NB comments
+  into different WGs and VIlle already had organized the list to be
+  triaged by EWG, so all I had to do was make sure EWG stayed on
+  target, working through all the NB comments assigned to us until
+  ViIle arrived.</span>
+</p>
+<h3>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong>Evolution
+  Working Group</strong><br /></span>
+</h3>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">This group
+  is in charge of designing new language addition to C++. Chairing
+  EWG was fun though I have to slow down my speech style
+  considerably to match the current chair’s style.</span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">We triaged
+  all issues by assigning a priority status to each one as
+  follows:</span>
+</p>
+<ol>
+  <li style="list-style-<p>
+      <span style=
+			  "color: rgb(0,0,0);text-decoration: none;">Immediate yes for
+      simple and obvious comments<br /></span>
+    </p>
+  </li>
+  <li style="list-style-<p>
+      <span style=
+			  "color: rgb(0,0,0);text-decoration: none;">Immediate no
+      <span style="color: rgb(0,0,0);text-decoration: none;">for
+      simple and obvious comments</span><br /></span>
+    </p>
+  </li>
+  <li style="list-style-<p>
+      <span style="color: rgb(0,0,0);text-decoration: none;">Pass
+      to another Working Group (WG)<br /></span>
+    </p>
+  </li>
+  <li style="list-style-<p>
+      <span style="color: rgb(0,0,0);text-decoration: none;">Need
+      extensive discussion so defer until after the
+      triage<br /></span>
+    </p>
+  </li>
+  <li style="list-style-<p>
+      <span style="color: rgb(0,0,0);text-decoration: none;">Need a
+      paper</span> <span style=
+			"color: rgb(0,0,0);text-decoration: none;">post-meeting due
+      to its complexity or controversial position<br /></span>
+    </p>
+  </li>
+</ol>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">This
+  allowed us to immediately work through all the issues, leaving
+  only those that need discussion/paper to be extensively scheduled
+  in the following days.<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">In all
+  cases, we would need to increase consensus in order for something
+  to be changed in the Draft. This means the bar for a change at
+  this stage is very high, so while people can have high
+  expectations (fix all problems, add this great feature back,
+  remove this feature) and people do, most will be resolved as No
+  Consensus. People are always invited to write a paper if they are
+  dissatisfied. This is the only way to push through
+  progress.</span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong>Deduction
+  Guides</strong><br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Sometimes,
+  the interaction of some issues between Working Groups is such
+  that we would need to have a joint session. I called for this to
+  occur on Monday afternoon with a joint session of Evolution and
+  Library Evolution on Deduction Guides, as the triage had revealed
+  an unusually large number of issues relating to deduction guides
+  and this impacted Library design. Deduction guides are new to
+  C++17 from this feature called "<a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0091r3.html">template
+  parameter deduction for constructors</a>"<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">It enables
+  the use of explicit deduction rules to be created and used along
+  with current implicit deduction rules for template arguments.
+  This simplified certain formulations for variadic lock guard, as
+  an example in the paper but it has general uses. This introduces
+  some problems when it is applied uniformly to the Standard
+  library, and in most cases the existing constructor syntax
+  already provide the desired behavior, but in some cases explicit
+  deduction guides would be needed to complement the implicit
+  deduction cases. The National Body comments fills in the gaps on
+  a few missing cases and also fixes inconsistencies. There were
+  also dueling comments that proposed removing all implicit
+  deduction guides in favor of explicit deduction guides, while
+  others proposed tweaking implicit deduction guides.&nbsp; The
+  committee decided that implicit deduction guides are to be kept,
+  and where needed explicit deduction guides be added.</span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Other
+  National Body comments we reviewed involved:</span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong>Expression
+  Evaluation Order</strong></span> <span style=
+		"color: rgb(0,0,0);text-decoration: none;"><br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">These
+  comments are concerned with the change in evaluation order from
+  this proposal commonly called "</span> <a href=
+		"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0145r3.pdf">
+  Refining Expression Evaluation Order for Idiomatic C++</a>"
+</p>
+
+<p>
+  where
+</p>
+<pre>
+a+=b, a-=b,
+</pre>
+
+<p>
+  and all variants with = where b is evaluated before a will have a
+  different evaluation order as
+</p>
+<pre>
+a.operator=(b)
+</pre>
+
+<p>
+  where a is evaluated before b.This may look bad, but it was worse
+  before C++17 as it was undefined, so code that relied on this
+  evaluation order was not really portable and may have relied on
+  one compiler's behavior. Now at least it is well-defined.
+</p>
+
+<p>
+  There was some concern about this feature when it was approved,
+  but one compiler implementer had implemented it and found
+  reasonable speedups, while others have done code-base searches
+  and found no impact. There was no consensus at this meeting to
+  reverse this feature out of C++17 so it stays.
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong>Decomposition
+  declarations (aka structured binding)</strong></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Tthese
+  comments are concerned with the change in syntax in this proposal
+  called "<a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0144r2.pdf">Structured
+  bindings</a>" where we can store a value and bind names to its
+  components</span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Most
+  comments concerned that&nbsp; [] was chosen over the original {}
+  syntax and some want that reversed though that had no consensus.
+  There were other concerns including enabling modifiers (static,
+  extern, inline, constexpr, and thread_local), init-captures,
+  arrays support, discarding values in declarations, explicit types
+  in decomposition declaration, decomposition in parenthesis, and
+  when is get&lt;&gt;() functions called. Almost all were either
+  rejected or were to be considered post-C++17 extensions. The only
+  one that was accepted was Decomposition declarations in
+  parenthesis which allows</span>
+</p>
+<pre>
+auto[a, b, c] {expr}, auto[a, b, c]= expr, and auto[a, b, c] (expr)
+</pre>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><span style=
+		  "color: rgb(0,0,0);text-decoration: none;">&nbsp;</span></span>
+  for uniformity reasons.</span> <span style=
+		"color: rgb(0,0,0);text-decoration: none;"><br /></span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong><a href=
+		  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0221r2.html">
+  Default comparison</a> revival</strong></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">This one
+  is not in C++17 but many want to revive it with a simplified
+  proposal such as only enabling == and&nbsp;!=, or make the syntax
+  be opt-in only, or a more comprehensive proposal that enables
+  multi-way comparison which gained popularity in the end but it
+  would require more work. All of these were deferred to post
+  C++17.</span> <span style=
+		"color: rgb(0,0,0);text-decoration: none;"><br /></span>
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong><a href=
+		  "http://wg21.link/P0257">std::byte</a></strong></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">This was a
+  final controversy that occurred in plenary requiring a vote to be
+  withdrawn. This feature adds a byte type with no arithmetic
+  operations to C++ but it was not in C++17, and there were several
+  comments including one from Canada that wish to add it in as all
+  the work had been completed on it but due to a procedural mishap,
+  it was not included.The only sub-part that became controversial
+  is the name of "byte" which had been bikeshed. Some want it to be
+  a storage_byte so that it is clear that this is about storage and
+  not arithmetic operations. The feature was proposed to be added
+  for C++17 to address the comment but without the name change. At
+  the plenary, the name concern was brought up and this caused
+  enough people to change their mind and this was not added. There
+  is discussion to have this vote to be retaken in the next meeting
+  as the proposal had gone through all sub groups and it is
+  uncommon to have it reversed at plenary. However, it does happen
+  and I am working behind the scene with the Canadians to deal with
+  this sensibly.<br /></span>
+</p>
+<h3>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><strong>Parallelism
+  and Concurrency (SG1)</strong><br /></span>
+</h3>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">SG1 had
+  about 20 comments and there were again some dueling varieties.
+  Here are some of the most prominent controversies some of which
+  involved SYCL as it became a prominent use case discussion during
+  SG1:</span>
+</p>
+
+<p>
+  <strong>Parallel Algorithms Exception Handling</strong>
+</p>
+
+<p>
+  In C++17, we added most of Parallel Algorithm TS1 as is. This
+  enabled STL algorithms to be executed, potentially on CPUs in
+  parallel by the addition of an extra parameter at the beginning
+  of say STL sort, for example. But its pedigree was really GPUs
+  and Heterogeneous Programming, and as such this opens the door
+  towards that support. This parameter is called execution policy.
+  So what is an execution policy? It promise that a particular kind
+  of reordering will preserve meaning of program . These were
+  called
+</p>
+
+<p>
+  <em>par, seq and par_vec</em>
+</p>
+
+<p>
+  in the TS. It enables the predicate function to be executed in an
+  unordered sequence. More specifically, par means the algorithm is
+  permitted to invoke the user-provided function objects
+  unsequenced if invoked in different&nbsp; threads, or invoke them
+  in indeterminate order if executed on one thread.&nbsp; And
+  par_vec means the algorithm is permitted to invoke the
+  user-defined function objects in unordered fashion in unspecified
+  threads, or invoke them unsequenced if executed on one thread.
+</p>
+
+<p>
+  Here are some examples of their use in the TS:
+</p>
+<pre>
+std::algo(std::seq, begin, end, Func);
+</pre>
+<pre>
+std::algo(std::par, begin, end, Func);
+</pre>
+<pre>
+std::algo(std::par_vec, begin, end, Func);
+</pre>
+
+<p>
+  However, even before the TS was added to C++ 17, we had removed
+  or changed in the C++17 CD the following features from the TS:
+</p>
+<ul>
+  <li>removed dynamic execution policy in order to not preserve
+  state in preparation for future addition of new execution
+  policies
+  </li>
+  <li>changed par_vec to par_unseq as a better naming convention
+  </li>
+</ul>
+
+<p>
+  But the most interesting change from the Oulu meeting was the
+  replacement of exception_list with terminate and don't unwind.
+  Exception_list is how parallel algorithms handle exceptions.
+  Essentially, they are a list of exception_ptrs. In other words,
+  exception can enter, but can not exit and if they were to escape,
+  then the system is allowed to terminate without unwinding. The
+  reason is because many feel that exception_lists are really
+  unmanageable and few implementers other then SYCL have actually
+  implemented it. If you have plenty of threads, say in a GPU, or
+  even in a CPU with nested context, then a multitude of exceptions
+  could arise, say one from each thread. SG1 agreed and until we
+  know what to do with the exception handling policy, we would
+  prefer to not introduce something that is unmanageable and can
+  not be fixed once it is enshrined in a Standard. This change
+  generated a lot of NB comments (US15, US167, US17, US169, US16,
+  US168, US170, CA17). There were those who wanted to bring back
+  the original policy because they care about a safety context
+  where system must be able to report an exception, and unwind.
+  There are those who wanted it to be removed because they knew
+  this was temporary and indeed is the state of how most parallel
+  system handle exceptions when they escape (including OpenMP
+  parallel regions). During deliberation at Issaquah, there was
+  suggestion that we create a second variant of the policy that
+  were known to throw no exceptions and those that were known to
+  throw. This would have created 6 sets of execution policies, and
+  in my opinion open the door to bifurcate on every quality we can
+  think of, and therefore deeply undesirable.&nbsp; So I suggested
+  that we enable a way to support future policies resembling
+  exception reduction. But this is only possible if we were to
+  change the current Parallel Algorithm exception to be attached to
+  the policy, and not to the algorithm. This change obtained
+  greater consensus and was the only change that was approved. So
+  in the C++17 CD exceptions that escape continues to terminate and
+  don't unwind.&nbsp; This change opens the door to enable us to
+  customize a more flexible policy for parallel algorithms. This
+  was ultimately voted into the Working Paper for C++17 through
+  <a href="http://wg21.link/P0502">P0502</a>.
+</p>
+
+<p>
+  <strong>inner_product becomes transform_reduce</strong>
+</p>
+
+<p>
+  This is one of the current Parallel Algorithms and it contains
+  incorrect parameter ordering for inner_product and some extra
+  overloads&nbsp; as described in US 159, US 160, US 161, US 162,
+  US 184 and it was agreed to be renamed to
+  <em>transform_reduce</em>. More specifically, it renamed
+  <em>inner_product()</em> to <em>transform_reduce()</em> and
+  reorganized some of the parameters. It removes the
+  <code>ExecutionPolicy</code> overloads for
+  <code>inner_product()</code>and&nbsp;
+  <code>adjacent_difference()</code> because it cannot be
+  parallelized. This work still requires some LWG approval so it
+  will continue into the next meeting.
+</p>
+
+<p>
+  <strong>Parallel Algorithm iterator requirements</strong>
+</p>
+
+<p>
+  <a href=
+		  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0467r0.html">
+  The current Parallelism TS restricts it to InputIterators</a> as
+  described by US 156, which are not well-specifed, because they
+  invalidate too frequently, necessitating a copy ability for
+  copying an input Range, or even serialization to an Output
+  Iterator. The basic problem with an Input Iterator is that it
+  does not provide the multi-pass guarantee due to the invalidation
+  (when it grows, for example). This makes it impossible for a
+  parallel algorithm to work with different subsequences at the
+  same time, as it is not possible to advance the iterator to refer
+  to such subsequences without invalidating the iterators used by
+  other threads.This paper specifically cites SYCL as one that
+  requires the ability to copy Parallel Algorithm arguments into
+  subranges (what SYCL called buffers though in this case, SYCL
+  uses a non-Std policy an so it is still conforming and it does it
+  to prepare for running the parallel Algorithm on GPUs) and
+  suggest to promote the requirement to RandomAccessIterators. SG1
+  considered that but there was no consensus for the change because
+  that may be too restrictive. I<span style=
+		"color: rgb(51,51,51);">n terms of SYCL 1.2,</span> <span style=
+		"color: rgb(51,51,51);">&nbsp;we are effectively only supporting
+  contiguous_iterators although we do not check for it since they
+  don't exist in C++14 though <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4132.html">
+  some form</a> will exist for C++17.</span> It was agreed by SG1
+  that we will simply put a note warning people that the choice of
+  iterators can affect performance, in that it may fall back to
+  sequential, which is entirely allowed by the specification. If
+  anything cannot be satisfied by the implementation, then it is
+  allowed to fall back from par_unseq, to par, to seq.&nbsp; What
+  this means is that the Std execution policy can probably only be
+  used in CPUs and shared memory. If it has NUMA, then it will
+  likely need to be copied and it may fall back to the sequential
+  case. This warning note will be reviewed by LWG in the next
+  meeting.
+</p>
+
+<p>
+  <strong>Enable copies of arguments of Parallel
+  Algorithms</strong>
+</p>
+
+<p>
+  One of the most important comments came from CH11 which asked
+  that we be allowed copying of argument objects in parallel
+  algorithm. This is currently not allowed for standard execution
+  policies and is a problem if people ever want to use them even in
+  CPUs with NUMA, but more specifically to enable use on GPUs which
+  have separate memory space, then copies must be allowed. Indeed
+  SYCL does this, not with the Standard execution policies, but
+  with a vendor-supplied SYCL execution policy which is allowed. I
+  think this is one of the most important comments to address for
+  future heterogeneous programming in C++. The proposal did
+  initially gain agreement and I was asked to draft the fix with
+  others, but when people looked at our wording, which used words
+  like "should not take the address of" as a proxy for working on
+  copies, they backtracked and are now concerned about its
+  adaption. This work also continues in the next meeting where SG1
+  will take another look at our wording fix.
+</p>
+
+<p>
+  In addition to these major issues, we also looked at how to break
+  up the various SG1 TSs. I currently edit the Concurrency TS, and
+  it was decided at this meeting that Concurrency TS2 will contain:
+</p>
+<ul>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0053r2.html">
+    ostream synchronization</a>
+  </li>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0020r3.html">
+    floating point atomics</a>
+  </li>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0019r3.html">
+    atomic views</a>
+  </li>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0019r3.html">
+    </a> <a href=
+		  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0019r3.html">
+    floating point atomic views</a>
+  </li>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0261r1.html">
+    counter</a> and <a href=
+		  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0260r0.html">
+    queues</a>
+  </li>
+  <li>lock-free support
+  </li>
+  <li>Synchronis/atomic flags
+  </li>
+</ul>
+
+<p>
+  A separate TS will deliver executors because it is needed to
+  support both parallelism and concurrency. Executors have been a
+  topic of great discussion that I have been chairing for the last
+  three months since the Oulu meeting to try to bring together the
+  three competing proposals. At the Issaquah meeting we prepared a
+  <a href=
+		  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0443r0.html">
+  unified paper</a> from the months of discussion that looks
+  promising to advance the status. I will describe this in more
+  detail in a future blog post.
+</p>
+
+<p>
+  Parallelism TS2 will contain task blocks, vector/simd datapar, as
+  well as loop-based vector/symd execution policies.
+</p>
+
+<p>
+  Here is an updated slide of how SG1 intends to separate out the
+  various TSes:
+</p>
+
+<p>
+
+  <img src=
+		  "/assets/images/missing-image.png" />
+</p>
+
+<p>
+  <span style=
+		  "color: rgb(0,0,0);text-decoration: none;"><br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">In SG1, we
+  got to work on not just NB defects, but also some new features
+  for C++20 as shown above as we cleared all NB comments by
+  Wednesday, although other groups continue to work on them as they
+  had far more to deal with. We presented 2 techniques for
+  lock-free programming, called <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0233r2.pdf">
+  Hazard pointers</a> and <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0461r0.pdf">
+  Read-Copy-update</a> as enhancements on top of shared_ptr and
+  atomic shared_ptr that can be packaged into a concurrency
+  toolkit. My <a href=
+			  "https://www.youtube.com/watch?v=uhgrD_B1RhQ">Cppcon 2016
+  talk</a> will demonstrate it more. This presents a C++ interface
+  to these techniques as well as show the advantages and
+  disadvantages when compared to reference counting. Both works
+  have been encouraged to continue.</span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">I also
+  worked on <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0462r0.pdf">
+  Memory order Consume</a>, <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0361r1.pdf">
+  asychronous algorithms</a>, and presented <a href=
+			  "http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0059r2.pdf">
+  Concurrent ring span</a> as the proxy for SG14.<br /></span>
+</p>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Other work
+  that was presented, and asked to continue and revise for next
+  meeting are:</span>
+</p>
+<ul>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0260r0.html">
+    C++ Concurrent Queue</a>: revised for next meeting<br /></span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0261r1.html">
+    C++ Distributed Counters</a>: ready for LEWG, target
+    concurrency TS2<br /></span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0387r0.html">
+    Concurrency Safety in C++ Data Structures</a>: revise for next
+    meeting</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0461r0.pdf">
+    RCU:</a> revise for next meeting<br /></span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0233r2.pdf">
+    Hazard Pointer</a>: revise for next meeting; possibly factor
+    commonality with RCU interface<br /></span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0059r2.pdf">
+    Concurrent Ring span</a>: drop concurrent part in favour of
+    above Concurrent Queue proposal, and continues with
+    non-concurrent part</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0290r1.html">
+    apply for synchronized_value</a>: revise for next
+    meeting</span>
+  </li>
+  <li>
+    <a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0439r0.html">
+    <span style=
+			"color: rgb(0,0,0);text-decoration: none;"><span style=
+			"color: rgb(0,0,0);text-decoration: none;">Make</span></span>
+    <code>std::memory_order</code> a scoped enumeration</a> :
+    proceed to LEWG
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0320r1.pdf">
+    Thread Constructor Attribute</a>: Revise for next
+    meeting</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0099r1.pdf">
+    Low level API for stackful context switching</a>: revise for
+    next meeting</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0462r0.pdf">
+    Implementation of memory_order_consume</a>: revise for next
+    meeting</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0361r1.pdf">
+    Invoking Algorithms asynchronously</a>: revise for next
+    meeting</span>
+  </li>
+  <li>
+    <span style="color: rgb(0,0,0);text-decoration: none;"><a href=
+			"http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0413r0.pdf">
+    Updating Parallel Execution Policy Names in Parallelism TS</a>:
+    proceed for LWG and update Parallelism TS<br /></span>
+  </li>
+</ul>
+
+<p>
+  <span style="color: rgb(0,0,0);text-decoration: none;">Here is
+  the current status of all the comments. Some of these may change
+  and a final document will be published after the Kona meeting as
+  a Record of Response. At the suggestion of my colleague, Ruyman,
+  I have removed the empty rows where we are still working on the
+  resolution.<br /></span>
+</p>
+<div style="clear: both"></div>
+
+<a href="{{ '/assets/images/portal/article-images/f3b13dc39d964c2f88febd53ab7247d3.png' | relative_url }}" target="_blank"><img src="{{ '/assets/images/portal/article-images/aa17628bb2a6eebe5a6f1cfc7eee7c59.png' | relative_url }}" /></a>
+
+<div style="clear: both"></div>
+
+<p>
+  By the next meeting in February, the remaining comments will be
+  triaged and we will be in a position to release C++17 for NB
+  ballot again, this time as a Draft International Standard (DIS).
+  If all goes well, the vote will be presented in the July Toronto
+  meeting, and we will be ready to celebrate and push C++17 to be
+  published by the end of 2017. At this point, I don't see any show
+  stoppers and certainly expect that prediction to come true.
+  However, the biggest issues tends to be settle only at the end,
+  so there may still be problems but we will not know until then.
+  So stay tuned.
+</p>
+<div style="clear: both"></div>
+<style>
+section#content div.wrapper article a {
+font-weight: 600;
+color: black;
+}
+</style>
+

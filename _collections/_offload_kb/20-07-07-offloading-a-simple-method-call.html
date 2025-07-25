@@ -1,0 +1,24 @@
+---
+id: 134
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Offloading a simple method call"
+redirect_from:
+  - /kb/134
+layout: products/offload/kb/view
+---
+<p>One of the most common Offload scenarios is calling a function on the SPU (i.e. inside an Offload context). For example:
+</p>
+<pre><code>__offload()
+{
+	ptr-&gt;func(ptrarg1,ptrarg2);//__outer this and argument pointers
+}
+</code></pre><p>The instance method func is called on a PPU pointer with 2 PPU pointers as arguments. There may be a performance penalty if method func, or functions it calls (directly or indirectly), frequently processes data off the argument pointers or the this pointer. In that case it might be worthwhile caching the data those pointers point to. This of course is subject to the usual language rules1, side-effects and enough SPU memory being available (usually on the SPU stack). Essentially, we want to emulate passing data by value to the SPU and for PPU pointer arguments this means caching data in local storage and using a pointer to local storage instead.
+</p><p>
+Read next article <a href="{{ '/kb/135' | relative_url }}">/kb/135.html</a> about how to cache data.
+</p><p>
+1Caching usually involves allocating local storage by creating temporary variables. Variables of type void or structure type with abstract methods cannot be created.
+</p>
+
+

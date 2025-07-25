@@ -1,0 +1,232 @@
+---
+layout: page
+nav_style: alt
+stylesheets:
+  - /assets/css/pages/company/careers/view.css
+scripts:
+  - /assets/js/pages/company/careers/view.js
+---
+
+<!-- Section: Career View -->
+<section id="career-view" class="minimal-top-header">
+    <div class="wrapper">
+        <div class="columns content-with-side-content">
+            <div>
+                <a class="button image-button" href="{{ '/company/careers/#career-list' | relative_url }}">
+                    <i class="material-icons">arrow_back_ios</i>
+                    Back to List
+                </a>
+
+                <header id="career-title">
+                    <h1>{{page.title}}</h1>
+                </header>
+
+                <div id="content" class="formatted-content">
+                    {{content}}
+                </div>
+
+                <br />
+                <br />
+
+                <!-- After Form Sent -->
+                <div id="form-after-send" class="notice">
+                    Your application has been sent successfully. Someone should contact you within the next two working
+                    days to confirm we have received your application.
+                </div>
+
+                <!-- Before Form Sent -->
+                <div id="form-before-send">
+                    {% if page.closed == true %}
+
+                    <div class="notice">
+                        <h2>Position Closed</h2>
+                        <p>Unfortunately this position is currently closed. You can check by at a later date or you can
+                            <a href="{{ '/company/careers/#career-list' | relative_url }}">click here</a> to view our other
+                            available positions.</p>
+                    </div>
+
+                    {% else %}
+
+                    <h2>Apply</h2>
+
+                    {% if page.apply_redirect %}
+                    <a class="button image-button" href="{{page.apply_redirect}}" target="_blank">
+                        <i class="material-icons">history_edu</i>Apply via 3rd Party Website</a>
+                    {% else %}
+                    <form id="apply"
+                          action="https://formspree.io/mgeadzvr"
+                          method="POST"
+                          enctype="multipart/form-data"
+                          data-requiresCookieAcceptance="true">
+                        <div>
+                            <label for="name">Name</label>
+                            <input id="name" type="text" name="name" placeholder="Joe Bloggs" value=""
+                                   required="required" />
+
+                            <label for="email">Email Address</label>
+                            <input id="email" type="email" name="email" placeholder="joe@joebloggs.com" value=""
+                                   required="required" />
+
+                            <label for="coverNote">Cover Note <small>(at least 50 characters)</small></label>
+                            <textarea id="coverNote"
+                                      name="coverNote"
+                                      placeholder="The Cover Note/Letter is just as important as your CV/Resume, so please include one, stating why you believe you are a good fit for the position. If you have examples of relevant work or projects, we would love to see them, so please include links to them in your application."
+                                      required="required"
+                                      minlength="50"></textarea>
+
+                            <label for="links">Relevant Links</label>
+                            <textarea id="links" name="relevantLinks"
+                                      placeholder="https://www.github.com, https://www.mysite.com"></textarea>
+
+                            <div>
+                                <label>Apply for Multiple Positions</label>
+                                <div><small>If you want to apply for multiple positions with this application,
+                                    please select the relevant positions from below.</small></div>
+                                <ul class="other-positions">
+                                    <li>
+                                        <input id="default-position" name="position" type="checkbox" value="{{page.title}}"
+                                               checked/>
+                                        <div>{{page.title}}</div>
+                                    </li>
+
+                                    {%- assign careers = site.careers | where: "type", page.type -%}
+                                    {%- assign careers = careers | where: "hidden", "false" -%}
+                                    {%- assign careers = careers | where: "closed", "false" -%}
+                                    {%- for career in careers -%}
+                                    {%- if career.title != page.title -%}
+                                    <li>
+                                        <input name="additional_positions[]" type="checkbox" value="{{career.title}}" />
+                                        <div>{{career.title}}</div>
+                                    </li>
+                                    {%- endif -%}
+                                    {%- endfor -%}
+                                </ul>
+                            </div>
+
+                            <div class="side-by-side">
+                                <div>
+                                    <label for="cv">Curriculum Vitae <small>(.pdf, .doc, .docx)</small></label>
+                                    <input id="cv" type="file" name="cv" accept="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                                </div>
+                            </div>
+
+                            <div class="side-by-side">
+                                <div>
+                                    <label for="referer">Where Did You Find Out About This Job Posting?</label>
+                                    <select id="referer" required>
+                                        <option value="" selected>Please Select</option>
+                                        <option>Employee Referral</option>
+                                        <option>Google Search</option>
+                                        <option>HiPEAC</option>
+                                        <option>University Event</option>
+                                        <option value="codeplay-related">Codeplay Careers</option>
+                                        <option value="social-media">Social Media</option>
+                                        <option value="job-board">Job Board</option>
+                                        <option value="other">Other</option>
+                                        <option>Prefer Not To Say</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="chooser codeplay-related">
+                                        <label for="referer-codeplay">Please Select</label>
+                                        <select id="referer-codeplay">
+                                            <option>Please Select</option>
+                                            <option>Codeplay.com</option>
+                                            <option>Codeplay Recruitment Leaflet</option>
+                                            <option>Codeplay Newsletter</option>
+                                        </select>
+                                    </div>
+                                    <div class="chooser social-media">
+                                        <label for="referer-social">Please Select</label>
+                                        <select id="referer-social">
+                                            <option>Please Select</option>
+                                            <option>Codeplay Facebook</option>
+                                            <option>Codeplay Twitter</option>
+                                            <option>Codeplay LinkedIn</option>
+                                        </select>
+                                    </div>
+                                    <div class="chooser job-board">
+                                        <label for="referer-job-board">Please Select</label>
+                                        <select id="referer-job-board">
+                                            <option>Please Select</option>
+                                            <option>University Job Board</option>
+                                            <option>Glassdoor.co.uk</option>
+                                            <option>Indeed.com</option>
+                                            <option>Women Who Code</option>
+                                            <option>Every Woman Tech Hub</option>
+                                            <option>Women In Stem</option>
+                                            <option>Stack Overflow</option>
+                                        </select>
+                                    </div>
+                                    <div class="chooser other">
+                                        <label for="referer-other">Please Specify</label>
+                                        <input id="referer-other"
+                                            type="text"
+                                            placeholder="Google.co.uk" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- CAPTCHA -->
+                        <div class="g-recaptcha"></div>
+
+                        <button type="submit" disabled>Submit Application</button>
+
+                        <!-- Redirect -->
+                        <input type="hidden" name="Where Did You Hear About Us" value="Prefer Not To Say" />
+                        <input type="hidden" name="_next" value="{{page.url}}#form-after-send" />
+                        <input type="hidden" name="_subject" value="Job Application for {{page.title}}" />
+                    </form>
+                    {% endif %}
+
+                    {% endif %}
+                </div>
+
+            </div>
+            <div>
+                <aside>
+                    <h3>Status</h3>
+                    {% if page.closed == true %}
+                    <div class="tag">Closed</div>
+                    {% else %}
+                    <div class="tag open">Open for Applications</div>
+                    {% endif %}
+
+                    <h3>Position Type</h3>
+                    <p>{{page.type | capitalize}} (Full-Time)</p>
+
+                    {% if page.type != "studentship" %}
+                    <h3>Career Benefits</h3>
+                    <ul id="career-benefits">
+                        <li><i class="material-icons">public</i>
+                            Hybrid In-office (Edinburgh)</li>
+                        <li><i class="material-icons">public</i>
+                            Fully Remote (Europe, UK)</li>
+                        <li><i class="material-icons">flight</i>
+                            Up To 35 Days Holidays</li>
+                        <li><i class="material-icons">spa</i>
+                            Private Health Care Options</li>
+                        <li><i class="material-icons">query_builder</i>
+                            Flexible Working Options</li>
+                        <li><i class="material-icons">directions_bike</i>
+                            Bike-to-Work Scheme</li>
+                        <li><i class="material-icons">apartment</i>
+                            Friendly Modern Office</li>
+                        <li><i class="material-icons">free_breakfast</i>
+                            Office Complimentary Refreshments</li>
+                        <li><i class="material-icons">outdoor_grill</i>
+                            Company Social Events </li>
+                        <li><i class="material-icons">more</i>
+                            and Much More! </li>
+                    </ul>
+                    {% endif %}
+
+                    <h3>Share</h3>
+                    {%- include _includes/share-buttons.html -%}
+                </aside>
+            </div>
+        </div>
+    </div>
+</section>

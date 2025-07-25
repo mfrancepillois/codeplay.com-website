@@ -1,0 +1,115 @@
+---
+category: blogs
+date: '2023-09-11T11:59:25.164058'
+hidden: false
+layout: portal/portal-article-view
+redirect_from:
+  - /portal/news/2023/09/11/nvidia-texture-cache-in-sycl
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+title: "NVIDIA&reg; Texture Cache in SYCL&trade;"
+user_id: 92149
+---
+
+<p>This blog post will present a performance analysis of the CUDA texture cache for generic GPGPU applications. This is important for GPGPU programmers that may want to manually access the L1/Tex cache outside the scope of image specific applications.</p>
+<h2><a href="#what-is-the-texture-cache"></a>What is the texture cache</h2><p>The texture cache is a part of the unified data cache. This cache is a dedicated bit of memory present on every Compute Unit (CU). The unified in the name comes from the fact that all its components (the texture cache, L1 cache and SYCL local memory (CUDA shared memory)) used to be housed in separate memory modules, but for <a href="https://images.nvidia.com/content/volta-architecture/pdf/volta-architecture-whitepaper.pdf" target="_blank">better performance</a> were over time moved onto a single die.</p>
+<p>The name, "Texture cache", comes from its original usage in the graphics pipeline to accelerate texture mapping. This also means that it is <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#device-memory-accesses" target="_blank">directly accessible</a> by the TEX units used by the SYCL bindless images API, however that is beyond the scope of this blog post. More can be read about the bindless images API in <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_bindless_images.asciidoc" target="_blank">its documentation</a>.</p>
+<p>The texture cache is <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#read-write-coherency" target="_blank">non-coherent</a>, meaning that it has no mechanism to update the data already loaded into it. As such it can only be used with data that is read only for at least the lifetime of the kernel.</p>
+<h2><a href="#how-to-access-the-texture-cache"></a>How to access the texture cache</h2><p>A global memory load can be cached in the texture cache by accessing it using the <code>ldg</code> function, which currently lives in the <code>sycl::ext::oneapi::experimental::cuda</code> namespace. The full details of the function can be found in <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/extensions/experimental/sycl_ext_oneapi_cuda_tex_cache_read.asciidoc" target="_blank">its documentation</a></p>
+<p>An example of adapting code to use the texture cache is visible in the code snippets below. Original snippet taken from <a href="https://github.com/zjin-lcf/HeCBench/blob/e2e13ff587c392361989cece0956d827167aa7b9/page-rank-sycl/main.cpp#L204" target="_blank">the page-rank benchmark</a> from HecBench.</p>
+<pre class="cpp"><code>// Without texture cache usage
+q.submit([&amp;](sycl::handler&amp; cgh) {
+  cgh.parallel_for&lt;class map&gt;(
+    sycl::nd_range&lt;1&gt;(gws, lws), [=] (sycl::nd_item&lt;1&gt; item) {
+    int i = item.get_global_id(0);
+    if (i &lt; n) {
+      float outbound_rank = d_page_ranks[i]/(float)d_noutlinks[i];
+      for(int j=0; j&lt;n; ++j)
+        d_maps[i*n+j] = d_pages[i*n+j]*outbound_rank;
+    }
+  });
+});</code></pre>
+
+<pre class="cpp"><code>#include &lt;sycl/ext/oneapi/experimental/cuda/builtins.hpp&gt;
+using namespace sycl::ext::oneapi::experimental::cuda;
+// With texture cache usage
+q.submit([&amp;](sycl::handler&amp; cgh) {
+  cgh.parallel_for&lt;class map&gt;(
+    sycl::nd_range&lt;1&gt;(gws, lws), [=] (sycl::nd_item&lt;1&gt; item) {
+    int i = item.get_global_id(0);
+    if (i &lt; n) {
+      float outbound_rank = ldg(&amp;d_page_ranks[i])/(float)ldg(&amp;d_noutlinks[i]);
+      for(int j=0; j&lt;n; ++j)
+        d_maps[i*n+j] = ldg(&amp;d_pages[i*n+j])*outbound_rank;
+    }
+  });
+});</code></pre><p>Under the hood this function uses the <code>ld.global.nc</code> PTX assembly instruction. As such the texture cache can also be accessed in <a href="https://docs.nvidia.com/cuda/inline-ptx-assembly/index.html" target="_blank">inline PTX assembly</a> using this instruction.</p>
+<h2><a href="#when-to-use-the-texture-cache"></a>When to use the texture cache</h2><p>As mentioned <a href="#what-is-the-texture-cache">previously</a> the texture cache can only be used with data that is read only for at least the lifetime of the kernel.</p>
+<p>NVIDIA describes two key characteristics of the cache. <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#device-memory-accesses" target="_blank">Firstly</a> that it is optimized for a certain data layout, but this layout (called block linear) is <a href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-arrays" target="_blank">opaque</a> and only accessible through the <a href="#what-is-the-texture-cache">previously mentioned</a> bindless images API. <a href="https://docs.nvidia.com/cuda/parallel-thread-execution/#data-movement-and-conversion-instructions-ld-global-nc" target="_blank">Secondly</a>, that on some architectures the texture cache has higher throughput, but longer latency, therefore needing more parallelism to cover for that latency.</p>
+<h3><a href="#general-usage"></a>General usage</h3><p>Benchmarking was performed to get a general overview of the impact of using the texture cache. It was done by modifying a selection of benchmarks from the <a href="https://github.com/zjin-lcf/HeCBench" target="_blank">HeCBench</a> suite to create versions with and without the use of the texture cache, and comparing performance between them.</p>
+<p>The HeCBench suite was chosen as the benchmarks contained within are based on real world GPGPU use cases. This was useful as one of the factors in a choice of benchmark was if a major GPGPU package (like PyTorch for example) was implementing that algorithm using the texture cache. The subset of benchmarks used was chosen by finding benchmarks that either already use the texture cache or operate on read only data that could use the texture cache. During their selection special attention was paid to benchmarks that operated on data in 2D layouts, like lattices or images as they could benefit from the <a href="#when-to-use-the-texture-cache">aforementioned</a> cache characteristics.</p>
+<p>The modifications performed on the benchmarks were very minimal. If a benchmark wasn't using the texture cache, a version using it was created by wrapping all eligible variables in the <code>ldg</code> function described <a href="#how-to-access-the-texture-cache">above</a>. And if a benchmark was already using it, a version without it was created.</p>
+<p>To minimize measurement error, the execution time of each version of each benchmark has been calculated as an average of many individual runs. The exact amount of these runs is different between benchmarks. It was determined by calculating (on assumption of runs being uncorrelated) the standard error after each series of runs and increasing the amount of runs until that error was below the desired resolution of 1%. This strategy minimized error so much that the error bars wouldn't be clearly visible on the plot and as such were omitted.</p>
+<p>The performance comparison was done by running the two versions of each benchmark (as described above) on the same system equipped with an NVIDIA A100. Then getting the average kernel execution time from both series of runs and calculating the texture cache speedup using the formula visible below:</p>
+
+<img src="{{ '/assets/images/portal/article-images/2023/texture-cache-formula.svg' | relative_url }}" alt="Texture Cache" class="formula" />
+
+<p>The data collected this way is visible in the plot in figure 1.</p>
+<p><img src="{{ '/assets/images/portal/article-images/speedup-general.svg' | relative_url }}"/> <strong>Figure 1: Plot showing speedups resulting from the use of the texture cache</strong></p>
+<p>All performance measurements visible in the plot in figure 1 were performed with an AMD EPYC 7402 CPU with 260 GB of RAM and an NVIDIA A100 PCIe GPU with 40 GB of RAM running Ubuntu 22.04.2 LTS (Linux Kernel 5.15.0), DPC++ version 2023.2, CUDA SDK 12.2. The binaries were compiled with compiler switches: </p>
+<p><code>-std=c++17 -Wall -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend --cuda-gpu-arch=sm_80 -O3</code></p>
+<p>In the plot in figure 1 it can be seen that the use of texture cache had no effect on most benchmarks. As for the benefiting benchmarks the improvements are rather varied, but always noticeable (up to 40%). Observed performance degradation has been very rare and rather small (~2%).</p>
+<p>From this data it can be seen that while the texture cache can bring noticeable performance increases, it is very situational. The exact circumstances under which it is most useful are hard to pinpoint due to the fact that the previously mentioned cache characteristics are either vague or opaque, but the collected data highlights some of them.</p>
+<p>Firstly, that the computational patterns of an algorithm are important. The texture cache seems to prefer algorithms with patterns of multiple reads of different elements of an array by multiple threads/and or same thread in a warp. This can be seen in the fact that algorithms based in convolutions (represented by <code>conv1d</code>, <code>conv1d-tiled</code>, <code>conv1d-tiled-caching</code> and <code>Convolution Separable</code>), LSTMs (represented by <code>clink kernel</code> and <code>clink offload</code>) and graph algorithms (represented by <code>page-rank</code>, <code>all pairs distance without shared</code> and <code>all pairs distance with shared</code>) received the biggest performance increases.</p>
+<p>This is not too surprising since convolution is one of the most common image processing operations. As such the optimizations from the graphics pipeline origins of the texture cache can shine through.</p>
+<p>It is worth noting that <code>winograd double</code> and <code>winograd float</code> experienced small but significant performance degradation, despite being convolution based. This will be further explored in the <a href="#architecture-impact">next section</a>.</p>
+<p>Secondly, multiple reuse of data appears to be important. This is suggested by benchmarks like <code>ising</code> and <code>heat2D</code>. Which while working on reused 2D structured read only data, reuse that data very lightly, and received no noticeable performance benefit.</p>
+<p>These observations, in combination with the fact that using the texture cache requires minimal changes to the kernel's code, means that the texture cache can be a quick and easy way to improve kernel performance.</p>
+<h3><a href="#architecture-impact"></a>Architecture impact</h3><p>As mentioned in <a href="#what-is-the-texture-cache">the first section</a> the texture cache lives in the unified data cache. As such it is impacted by what else is unified with it.</p>
+<p>The last time NVIDIA has made a change to it was in 2017 with the Volta microarchitecture (compute capability 7.0). At this point the unified data cache got physically combined with SYCL local memory.</p>
+<p>The possible impact of this change has been investigated by running the benchmarks from <a href="#general-usage">the previous subsection</a> on 3 different hardware configurations:</p>
+
+<ol>
+  <li>NVIDIA GeForce GTX 1050 Ti, representing the performance before the merge of the Texture/L1 and shared memory caches.</li>
+  <li>NVIDIA GeForce GTX 1650 representing performance after the merge.</li>
+  <li>NVIDIA A100 representing a more current architecture to see if there have been any more changes since.</li>
+</ol>
+
+<p>Relevant changes to the memory hardware between these GPUs are visible in table 1.</p>
+
+<table><thead><tr><th></th><th>1050Ti</th><th>1650</th><th>A100</th></tr></thead><tbody><tr><td>compute capability</td><td>6.1</td><td>7.5</td><td>8.0</td></tr><tr><td>VRAM size</td><td>4 GB</td><td>4 GB</td><td>40 GB</td></tr><tr><td>VRAM technology</td><td>GDDR5</td><td>GDDR5</td><td>HBM2e</td></tr><tr><td>Memory bus</td><td>128 bit</td><td>128bit</td><td>5120 bit</td></tr><tr><td>Memory clock</td><td>1752 MHz</td><td>2001 MHz</td><td>1215 MHz</td></tr><tr><td>Unified L1/texture cache (per CU)</td><td>48 KB</td><td>N/A</td><td>N/A</td></tr><tr><td>Local memory (per CU)</td><td>96 KB</td><td>N/A</td><td>N/A</td></tr><tr><td>Unified data cache (per CU)</td><td>N/A</td><td>96 KB</td><td>192 KB</td></tr></tbody></table><p><strong>Table 1: Relevant hardware differences between used GPUs</strong></p>
+<p>This hardware selection meant that the benchmarks run on the 3rd configuration had to be run with slightly different parameters. The only changed parameter was an increase of the processed data size. This change was necessary as the A100 is the only data center GPU. This means that it possesses much more memory capacity and compute resources (as visible in table 1). As such this change kept the resource utilization and occupancy of the cards equally stressed allowing for caching benefits observation.</p>
+<p>The data collected is visible in the plots in figures 2,3 and 4.</p>
+<p><img src="{{ '/assets/images/portal/article-images/speedups-sm61.svg' | relative_url }}"/><strong>Figure 2: Plot showing speedups resulting from the use of the texture cache on a GTX 1050Ti</strong></p>
+<p>All performance measurements visible in the plot in figure 2 were performed with an Intel i7-10700K CPU with 32 GB of RAM and an NVIDIA GeForce GTX 1050 Ti running Ubuntu 18.04.6 LTS (Linux Kernel 5.4.0), DPC++ version <a href="https://github.com/intel/llvm/commit/c87e7802ef8087e81d66c41819fa05ab76fbd408" target="_blank">c87e7802</a>, CUDA SDK 11.6. The binaries were compiled with compiler switches: </p>
+<p><code>-std=c++17 -Wall -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend --cuda-gpu-arch=sm_61 -O3</code></p>
+<p><img src="{{ '/assets/images/portal/article-images/speedups-sm75.svg' | relative_url }}"/> <strong>Figure 3: Plot showing speedups resulting from the use of the texture cache on a GTX1650</strong></p>
+<p>All performance measurements visible in the plot in figure 3 were performed with a 12th Gen Intel i9-12900K CPU with 64 GB of RAM and an NVIDIA GeForce GTX 1650 running Ubuntu 22.04.2 LTS (Linux Kernel 5.19.0), DPC++ version <a href="https://github.com/intel/llvm/commit/0a39bb880bd1ce5505b059dcde0406b58c7881eb" target="_blank">0a39bb88</a>, CUDA SDK 12.1. The binaries were compiled with compiler switches:</p>
+<p> <code>-std=c++17 -Wall -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend --cuda-gpu-arch=sm_75 -O3</code></p>
+<p><img src="{{ '/assets/images/portal/article-images/speedups-sm80.svg' | relative_url }}"/> <strong>Figure 4: Plot showing speedups resulting from the use of the texture cache on an A100</strong></p>
+<p>All performance measurements visible in the plot in figure 4 were performed with an AMD EPYC 7402 CPU with 260 GB of RAM and an NVIDIA A100 PCIe GPU with 40 GB of RAM running Ubuntu 22.04.2 LTS (Linux Kernel 5.15.0), DPC++ version 2023.2, CUDA SDK 12.2. The binaries were compiled with compiler switches:</p>
+<p> <code>-std=c++17 -Wall -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend --cuda-gpu-arch=sm_80 -O3</code></p>
+<p>These results suggest that the GPU architecture version may have a major impact on the effectiveness of the texture cache. With some of the benchmarks experiencing drastically lower benefits of using the texture cache in the more modern GPUs, from over 200% to less than 50%. Some benchmarks (namely <code>winograd float</code> and <code>winograd double</code>) experienced not only lower performance benefits, but even a small but significant performance degradation on newer GPUs.</p>
+<h3><a href="#data-size-impact"></a>Data size impact</h3><p>As the 1D Convolution benchmark has a lot of easily changeable variables it allowed for easy collection of extra data. With minimal modifications it was made to run 3 versions of the convolution kernel for 3 different data types for 7 different sizes of the convolution mask. Convolution mask size here is the size in elements of the smaller convolution input sequence. This was run and processed like the previous benchmarks, just with the desired resolution of 5%. This change in error resolution was necessary due to a combination of time constraints and the very long single run times. This lower precision was still deemed acceptable as the observed speed-ups are substantially bigger. The data collected is visible in the plot in figure 5.</p>
+<p><img src="{{ '/assets/images/portal/article-images/conv1d-sm61.svg' | relative_url }}"/> <strong>Figure 5: Plot showing speedups for different mask sizes for different variants of 1D convolution</strong></p>
+<p>All performance measurements visible in the plot in figure 5 were performed with an Intel i7-10700K CPU with 32 GB of RAM and an NVIDIA GeForce GTX 1050 Ti running Ubuntu 18.04.6 LTS (Linux Kernel 5.4.0), DPC++ version <a href="https://github.com/intel/llvm/commit/c87e7802ef8087e81d66c41819fa05ab76fbd408" target="_blank">c87e7802</a>, CUDA SDK 11.6. The binaries were compiled with compiler switches: </p>
+<code>-std=c++17 -Wall -fsycl -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend --cuda-gpu-arch=sm_61 -O3</code><p>The first thing immediately obvious from the plot in figure 5 is that the <code>conv1d-tiled-caching</code> kernel, despite being convolution based, receives either no benefit or even a light penalty, reinforcing the fact that the texture cache is extremely use case dependent. It can be seen that the texture cache benefits grow with mask size. This continues up to a saturation point occurring at around 63 <code>float</code> values or the equivalent of 31 <code>double</code> values or 127 <code>int16_t</code> values. After which the benefits drop noticeably. A seemingly relevant observation made by <a href="http://dominikwodniok.de/publications/Schulz_supplemental_EGPGV2013.pdf" target="_blank">this paper</a> is that the texture cache has a 128 byte cache line width.</p>
+<p>This also further supports the conclusion from a <a href="#general-usage">previous subsection</a> that the texture cache benefits from increased data reuse.</p>
+<h2><a href="#optimizing-for-the-texture-cache"></a>Optimizing for the texture cache</h2><h3><a href="#data-type"></a>Data type</h3><p>While the <code>ldg</code> function supports many data types with a variety of different sizes, performance wise it favors some over others.</p>
+<p>It can be seen in the plot in figure 5, that, roughly speaking, the smaller the data type the bigger the benefits of using the texture cache get. This is also visible in the <code>winograd</code> benchmarks from the plots in figures 2,3 and 4. This benchmark originally used <code>double</code> as its primary data type, and had a version of it made that used <code>float</code> instead.</p>
+<p>Note that, when changing the data type for a given benchmark the whole algorithm was changed to use the new data type.</p>
+<h3><a href="#data-ordering"></a>Data ordering</h3><p>While the 2D spacial locality of the block-linear layout that the texture cache is optimized for, hints at it being related to z-ordering (aka z-curve ordering or Morton code indexing), as it is an opaque layout nothing can be officially confirmed.</p>
+<p>However, some applications have reported benefits from using z-ordering. Like the particle simulator that in <a href="https://developer.download.nvidia.com/assets/cuda/files/particles.pdf" target="_blank">this</a> paper from 2010 says that "it may be beneficial to use other functions such the Z-order curve [8] to improve the coherence of memory accesses.". Or the more modern use cases described in <a href="https://www.sciencedirect.com/science/article/abs/pii/S0010465516300182" target="_blank">this</a> and <a href="https://www.sciencedirect.com/science/article/abs/pii/S092702561930206X" target="_blank">this</a> paper, which both use z-ordering within the HOOMD-blue molecular dynamics package.</p>
+<h2><a href="#relation-to-local-memory"></a>Relation to local memory</h2><p>As mentioned in the <a href="#architecture-impact">architecture impact</a> section ever since the Volta microarchitecture the texture cache and local memory have been sharing the same physical resource. This has introduced a new dependency between them. Namely, that the sum of the local memory and texture cache used by a kernel must be less or equal to a fixed value.</p>
+<p>This means that the more local memory a given kernel allocates the less texture cache is available to it. This is further exaggerated by the fact that while local memory can allocate any arbitrary amount of memory within the hardware limits, the texture cache is not as flexible and can only snap to per architecture predefined values called carveouts.</p>
+<p>More about this topic, including how to set local memory allocation limits and how the carveout is decided can be read about <a href="https://developer.codeplay.com/products/oneapi/nvidia/2023.2.1/guides/performance/performance-on-nvidia#memory" target="_blank">here</a></p>
+<h2><a href="#related-optimization-tip"></a>Related optimization tip</h2><p>If one is considering the use of the texture cache to optimize some kernels, one might also consider a related optimization.</p>
+<p>Namely, register reuse. This optimization is possible because data loaded through the texture cache has to be constant for the lifetime of the kernel. This means that the data instead of being loaded on every use can be just loaded into registers and reused from there. And while a texture cache load is faster than a device memory one, a register load is significantly faster than either one of them.</p>
+<p>Register reuse is especially important for data used within loops. Because the data is constant for the lifetime of the kernel, it is also invariant for all the loops within the kernel. As such the loads can be taken out of the loop greatly reducing the amount of memory loads.</p>
+<p>It is important to note that this only applies to smaller amounts of data as loading too much data into registers might cause a register spill and harm performance instead. This is because in this case registers spill into private memory, which is located in device memory. This means that at this point the optimization would be replacing a cached global read with a standard one.</p>
+<h2><a href="#disclaimer"></a>Disclaimer</h2><p>Performance varies by use, configuration and other factors. Results may vary.</p>
+
+<style>
+  .formula {
+    max-width: 250px !important;
+  }
+</style>

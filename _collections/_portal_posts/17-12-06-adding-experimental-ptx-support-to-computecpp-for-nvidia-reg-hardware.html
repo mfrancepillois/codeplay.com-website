@@ -1,0 +1,35 @@
+---
+id: 284
+url: 12-06-17-adding-experimental-ptx-support-to-computecpp-for-nvidia
+user_id: 840
+date: 2017-12-06T14:28:23.3600Z
+category: news
+title: "Adding Experimental PTX Support To ComputeCpp For NVIDIA&reg; Hardware"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/12-06-17-adding-experimental-ptx-support-to-computecpp-for-nvidia
+thumbnail: /assets/images/portal/article-images/5b60d58a6036830ce31079bbadd8acc3.png
+layout: portal/portal-article-view
+---
+
+<p>ComputeCpp provides support for a wide range of devices that can consume OpenCL SPIR instructions. When SYCL code is compiled by ComputeCpp, the device code is output using SPIR or SPIR-V binary formats. This enables SYCL developers to deploy their software to a wide variety of devices from several companies including AMD, Intel, ARM and Renesas without re-writing any code.</p>
+
+
+<p>One of the main requests of our developer community has been to support NVIDIA platforms. Unfortunately, NVIDIA provides an OpenCL interface but it does not provide support for standard intermediate representations (SPIR or SPIR-V). While SPIR and SPIR-V are open standards developed to be the intermediate representation used by OpenCL devices, Parallel Thread Execution (PTX) was developed by NVIDIA as an intermediate representation of code for its GPUs. When CUDA applications are compiled the output is the PTX intermediate representation.</p>
+
+
+<p>The ComputeCpp compiler team, together with Codeplay Research, has been working on a side project to integrate the PTX backend generation into our compiler toolchain. We are pleased to announce that this experimental support is now available in our Community Edition. What this means is that developers using ComputeCpp can compile their code for the PTX target and will be able to execute it on NVIDIA GPUs, with some limitations. In particular, although the code generation is ready, the builtin support is limited. We still need to map OpenCL builtins to their PTX counterparts. The ComputeCpp team will continue working on adding those steadily over the 2018 releases, focusing in those more requested by the users. If you try to use PTX support and find a missing builtin, all hope is not lost! Simply send us an email with your error and the builtins you need to <support email> and we'll do our best to include them for the next release.</p>
+
+<img src="{{ '/assets/images/portal/article-images/5b60d58a6036830ce31079bbadd8acc3.png' | relative_url }}" />
+
+
+<p>To find out how to take advantage of this new feature take a look at the <a target="_blank" href="https://developer.codeplay.com/computecppce/latest/computecpp-with-ptx">PTX guide on our website</a>.</p>
+
+
+<p>As we've already said, the implementation is experimental, which means there are some limitations you should be aware of. Firstly, it has not been tested on a wide range of NVIDIA hardware but we are really keen to hear about your experiences on your NVIDIA platforms. We have also not tested support on Windows, although it is known to work. Note that, in the community edition, you cannot have both SPIR and PTX binaries loaded at runtime. Contact us if you are interested in this feature that will enable deploying a single binary for all the available GPUs in the market!</p>
+
+
+<p>If you have any feedback on our PTX implementation get in touch at sycl<img class="email-at-symbol" src="{{ '/assets/images/global/at-symbol.svg' | relative_url }}" />codeplay.com and tell us how you got on and how we can make it better.</p>
+

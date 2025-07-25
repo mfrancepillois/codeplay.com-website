@@ -1,0 +1,127 @@
+---
+id: 70
+url: impact-of-address-spaces-on-c
+user_id: 73
+date: 2012-03-14T18:45:21.3600Z
+category: news
+title: "Impact of multiple address spaces on C++"
+showOnFrontPage: 0
+views: 686
+tags:
+redirect_from:
+  - /portal/impact-of-address-spaces-on-c
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Programming languages for heterogeneous multicore need to cater for different types of local memories. Standard C/C++ support a single address space only, but <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1169.pdf">embedded C provides address space qualifiers</a> to enable the access of data in different types of (local) memory. For example:
+</p>
+<pre>int           v1 = 1;  //defines global variable in host memory
+__asp int  v2 = 2;   //defines global variable in address space __asp (just used for sake of explanation) which could be on a different core or even different machine
+
+</pre>
+<p>These address qualifiers enable the compiler to generate the correct instructions to load and store data from different types of memory. The compiler can then generate a normal mov instruction when accessing v1, but an (hypothetical) __asp_move instruction when accessing v2 which is in address space __asp.
+</p><h2>Multiple address spaces often means multiple functions with the same functionality</h2>
+<p>Introducing different address spaces to C++ highlights some issues (similar issues are in C too) that, without changes to the compiler, lead quickly to an unwieldy programming model and a lot of code duplication. For example, the following code works great in standard C++ : a struct is defined with a constructor which is called to initialise a global variable in host memory:
+</p>
+<pre>struct s
+{
+      s(int* arg)
+      {   field = *arg;
+      }
+      int field;
+};
+
+s v3(&amp;v1); //OK, initialised variable on host memory
+</pre>
+<p>Now we want to use different address spaces. Pointers to different address spaces are not convertible into each other, so unfortunately we cannot pass a pointer to different address spaces to that constructor:
+</p>
+<pre>s v4(&amp;v2); //error: cannot convert argument from '__asp int*' into 'int*'
+</pre>
+<p>To fix this we need to overload the constructor with a definition that can take the address of variable v2 which is in address space __asp:
+</p>
+<pre>struct s
+{
+      s(int* arg)  //1
+      {   field = *arg;
+      }
+      s(__asp int* arg)  //2: identical to 1 except for the address space in the parameter
+      {   field = *arg;
+      }
+      int field;
+};
+</pre>
+<p>More interestingly, we cannot declare an object of type s in a different address space such as __asp because all the constructors of that struct type have implicit 'this' pointers to host memory only. In fact, any non-static member function without __asp modifier could not be called on a variable that is in address space __asp. The 'this' pointer is just an implicit parameter to non-static member functions that essentially has to follow the conversion rules for normal parameters when matching arguments. For example:
+</p>
+<pre>__asp s v5(&amp;v1); //error: cannot convert 'this' pointer from '__asp s*' into 's*'
+</pre>
+<p>Again, we can fix this by adding yet another constructor overload: one that has a 'this'  pointer of type '__asp s*':
+</p>
+<pre>struct s
+{
+      s(int* arg) //1
+      {   field = *arg;
+      }
+      s(__asp int* arg)  //2;   identical to 1 except for the address space in the parameter declaration
+      {   field = *arg;
+      }
+      s(int* arg) __asp //3;   identical to 1 except for the address space on the implicit 'this' pointer
+      {   field = *arg;
+      }
+      int field;
+};
+</pre>
+<p>Finally, if we want to initialise a variable in address space __asp with a pointer to address space __asp
+</p>
+<pre>__asp s v6(&amp;v2);// None of the 3 overloads can be called. 2 errors: cannot convert 'this' pointer from '__asp s*' into 's*' and argument '__asp int*' into 'int*'
+</pre>
+<p>Again we are let down by a missing constructor overload that can take pointers to address space __asp as argument and as an implicit 'this' pointer to __asp:
+</p>
+<pre>struct s
+{
+      s(int* arg) //1
+      {   field = *arg;
+      }
+      s(__asp int* arg)  //2;   identical to 1 except for the address space in the parameter decl
+      {   field = *arg;
+      }
+      s(int* arg) __asp //3;   identical to 1 except for the address space on the 'this' pointer
+      {   field = *arg;
+      }
+      s(__aps int* arg) __asp //4;   identical to 1 except for the address space in the parameter decl and implicit 'this' pointer
+      {   field = *arg;
+      }
+      int field;
+};
+</pre>
+<p>Note that all four constructors have different parameter lists but the same definition. This is a lot of code duplication required in order to be able to cope with two address spaces. It gets even worse in environments where there's more than two address spaces. In OpenCL for example there are 4 different address spaces on the device (__private, __local, __global and __constant). To be able to call a kernel with pointer arguments could require m^p duplicates where m is the number of address spaces and p is the number of address spaces in the parameter declarations (for example multilevel pointers and other types can have more than one address space attached to them). The OpenCL libraries are therefore very large and tedious to maintain due to this explicit code duplication.
+</p><h2>More function duplication for different cores</h2>
+<p>Note also that so far all &quot;explicitly duplicated&quot; functions in the example are still host functions. However, we may want to be able to use that struct and its methods on a different core, so that the four constructors could also be called from that core. The new OpenCL for example is widely seen in the industry to provide a C++0X- based <strong>single-source</strong> programming model with host functions overloading device kernels (annotated with some keyword) in the same translation unit (see for <a href="http://developer.amd.com/documentation/presentations/assets/ProgrammingModelsforNextGenGPGPU.pdf">example AMD's programming models slide</a>). In order for device kernels to be able to call the 4 different constructors, each of those constructors needs to then be duplicated and compiled into a kernel function (because the GPU may have a different instruction set and memory access operations than the host). So we now end up with 2^(2+1) == 8 duplicates of the same constructor.
+</p><h2>How to avoid explicit function duplication: Implicit Call-graph duplication with pointer memory inference</h2>
+<p>A solution to this explicit error-prone code bloat is implicit call-graph duplication with pointer memory inference (<a href="{{ '/blogs/uwe/' | relative_url }}">see previous blogs</a>) which is done by the compiler. This allows most header files to be used without annotations for kernel functions and address spaces. At the function call site the compiler deduces the address spaces from the arguments and creates the appropriate duplicate behind the scenes. This is very much like treating each function as a function template whose template parameters are the address spaces deduced from the argument pointers (<a href="{{ '/blogs/uwe/how-offload-cpp-works---every-function-is-a-template' | relative_url }}">see this article</a>).  Coming back to the original example with the constructors, there's no longer explicit duplication required because the compiler implicitly generates the required functions:
+</p>
+<pre>struct s
+{
+      s(int* arg)
+      {   field = *arg;
+      }
+      int field;
+};
+
+//no annotations for memory space so far
+
+s v3(&amp;v1);            //calls host constructor
+s v4(&amp;v2);            //generates and calls duplicate s(__asp int*);
+__asp s v5(&amp;v1); //generates and calls duplicate s(int*)__asp;
+__asp s v6(&amp;v2); //generates and calls duplicate s(__asp int*) __asp;
+</pre>
+<p>Call-graph duplication with pointer memory inference has been implemented in the <a href="{{ '/products/offload/' | relative_url }}">OffloadPS3 compilers</a>.
+</p>
+
+
+
+
+
+
+
+

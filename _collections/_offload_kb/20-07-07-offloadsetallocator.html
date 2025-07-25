@@ -1,0 +1,22 @@
+---
+id: 56
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadSetAllocator"
+redirect_from:
+  - /kb/56
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>int offloadSetAllocator(
+	void* (*cpfncMemalign)	( unsigned int alignment, unsigned int size),
+	void  (*cpfncFree)		( void* ptr )
+);
+</code></pre><p>This function sets the runtime to use the provided memory management functions. cpfncMemalign points to a memalign implementation, with the first argument the alignment in bytes, second argument being size required.
+</p><p>
+The Offload runtime will use standard platform implementations of these functions unless instructed to use otherwise via this function.
+</p>
+
+

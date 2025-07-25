@@ -1,0 +1,49 @@
+---
+id: 240
+url: 02-14-17-bringing-the-acceleration-of-opencl-to-tensorflow-with-sycl
+user_id: 497
+date: 2017-02-14T11:46:14.3600Z
+category: news
+title: "Bringing the Acceleration of OpenCL to TensorFlow with SYCL"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/02-14-17-bringing-the-acceleration-of-opencl-to-tensorflow-with-sycl
+thumbnail: /assets/images/portal/article-images/3e63f17db2349caf09c1be41ecfe0f5f.png
+layout: portal/portal-article-view
+---
+
+<img src="{{ '/assets/images/portal/article-images/3e63f17db2349caf09c1be41ecfe0f5f.png' | relative_url }}" style="width: 100%; height: auto">
+
+<br /><br />
+
+<p><a href="https://www.tensorflow.org/">TensorFlow<span class="_Tgc">™</span>
+  </a> is an artificial intelligence framework that can be used for executing machine learning algorithms. While a computation expressed using TensorFlow can be executed across heterogeneous systems, support has so far been limited to NVIDIA<span class="_Tgc">
+    <strong>®</strong>
+  </span> processors using CUDA<span class="_Tgc">
+    <strong>®</strong>
+  </span>. In order to enable developers to access a wider range of processors, we are working to bring support for OpenCL<span class="_Tgc">™</span> devices to the TensorFlow framework using SYCL<span class="_Tgc">™</span>.&nbsp;OpenCL is a framework for writing programs that execute across heterogeneous platforms, and SYCL is a royalty-free, cross-platform C++ abstraction layer that builds on the underlying concepts, portability and efficiency of OpenCL, while adding the ease-of-use and flexibility of modern C++ 14.</p>
+
+<p>
+  <a href="https://www.codeplay.com/products/computesuite/computecpp">ComputeCpp™</a> is Codeplay's implementation of SYCL and currently offers support for AMD and Intel processors that support OpenCL 1.2 with SPIR™, with plans to add more in the future (particularly as the demand for machine learning applications on embedded and mobile devices grows).</p>
+
+<p>TensorFlow can be used to build deep neural networks capable of machine learning, and these networks rely heavily on linear algebra where matrix calculations are key to building up predictions based on the input data set. TensorFlow, which consists of tensors (n-dimensional matrices), uses the Eigen libraries that have been built specifically for performing linear algebra, and written in C++ which makes SYCL an excellent option for offloading these operations to OpenCL devices.The Eigen libraries to do a lot of heavy lifting by creating kernels, and it is these kernels that make it possible to run many calculations in parallel. ComputeCpp converts those into SYCL kernels so that they can be run on a range of OpenCL devices using modern C++ code.</p>
+
+<p>In addition to enabling parallelization of the Eigen libraries on OpenCL devices, we are also supporting the most common TensorFlow operations such as <a href="https://www.tensorflow.org/api_docs/python/math_ops/basic_math_functions">basic math functions</a>. A full list of what is implemented and what is yet to be done is available on the <a href="https://docs.google.com/spreadsheets/d/1YbHn7dAFPPG_PgTtgCJlWhMGorUPYsF681TsZ4Y4LP0/edit#gid=1719702219">shared Google Doc</a>.</p>
+
+<p>
+  We have also implemented <a href="https://github.com/codeplaysoftware/visioncpp/tree/master/contrib/python">Python bindings</a> between <a href="https://github.com/codeplaysoftware/visioncpp/">VisionCpp™</a> and TensorFlow, these act as a bridge between the Python code and the VisionCpp C++ code. VisionCpp is a header-only library for computer vision and image processing applications that enables developers to build accelerated code utilising OpenCL devices. By bringing these frameworks together, developers can combine vision and image data with machine learning applications.</p>
+
+<p>Parallelization is also important from a processing and power management perspective. Since tensors are n-dimensional vectors, having access to parallelization of your TensorFlow code is important not just at the training stage, but also when performing inference on new data sets and this could well be happening on embedded hardware with low power requirements.</p>
+<p class="inline-comment-marker">Our implementation is still experimental and not yet complete, but we are making some great progress. We now pass over 90% of the TensorFlow unit tests, and there is a <a href="https://ci.tensorflow.org/job/tensorflow-opencl">public continuous integration system</a> set up to run those tests on a regular basis. The server will show you the current state for the building and testing of TensorFlow with OpenCL. We've also recently been able to run the <a href="https://www.tensorflow.org/versions/r0.10/tutorials/mnist/beginners/">MNIST</a> application using both OpenCL CPU and GPU in parallel, demonstrating the progress that has been made in making OpenCL devices available to TensorFlow developers.<br>
+
+</p>
+
+<p>If you want to try out <a href="https://www.codeplay.com/products/computesuite/computecpp">ComputeCpp CE</a>, our implementation of SYCL, with TensorFlow to make use of OpenCL devices you can now build the TensorFlow project with the OpenCL option turned on. Full instructions are available in the <a href="https://www.tensorflow.org/versions/master/get_started/os_setup" target="_blank">project documentation</a>.</p>
+
+<p>We are also looking for collaborators who can help to work on the project to bring the power of OpenCL devices to TensorFlow, you can email us at sycl at codeplay.com to find out how you can contribute.</p>
+
+<p>You'll also find me at the <a href="https://events.withgoogle.com/tensorflow-dev-summit/">TensorFlow Dev Summit</a> in Mountain View, California on February 15th if you want to talk more about how we are bringing OpenCL to TensorFlow.</p>
+
+

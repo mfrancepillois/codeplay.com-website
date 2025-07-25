@@ -1,0 +1,65 @@
+---
+layout: page
+nav_style: alt
+title: Team
+permalink: /company/team/
+stylesheets:
+  - /assets/css/pages/company/team.css
+scripts:
+  - /assets/js/pages/company/team.js
+redirect_from:
+  - /company/team.html
+  - /en/company/management-team/
+management_team:
+  - 838
+  - 503
+  - 1200
+  - 653
+  - 712
+  - 841
+  - 501
+  - 840
+---
+
+<!-- Section: Management Team -->
+<section id="management-team" class="reduce-top-header">
+    <div class="wrapper">
+        <header>
+            <h1>Management Team</h1>
+        </header>
+        <div class="columns four">
+            {%- assign authors = site.authors | sort: 'title' -%}
+            {%- for author in authors -%}
+            {%- if page.management_team contains author.user_id -%}
+            {%- assign current_author_id = author.user_id | times:1 -%}
+            <div>
+                <div>
+                    <div class="avatar medium">
+                        <img src="{{author.avatar | relative_url}}" alt="{{author.title}}'s Avatar" />
+                    </div>
+                    <h2>{{author.title}}</h2>
+                    <h3>{{author.position}}</h3>
+                    <div class="bio">{{author.content}}</div>
+                </div>
+            </div>
+            {%- endif -%}
+            {%- endfor -%}
+        </div>
+    </div>
+</section>
+
+<!-- Popup: Package Selection Sent -->
+<div id="user-popup" class="popup">
+    <div>
+        <div>
+            <div class="avatar medium">
+                <img src="" alt="" />
+            </div>
+            <h2></h2>
+            <h3></h3>
+        </div>
+        <div class="bio">
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+---
+id: 283
+url: 12-06-17-computecpp-ce-0-5-0-released-and-sycl-1-2-1-ratified
+user_id: 653
+date: 2017-12-06T14:28:23.3600Z
+category: news
+title: "ComputeCpp v0.5.0 is released and SYCL 1.2.1 ratified"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/12-06-17-computecpp-ce-0-5-0-released-and-sycl-1-2-1-ratified
+thumbnail: /assets/images/portal/article-images/34210cd1b66a3f06fb3b2f78c6db4286.png
+layout: portal/portal-article-view
+---
+
+<p>It is a day to celebrate for the ComputeCpp team at Codeplay because today the Khronos group announced that SYCL 1.2.1 has been <a target="_blank" href="https://www.khronos.org/news/press/the-khronos-group-releases-finalized-sycl-1.2.1">ratified and finalized for release</a>. This is an exciting piece of news for Codeplay that enables us to work towards full compliance of SYCL 1.2.1 for ComputeCpp, and our v0.5 release which is now <a href="https://developer.codeplay.com/" target="_blank">available to download</a>, moves us closer to that goal.</p>
+
+
+<p>The SYCL 1.2.1 specification has improved on the existing 1.2 standard by introducing new features which allow for better integration with existing machine learning and OpenCL-based frameworks such as TensorFlow as well as various improvements based on user feedback. SYCL 1.2.1 includes new asynchronous data movement routines; allowing users more control over when data is moved between devices, placeholder accessors; making data access more flexible, a new extensible property-based system; for customising the behavior of SYCL objects, and much more. The Khronos group has also been working closely with ISO C++ to ensure closer integration between SYCL and upcoming C++ standards.</p>
+
+
+<p>The diagram below illustrates the different changes we have added to the new SYCL specification. The boxes with a gradient color show the features or changes implemented in the ComputeCpp 0.5 release. We'll update this diagram with upcoming releases, so we'll keep you posted!</p>
+
+<img src="{{ '/assets/images/portal/article-images/34210cd1b66a3f06fb3b2f78c6db4286.png' | relative_url }}">
+
+
+<p>We have seen a lot of SYCL usage in the machine learning space with many developers keen to take advantage of accelerator processors that provide OpenCL support. From desktop to embedded systems, SYCL can help developers integrate high level frameworks such as TensorFlow with a wide range of parallel hardware. ComputeCpp, our implementation of the SYCL standard can already be used to execute TensorFlow applications on SPIR OpenCL supported hardware.</p>
+
+
+<p>ComputeCpp v0.5 brings significant advancements for machine learning developers using TensorFlow and other frameworks, by providing better interaction with existing schedulers via explicit copy operations and clear data-flow semantics. This enables a number of new operations on TensorFlow, alongside several performance improvements, that will be upstreamed soon. In particular, some of the Codeplay extensions in Tensorflow have now made it to the core SYCL specification and will be implemented by all the other SYCL implementations.</p>
+
+
+<p>SYCL received a boost recently when Renesas committed to supporting SYCL through ComputeCpp with their latest R-Car hardware designs, making it simpler for developers to build software that takes full advantage of the parallel capabilities of their processors. Renesas join a wide group from the industry in supporting OpenCL and SYCL with Codeplay, Xilinx and AMD all active members of the SYCL Working Group. An ARM release of ComputeCpp is also now available and allows developers to target a range of embedded processors using SYCL. </p>
+
+
+<p>This ratification concludes a large effort from the committee members, including Michael, Gordon and Ruyman from Codeplay, who provide feedback based on their experience in implementing SYCL frameworks and applications. The work does not stop here though. The SYCL working group will continue to work on next developments for the SYCL standard, an updated 2.2 specification to match 1.2.1 developments and closer interaction with C++ 2020 proposals for heterogeneous systems. The SYCL group participates heavily in multiple C++2020 standardization efforts and working groups, and contributes using the forefront experience of SYCL on the feedback for proposals and papers.</p>
+

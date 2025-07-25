@@ -1,0 +1,24 @@
+---
+id: 263
+url: 07-14-17-codeplay-release-clspv-an-opencl-tool-for-vulkan-enabled-devices
+user_id: 813
+date: 2017-07-14T13:10:07.7200Z
+category: press-releases
+title: "Codeplay Release “clspv”, an OpenCL Tool for Vulkan Enabled Devices"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/07-14-17-codeplay-release-clspv-an-opencl-tool-for-vulkan-enabled-devices
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>In collaboration with Google, Codeplay is proud to announce the release of a new open-source tool allowing the compilation of OpenCL C language kernels to run on the Vulkan API.</p>
+<p>Vulkan is a low-overhead, cross-platform 3D graphics and compute API, available on the Android, Linux, and Windows platforms. OpenCL C is the kernel language used in the OpenCL API allowing developers to program for execution on heterogeneous devices.</p>
+<p>The tool, named <b><i>'clspv'</i></b>, allows a subset of the OpenCL C language to be targeted at the Vulkan API. This tool allows developers to port code containing more than a million lines of OpenCL C to run on the Vulkan API.</p>
+<p>As active members of the Khronos Vulkan working group, Codeplay has been instrumental in pushing two extensions that the clspv codebase requires - <a href="https://www.khronos.org/registry/vulkan/specs/1.0-extensions/html/vkspec.html#VK_KHR_variable_pointers"><b><u>VK_KHR_variable_pointers</u></b></a> and <a href="https://www.khronos.org/registry/vulkan/specs/1.0-extensions/html/vkspec.html#VK_KHR_16bit_storage"><b><u>VK_KHR_16bit_storage</u></b></a>, which were announced yesterday by <a href="https://github.com/KhronosGroup/Vulkan-Docs/blob/1.0/ChangeLog.txt"><b><u>Khronos</u></b></a>.</p>
+<p>The tool source code is available at <a href="https://github.com/google/clspv"><b><u>https://github.com/google/clspv</u></b></a> and is available under the Apache 2.0 open source license.</p>
+<p><b><u>Some notes on the clspv:</u></b></p>
+<p><ul><li><span style="color: inherit; font-size: 1.1rem;">This is a prototype, with known issues.  However, it does compile significant portions of kernels</span><br></li><li><span style="color: inherit; font-size: 1.1rem;">It uses close to top-of-tree versions of LLVM and Clang as third-party projects - this is not a fork</span><br></li><li><span style="color: inherit; font-size: 1.1rem;">It is mainly a set of LLVM module passes. The flow starts with the SPIR code generated from stock Clang, then massages it into SPIR-V for Vulkan</span><br></li><li><span style="color: inherit; font-size: 1.1rem;">It exercises SPV_KHR_variable_pointers (rev13)</span><br></li></ul></p>
+

@@ -1,0 +1,24 @@
+---
+id: 135
+category: case-studies
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Caching instance data"
+redirect_from:
+  - /kb/135
+layout: products/offload/kb/view
+---
+<p>The code below caches the this pointer only by using a local temporary object on the SPU, copies data from the PPU via DMA or Software Cache into that object and calls the (duplicated) method func on it with 2 PPU pointer arguments.
+</p>
+<pre><code>__offload()
+{
+	auto localptr = *ptr; //DMA or SW cache read into a local
+	localptr.func(ptrarg1,ptrarg2);//__inner this pointer and outer argument pointers* ptr
+	*ptr = localptr; //writing data back
+}
+</code></pre><p>This means that all fields of the instance are now in fast local memory. The write-back at the end may not be necessary if func is a const-qualified member function (doesn't modify the SPU local instance). In fact if any code before the write-back causes side-effects to the (PPU) data that ptr points to, the a single write-back would clobber these changes.
+</p><p>
+This caching required changes to existing code which may not be practical when offloading larger chunks of code. The next <a href="{{ '/kb/136' | relative_url }}">/kb/136.html</a> describes how to minimise those changes by using standard C++ cache classes.
+</p>
+
+

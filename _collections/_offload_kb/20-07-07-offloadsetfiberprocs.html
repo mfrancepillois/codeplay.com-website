@@ -1,0 +1,19 @@
+---
+id: 55
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadSetFiberProcs"
+redirect_from:
+  - /kb/55
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>void offloadSetFiberProcs(int(*hasfiber)(void), void(*yield)(void));
+</code></pre><p>This sets callbacks for use within the offloadThreadJoin function. If a fiber system other than the supplied platform fiber system is used, you can use this function to make the Offload runtime aware. If the runtime wants a PPU thread to sleep while waiting for an Offload thread to join, first the hasfiber function pointer will be used. If a non-zero value is returned, the yield function pointer will be invoked.
+</p><p>
+Calling this function with NULL as either argument will result in undefined behaviour.
+</p>
+
+

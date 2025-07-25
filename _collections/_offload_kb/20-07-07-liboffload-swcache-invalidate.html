@@ -1,0 +1,29 @@
+---
+id: 61
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "liboffload::swcache::invalidate"
+redirect_from:
+  - /kb/61
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>static inline void liboffload::swcache::invalidate( __outer void * linePtr );
+</code></pre>
+<p>
+<strong>Within an Offload context:</strong>
+</p><p>
+This function invalidates the software cache line which holds the pointer linePtr. This will not writeback the line if modified.
+</p><p>
+<strong>Outside of an Offload context:</strong>
+</p><p>
+This function has no effect.
+</p>
+
+
+
+
+
+

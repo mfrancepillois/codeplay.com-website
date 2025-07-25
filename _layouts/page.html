@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}" prefix="og: http://ogp.me/ns#">
+    {% include _includes/head.html %}
+    <body class="cs" data-scrollposition="0">
+        {%- assign nav_style = '' -%}
+        {%- if page.nav_style -%}
+        {%- assign nav_style = page.nav_style -%}
+        {%- endif -%}
+        {%- if layout.nav_style -%}
+        {%- assign nav_style = layout.nav_style -%}
+        {%- endif -%}
+
+        {% if site.alert %}
+        <!-- Top Alert -->
+        <div id="top-alert">
+            <div class="wrapper">
+                <a href="{{site.alert.url}}" target="_blank">
+                    <div>
+                        <span class="material-icons">notifications</span>
+                    </div>
+                    <div>{{site.alert.message}}</div>
+                </a>
+                <div class="close-container">
+                    <a class="close" title="Hide this alert banner.">
+                        <span class="material-icons">highlight_off</span>
+                    </a>
+                    <a href="{{ '/company/cookies/' | relative_url }}"
+                       class="cookies-disabled"
+                       title="Please enable cookies to hide this alert banner.">
+                        <span class="material-icons">settings</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Page container -->
+        <div id="page-container">
+            <!-- The top level navigation bar that provides access to the home page and main menu. -->
+            <nav class="responsive {{nav_style}}">
+                <div>
+                    {%- include _includes/header.html -%}
+                </div>
+            </nav>
+
+            <main class="page-content {{nav_style}}" aria-label="Content">
+                <div id="page-content-padder"></div>
+                {{ content }}
+            </main>
+
+            {%- include _includes/footer.html -%}
+        </div>
+    </body>
+</html>

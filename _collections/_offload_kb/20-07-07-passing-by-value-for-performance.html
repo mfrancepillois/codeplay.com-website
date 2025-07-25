@@ -1,0 +1,46 @@
+---
+id: 147
+category: faq
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Passing by value for performance"
+redirect_from:
+  - /kb/147
+layout: products/offload/kb/view
+---
+<p>Since pointer parameters of duplicated SPU functions can be PPU or SPU pointers it is recommended to use value parameters over reference parameters if possible. In standard C++ code often relatively small values are passed by reference in the hope that this will improve performance. In offloaded functions on the SPU such a reference may however be __outer (to PPU memory), so accesses to non-static members involve software cache or DMAs. For example:
+</p>
+<pre><code>struct vec3
+{
+    double x, y, z;
+    vec3(double,double,double);
+    inline vec3 cross(const vec3 &amp;a) const
+	{
+		return vec3((y * a.z) - (z * a.y),
+					(z * a.x) - (x * a.z),
+					(x * a.y) - (y * a.x));
+	}
+};
+
+vec3 global(1,1,1);
+
+int main()
+{
+	vec3 var(1,1,1);
+	__blockingoffload()
+	{
+		var = global.cross(global); //leads to slow fragmented memory accesses inside the SPU version of str::cross
+	}
+}
+</code></pre><p>The method vec3::cross is called inside a __blockingoffload block on an __outer object (global) with an __outer lvalue argument (global). So the compiler generates a vec3::cross duplicate with an __outer this pointer and outer parameter reference, which will lead to 12 __outer accesses (without common subexpression elimination). Using the command line option -warnonouterreadswrites (see <a href="{{ '/kb/80' | relative_url }}">/kb/80.html</a> will print information on any of those accesses:
+</p>
+
+<p>
+<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 6, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 6, column: 0<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 6, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 6, column: 0<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 7, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 7, column: 0<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 7, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 7, column: 0<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 8, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 8, column: 0<strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 8, column: 0</strong>* WARNING: Generating outer read,  Alignment   8 ,Size:    8.--- In file: vec3test.cpp, at line: 8, column: 0
+</p>
+
+<p>
+Turning parameter a into value parameter allows the compiler to take the copy at the call site with only one __outer memory of the full vector access instead of several fragmented accesses. Alternatively, caching global inside the __blockingoffload block (See <a href="{{ '/kb/135' | relative_url }}">/kb/135.html</a> for caching data) will produce no __outer memory accesses inside vec3::cross.
+</p>
+
+

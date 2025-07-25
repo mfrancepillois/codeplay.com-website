@@ -1,0 +1,20 @@
+---
+id: 37
+category: performance
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Aligning Data"
+redirect_from:
+  - /kb/37
+layout: products/offload/kb/view
+---
+<p>Aligning data within an Offload&trade; context can provide a wealth of optimization opportunites for the compiler. The Playstation 3 SPUs are most efficient when operating on data aligned to at least 16 bytes.  Offload&trade; is able to perform more optimizations on data accesses when it knows the alignment of the data.Offload&trade; supports both the Microsoft Visual Studio __declspec(align(#)) and GCC __attribute__((aligned((#)))) specifiers to increase the alignment of types and variables.<strong>Increasing the alignment of data accessed inside Offloaded code to 16 bytes or more results in:</strong>
+</p><ul>
+<li> Fewer reads from the software cache,</li>
+</ul><ul>
+<li> Faster memcpy's</li>
+</ul><ul>
+<li> Higher performance memory access intrinsics</li>
+</ul>
+
+

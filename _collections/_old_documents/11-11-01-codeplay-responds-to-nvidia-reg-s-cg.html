@@ -1,0 +1,39 @@
+---
+id: 28
+category: vectorc
+date: 2011-11-01T17:32:24.3600Z
+date_updated: 0
+title: "Codeplay responds to NVIDIA&reg;'s CG"
+url: codeplay-responds-to-nvidias-cg
+description:
+redirect_from:
+  - /company/documents/codeplay-responds-to-nvidias-cg
+layout: company/documents/view
+---
+<p>LONDON, UK - 14th June, 2002 - NVIDIA&reg; produce capable graphics hardware that, since the introduction of the GeForce 3, contains a degree of programmability. It is programmable in the powerful but low-level pixel and vertex shader level, these being hardware-specific features of their products.
+</p><p>
+NVIDIA&reg; are now advocating a simplified cut-down language, known as Cg, which allows programming of those low level pixel and vertex shaders. They are promoting this as an open standard, being suitable to program all 'GPUs' or graphics processor units.
+</p><p>
+However, not all GPUs are created equal, and differences will become ever greater. With the PlayStation&reg;2, SCEI demonstrated a programmable graphics pipeline from higher up in the rendering process, which has different demands of a graphics programming language.
+</p><p>
+In the future, graphics hardware will incorporate both low level pixel and vertex shaders as demonstrated by NVIDIA&reg; and higher-level general programmability as demonstrated in the PlayStation&reg;2. The Cg language is not sufficiently well specified for such hardware, particularly with reference to:
+</p><p>
+No break, continue, goto, switch, case, default. These are useful features that can be used without penalty on other vector processors.
+No pointers. This is Cg's most serious omission. Pointers are necessary for storing scene graphs, so this will quickly become a serious omission for vector processors that can store and process the entire scene or even sections of it.
+No integers. This may be appropriate to NVIDIA&reg;, but is not a universal design decision.
+Arrays use float indices. This is an odd design decision, relevant to DirectX 8 and NVIDIA&reg; only.
+</p><p>
+NVIDIA&reg; have introduced Cg as a standard, fully backward- and forward-compatible. However, the existence of reserved keywords (such as break and continue, mentioned above) is a clear indication that functions will be added when NVIDIA&reg; hardware supports it. This is not conducive to future compatibility.
+</p><p>
+Codeplay believes that Cg is inadequate for some current, and more future, GPU s. Most importantly, standard rendering code needs to move onto graphics processors, and Cg is not sufficiently flexible for this type of code.
+</p><p>
+Codeplay Director Andrew Richards says, Overall, Cg is not a generic language for graphics programming; it is a language for NVIDIA&reg; s current generation of graphics card. It has a different set of goals from what s required to design computer graphics at the heart of the successful computer games of tomorrow.
+</p><p>
+Instead, the right approach is to use standard C/C++, and to make the compiler sufficiently advanced to be able to produce high quality code for dedicated hardware. This facilitates programming of advanced hardware at both the low-level of shaders and the higher level of the rendering pipeline, and is the language familiar to millions of programmers.
+</p><p>
+Codeplay have demonstrated the implementation of a C/C++ compiler for a specialist graphics co-processor in their VectorC {VU} compiler for PlayStation&reg;2. This approach will be extended to embrace emerging new hardware features without the need of proprietary standards .
+</p><p>
+Computer games are an intricate blend of immersive graphics and creative gameplay programming. With cross-platform standards and development tools that work as programmers demand, game developers can continue to produce radical-looking games beyond the vision of hardware engineers, thanks to creative talented software engineering.
+</p>
+
+

@@ -1,0 +1,72 @@
+---
+title: "SYCL Session Episode 1: SYCL Helping to Accelerate Simulation for CERN Researchers"
+date: 2022-02-21T10:18:32.274000+00:00
+layout: portal/portal-article-view
+user_id: 840
+category: blogs
+thumbnail: /assets/images/portal/article-images/intro-sycl-sessions.png
+---
+
+<p>At the <a href="sc21.supercomputing.org/">Supercomputing SC21</a> conference last year there were many research
+papers and presentations to help us learn more about how SYCL is being used
+across the industry. One of the sessions that stood out for me was presented by
+Dr. Vincent Pascuzzi from Brookhaven National Laboratory whose research paper
+was co-authored with Mehdi Goli, VP Research at Codeplay<b>®</b>
+ and outlined the
+collaboration that is being done to advance research using the Large Hadron
+Collider. You can find the slides <a href="https://waccpd.org/program/#sycl">on the workshop website</a> and the paper itself is <a href="https://arxiv.org/abs/2109.01329">also now available</a>. I also talked
+to Vincent about his work during an online video presentation and chat during
+the latest SYCL Session <a href="https://youtu.be/P-sOQmwQ5gI">available on YouTube</a>.</p><div style="text-align: center;"><a href="https://youtu.be/P-sOQmwQ5gI"><img src="{{ '/assets/images/portal/article-images/2022-02-21_13-15-46.png' | relative_url }}" width="437" height="242"></a></div>
+<p>Vincent is a physicist turned Computational Scientist and is working in
+conjunction with researchers at CERN who run experiments with the <a href="https://home.cern/science/accelerators/large-hadron-collider">Large Hadron Collider (LHC)</a>. As a physicist he is of course very interested in
+the results from these experiments. His work focuses on the ATLAS detector, one
+of the general purpose experiments stationed along the LHC ring, that is
+designed for particle physics research and it is hoped will make physics discoveries
+beyond the Standard Model like supersymmetry (SUSY), graviton or Dark Matter. The
+LHC has been built to facilitate experiments and research for at least a decade
+to come, so software written to run and simulate research must be maintained
+for more than 10 years. </p>
+<p>Something that has become obvious to Vincent is that the days of big data
+science using CPUs alone is no longer viable, with more and more data being
+produced and increasingly complex experiments. This is motivating the National
+Laboratories in the United States to investigate how they can target large GPU
+based supercomputers without having to use proprietary programming models. SYCL
+has become a focus, it enables developers to use ISO standard C++ code, is open
+and defined by the industry, and with multiple implementations can target
+Intel<b>®</b>, AMD
+ and Nvidia<b>®</b>
+ GPUs.</p>
+<p>A problem that researchers using the LHC face is that they are required to
+validate the measurements that have been made, and also ensure the detector is
+functioning nominally. The validation of the measurements requires the use of
+lots of Monte Carlo simulations which when run on the existing machines can
+take minutes for just a single simulated event, and when further upgrades are
+made to the LHC this could increase many-fold. In addition to this
+reproducibility and productivity are essential for researchers working on this
+validation.</p>
+<p>Monte Carlo simulations require lots of random numbers to be generated and
+it's well known that GPUs can be used very effectively to execute Random Number
+Generator (RNG) algorithms. Vincent wants to make it possible to target the
+Perlmutter, Frontier, Aurora, El Capitan supercomputers with a single code base
+using the SYCL open standard programming model. This is the real focus of the
+paper and presentation where Vincent talks about how the RNG algorithm was
+added to the oneMKL library implemented using SYCL. This library makes it
+possible to target Intel, Nvidia and AMD GPUs from a single code base and
+interface. The algorithm was benchmarked using real data and demonstrates very
+promising performance portability across multiple GPU architectures using
+Codeplay's implementations for Nvidia and AMD GPUs with DPC++, an open source
+SYCL compiler project.</p>
+
+<img src="{{ '/assets/images/portal/article-images/chart-pascuzzi.png' | relative_url }}" width="348" height="426"><p><br><i>Referenced from paper: Achieving near
+native runtime performance and cross-platform performance portability for
+random number generation through SYCL interoperability paper by V Pascuzzi,
+Mehdi Goli</i></p>
+<p>Vincent expands on the growing number of potential future projects, for
+example in further quantum simulations, that can take advantage of both SYCL
+and the oneAPI oneMKL library for many other experiments and research. </p>
+<p>I for one look forward to seeing how SYCL can help researchers make new
+discoveries using the CERN Large Hadron Collider and Codeplay is continuing to
+collaborate with Vincent to make further optimizations to the kernels used in
+this paper.</p>
+<p><a href="https://youtu.be/P-sOQmwQ5gI">Watch the SYCL Session with Dr.Vincent Pascuzzi on YouTube</a>.</p>
+<p><br></p>

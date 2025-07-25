@@ -1,0 +1,110 @@
+section#splash #splash-img {
+    display: inline-block;
+    width: 501px;
+    height: 512px;
+}
+section#migrate-to-open-source-programming {
+    background-color: #006faf;
+    color: #efefef;
+    text-align: center;
+    padding: 6rem 0 6rem 0;
+    background-attachment: fixed;
+    background-image: url("/assets/images/solutions/ecosystem/bg-image.jpg");
+    background-size: cover;
+    position: relative;
+    z-index: 0;
+}
+section#migrate-to-open-source-programming #bg-container {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(0, 54, 85, 0.3) 0%, rgba(0, 27, 46, 1) 100%);
+}
+section#migrate-to-open-source-programming .wrapper {
+    z-index: 99;
+}
+section#migrate-to-open-source-programming ul {
+    margin-top: 2rem;
+    list-style: none;
+}
+section#migrate-to-open-source-programming ul li {
+    padding: 1rem 0;
+}
+section#migrate-to-open-source-programming ul li:not(:last-of-type) {
+    border-bottom: rgba(255, 255, 255, .1) 1px solid;
+}
+section#migrate-to-open-source-programming i {
+    font-size: 5rem;
+}
+section#migrate-to-open-source-programming div.columns {
+    padding-top: 4rem;
+}
+@media screen and (min-width: 700px) {
+    section#migrate-to-open-source-programming div.columns.image-description-style > *:not(:last-of-type) {
+        border-right: rgba(255, 255, 255, .4) 1px solid;
+    }
+}
+
+section#projects .image-description-style img {
+    max-width: 200px;
+}
+
+section#talk-to-us {
+    text-align: center;
+    color: #efefef;
+    background: #003c5e;
+    background: linear-gradient(90deg, rgba(136, 0, 143, 1) 0%, rgba(0, 36, 57, 1) 100%);
+    padding: 2rem 0 1rem 0;
+}
+section#projects h2 {
+    font-weight: bold;
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+    display: block;
+    padding: 2rem;
+    border-bottom: #ccc 1px solid;
+}
+section#why-use-computecpp .image-button {
+    background-color: rgba(0, 0, 0, .4) !important;
+}
+section#our-sycl-based-solutions div.columns.image-block-style {
+    text-align: center;
+}
+section#our-sycl-based-solutions div.columns.image-block-style > div > div:first-of-type {
+    background-color: #021d2d !important;
+    background: linear-gradient(38deg, rgba(71, 0, 74, 1) 0%, rgba(0, 36, 57, 1) 100%);
+}
+section#our-sycl-based-solutions a.button {
+    margin-top: 2rem;
+}
+#get-started div.columns {
+    text-align: center;
+}
+section#what-is-sycl .sycl-container {
+    background-attachment: fixed;
+    background-image: url("/assets/images/solutions/ecosystem/sycl-banner-code.png");
+    background-position: left;
+    position: relative;
+    width: 618px;
+    height: 279px;
+    display: inline-block;
+    z-index: 0;
+}
+section#what-is-sycl .sycl-container .code {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-image: url("/assets/images/solutions/ecosystem/sycl-banner-icon.png");
+}
+

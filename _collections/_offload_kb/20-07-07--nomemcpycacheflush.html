@@ -1,0 +1,14 @@
+---
+id: 26
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "-nomemcpycacheflush"
+redirect_from:
+  - /kb/26
+layout: products/offload/kb/view
+---
+<p>Disables cache flushes when a memcpy on accessing outer memory happens (which is the default behaviour for correctness). Should only be used when data being read/written from is on aligned boundaries and does not overlap. If the programmer knows that the cache is not reading from variables that overlap with buffers being copied to and from the SPU, using this option provides a substantial performance improvement.
+</p>
+
+

@@ -1,0 +1,246 @@
+---
+id: 9
+url: optimizing-sort-algorithms-for-the-ps3-part-1-quicksort
+user_id: 391
+date: 2011-07-11T18:09:52.7200Z
+category: news
+title: "Optimizing Sort Algorithms for the PS3 Part 1 (Quicksort)"
+showOnFrontPage: 0
+views: 822
+tags:
+redirect_from:
+  - /portal/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Sorting is a simple but important concept for implementing games. For example, sorting transparent objects before rendering or sorting objects by state attribute (e.g. texture) to improve batching. Because of the way most algorithms work (comparing and swapping pairs of items) sorting often takes precious time. With multi-core architectures like the PS3 it makes sense to parallelize this operation to maximize the use of these cores.
+</p>
+<p>
+This is the first of a series of blog posts explaining how to get several algorithms to run faster on the PS3. First we will take the canonical C++ implementations, apply generic optimizations, then apply PS3-specific optimizations for the PPU. Then later in the series we will show how to run the same implementations on a SPU by using Offload. The last parts will focus on parallelization, i.e. sorting on multiple SPUs at the same time.
+</p>
+<p>
+Quick Links ==
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-1-quicksort' | relative_url }}">Part 1 (Quicksort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-2-merge' | relative_url }}">Part 2 (Merge)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-3-merge-sort' | relative_url }}">Part 3 (Merge Sort)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-4-offloading-on-1-spu' | relative_url }}">Part 4 (Offloading on 1 SPU)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-5-parallel-sort-on-2-spus' | relative_url }}">Part 5 (Parallel Sort on 2 SPUs)</a>
+</p>
+<p>
+<a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-6-final-optimizations' | relative_url }}">Part 6 (Final Optimizations)</a>
+</p>
+<p>
+The entire series is also available as a <a href="{{ '/public/uploaded/filehost/Optimizing_Sort_Algorithms_for_the_PS3.pdf' | relative_url }}">single PDF document</a>.
+</p>
+<p>
+Quicksort ==
+The first algorithm we will present is quicksort. This is a very popular sort because it is very fast (O(n * log n) time) in the average case and requires a constant amount of memory to run (i.e. it doesn't depend on the number of items to sort). As a downside it becomes very slow (O(n^2)) when the input is already sorted. Its divide-and-conquer approach makes it easy to parallelize.
+</p>
+<p>
+Sorting goes like this: choose one item to be the pivot (e.g. the item in the middle of the array). Move all the items smaller than the pivot (A) before it and all larger items (B) after it. This divides the array into two parts: A and B. The same process is then recursively applied to A and B until the items are sorted (see the code below).
+</p>
+<pre>template&lt;typename T&gt;
+void quickSort(T *data, size_t start, size_t end)
+{
+    size_t count = end - start + 1;
+    if(count &lt; 2)
+        return;
+
+    // choose the middle item as pivot
+    int pivotIndex = start + ((end - start) &gt;&gt; 1);
+    T pivot = data[pivotIndex];
+    int i = start, j = end;
+    T tmp;
+    // move all items smaller than pivot after it and larger items before it
+    while(i &lt;= j)
+    {
+        // look for the next item larger than pivot (going from the start)
+        while(data[i] &lt; pivot)
+            i++;
+        // do the same for the next item larger than pivot (going from the end)
+        while(pivot &lt; data[j])
+            j--;
+        if(i &lt;= j)
+        {
+            // swap the larger and smaller items
+            swap(data[i], data[j]);
+            i++;
+            j--;
+        }
+    }
+    // now repeat the process on all items before the pivot
+    if(start &lt; j)
+        quickSort(data, start, j);
+    // and another time on all items after the pivot
+    if(i &lt; end)
+        quickSort(data, i, end);
+}
+</pre>
+<p>This naive implementation takes 21.9 ms to sort 64K floats and 9.6 ms for sorting 64K integers. As a comparison std::sort() takes 12.8 ms and 6.7 ms, respectively. Making it iterative by managing a local stack gives 21.5 ms for floats and 9.6 ms for integers. Quicksort efficiently sorts large arrays but does not perform well with small arrays.
+</p>
+<p>
+A common optimization is to use a simpler sort for smaller arrays. When sorting with insertion sort for arrays of 55 items or less, we get 17.2 ms and 7.4 ms. Another optimisation<a href="http://citeseer.ist.psu.edu/bentley93engineering.html">[1</a>] is to choose the median of (first, middle, last) as the pivot which results in 16.8 ms and 7.1 ms. The final code for this quicksort implementation can be found below.
+</p>
+<pre>template&lt;typename T&gt;
+void quickSortIterative(T *data, size_t start, size_t end)
+{
+    range stack[32];
+    range *s = stack;
+    s-&gt;start = start;
+    s-&gt;end = end;
+    s++;
+    do
+    {
+        // dequeue the next [start, end] range of the array to sort
+        s--;
+        int startI = s-&gt;start, endI = s-&gt;end;
+        int count = endI - startI + 1;
+        // small array optimisation
+        if(count &lt;= 55)
+        {
+            insertionSort(data, startI, endI);
+            continue;
+        }
+        // choose the middle item as pivot
+        int pivotIndex = startI + ((endI - startI) &gt;&gt; 1);
+        // reorder these three items such that the median is at pivotIndex
+        median(data[startI], data[pivotIndex], data[endI]);
+
+        T pivot = data[pivotIndex];
+        int i = startI, j = endI;
+       // move all items smaller than pivot after it and larger items before it
+        while(i &lt;= j)
+        {
+        // look for the next item larger than pivot (going from the start)
+            while(data[i] &lt; pivot)
+                i++;
+        // do the same for the next item larger than pivot (going from the end)
+            while(pivot &lt; data[j])
+                j--;
+        // swap the larger and smaller items
+            if(i &lt;= j)
+            {
+                swap(data[i], data[j]);
+                i++;
+                j--;
+            }
+        }
+        // now repeat the process on all items before the pivot
+        if(startI &lt; j)
+        {
+            // instead of a recursive call, enqueue the new [start, end] range
+            s-&gt;start = startI;
+            s-&gt;end = j;
+            s++;
+        }
+        // and another time on all items after the pivot
+        if(i &lt; endI)
+        {
+            s-&gt;start = i;
+            s-&gt;end = endI;
+            s++;
+        }
+    }
+    while(s &gt; stack);  // as long as we have [start, end] ranges to sort
+}
+
+struct range
+{
+    int start;
+    int end;
+};
+
+// reorder items such that a &lt;= b &lt;= c
+template&lt;typename T&gt;
+void median(T&amp; a, T&amp; b, T &amp;c)
+{
+    if(c &lt; a)
+        swap(a, c);
+    if(b &lt; a)
+        swap(a, b);
+    if(c &lt; b)
+        swap(b, c);
+}
+</pre>
+<p>Testing methodology ==
+The arrays used as test data for the performance comparisons contain random data with the current time used as the seed. For each array size the sorting function is executed five times and the median time is kept. The clock() function is used for measuring execution time. This approach will be used throughout the series.
+</p>
+<p>
+Results ==
+</p>
+
+<p>
+64K floats
+</p>
+<p>
+64K integers
+</p>
+<p>
+std::sort
+</p>
+<p>
+12.8 ms
+</p>
+<p>
+6.7 ms
+</p>
+<p>
+Recursive quicksort
+</p>
+<p>
+21.9 ms
+</p>
+<p>
+9.6 ms
+</p>
+<p>
+Iterative quicksort
+</p>
+<p>
+21.5 ms
+</p>
+<p>
+9.6 ms
+</p>
+<p>
+Iterative quicksort, small array (N &lt;= 55)
+</p>
+<p>
+17.2 ms
+</p>
+<p>
+7.4 ms
+</p>
+<p>
+Iterative quicksort, small array (N &lt;= 55) and median
+</p>
+<p>
+16.8 ms
+</p>
+<p>
+7.1 ms
+</p>
+<p>
+As we can see in the table above, our simple quicksort implementation approaches the performance of the PS3's STL sort for integer arrays but it is quite slower when sorting float arrays. As we will see later in the series, this is not a problem because we will get similar performance for integers and floats when running on the SPUs.
+</p>
+<p>
+Another optimization we could apply is vectorizing the partitioning part (i.e. moving elements on each side of the pivot) using AltiVec instructions. Unfortunately, research suggested that there was no successful vectorized implementation.
+</p>
+<p>
+In the <a href="{{ '/blogs/pierre-andre/optimizing-sort-algorithms-for-the-ps3-part-2-merge' | relative_url }}">next part in the series</a> we will have a look at the merge algorithm which is central to both the merge sort algorithm and implementing a parallel sort.
+</p>
+<p>
+References ==
+[1] Jon L. Bentley and M. Douglas McIlroy, <a href="http://citeseer.ist.psu.edu/bentley93engineering.html">Engineering a Sort Function</a>, Software&mdash;Practice and Experience, Vol. 23(11), 1249&ndash;1265, 1993
+</p>
+
+

@@ -1,0 +1,134 @@
+---
+id: 369
+url: 11-18-19-computecpp-v1-1-6-changes-to-work-item-mapping-optimization
+user_id: 607
+date: 2019-11-18T13:06:33.3600Z
+category: blogs
+title: "ComputeCpp v1.1.6: Changes to Work-item Mapping Optimization"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/11-18-19-computecpp-v1-1-6-changes-to-work-item-mapping-optimization
+thumbnail: /assets/images/portal/article-images/0d21b692ae8d8cded4de1c0422e77242.png
+layout: portal/portal-article-view
+---
+
+<p>In <a href="https://developer.codeplay.com">ComputeCpp v1.1.6</a> we have introduced an optimization to the way SYCL work-items map to OpenCL processing elements in order to improve performance in the most common use cases. While this change could have performance implications in some cases, it is straight forward to resolve these. This blog post will start by providing an overview of what has changed and if and how you may need to update your SYCL code. It will then provide further rationale and detail of the change for those who are interested in the implementation details.</p>
+<h2>What you need to know</h2>
+
+<p>What this change means is that the mapping of a 2 or 3-dimensional <strong>nd_range</strong> to the underlying OpenCL processing elements has been transposed, such that if you use the SYCL API to translate a 2 or 3-dimensional <strong>id</strong> into a linear index you will get better performance by default, as this mapping is now more suited to most OpenCL devices. The APIs which perform linearization for you are:</p>
+<ul>
+  <li>
+    <strong>item::get_linear_id()</strong>
+  </li>
+  <li>
+    <strong>nd_item::get_global_linear_id()</strong>
+  </li>
+  <li>
+    <strong>nd_item::get_local_linear_id()</strong>
+  </li>
+  <li>
+    <strong>accessor::operator[](id)</strong>
+  </li>
+</ul>
+
+<p>However, if you manually calculate a linear index (which we do not recommend) then you may see a drop in performance from ComputeCpp v1.1.6, so you will need to reverse the <strong>id</strong> and <strong>range</strong> dimensions in your calculation. For example, if you calculated the linear index of a 2-dimensional <strong>id</strong> using <strong>L = id0 + (id1 * r0) </strong>you would flip this to <strong>L = id1 + (id0 * r1) </strong>as we do in the before and after code samples below (Figure 1).</p>
+
+<div class="table-wrapper">
+  <table class="wrapped">
+    <colgroup>
+      <col>
+      <col>
+    </colgroup>
+    <tbody>
+    <tr>
+      <td>
+        <strong>Before</strong>
+      </td>
+      <td>
+        <strong>After</strong>
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: left; line-height: normal;">
+        <pre><code>cgh.parallel_for<my_kernel>(range&lt;2&gt;(64, 128), [=](item&lt;2&gt; it) {
+  size_t linearIdx = it.get_id(0) + (it.get_id(1) * it.get_range(0));
+  outputAcc[linearIdx] = some_func(inputAcc[linearIdx]);
+});</my_kernel></code></pre>
+      </td>
+      <td style="text-align: left; line-height: normal;">
+	    <pre><code>cgh.parallel_for<my_kernel>(range&lt;2&gt;(64, 128), [=](item&lt;2&gt; it) {
+  size_t linearIdx = it.get_id(1) + (it.get_id(0) * it.get_range(1));
+  outputAcc[linearIdx] = some_func(inputAcc[linearIdx]);
+});</my_kernel></code></pre></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<p class="auto-cursor-target">
+  <em>Figure 1: Manually linearization, before and after</em>
+</p>
+<p class="auto-cursor-target">
+  <span style="letter-spacing: 0.0px;">We recommend that you first measure the performance of your kernels with the ComputeCpp v1.1.6 release and compare that with the ComputeCpp v1.1.5 release in order to determine whether your code is affected by this change. By then measuring the performance before and after any change to linearization you can also ensure it has had the intended effect. </span>
+  <span style="letter-spacing: 0.0px;">If you encounter any issues when applying the change described above, or find a case not covered in this blog post, please feel free to </span>
+  <a href="https://support.codeplay.com/" style="letter-spacing: 0.0px;">start a thread on our support forum</a>
+  <span style="letter-spacing: 0.0px;"> and our team will try to give you the best advice.</span>
+</p>
+<h2>The rationale behind this change</h2>
+
+<p>
+  <span style="letter-spacing: 0.0px;">When writing SYCL kernels, particularly for vector processors such as SIMD CPUs and GPUs, one of the most important optimizations ways you can achieve good performance is to ensure that access to global memory is coalesced.</span>
+</p>
+
+<p>The way to achieve this is to ensure that consecutively executing processing elements access consecutive elements in memory take advantage of vectorized load and store operations. In this scenario the same instruction is performed across a number of consecutive processing elements together, loading and storing many elements of data at once (Figure 2).</p>
+<p style="text-align: center;">
+
+    <img src="{{ '/assets/images/portal/article-images/0d21b692ae8d8cded4de1c0422e77242.png' | relative_url }}">&nbsp;
+
+</p>
+<p style="text-align: center;">
+  <em>Figure 2: Comparison of coalesced and non-coalesced global memory access</em>
+</p>
+
+<p>If you don't do this then you will likely end up utilizing only part of the vectorized load and store operations, and ultimately require many more load and store operations than you need to. This can result in a pretty significant performance hit, such as that demonstrated in the graph below, taken from a SYCL image convolution kernel (Figure 3).</p><p align="center"><img src="{{ '/assets/images/portal/article-images/22a9540374901f9a2d6c852fdc5fddc3.png' | relative_url }}" style="width:500px;"></p>
+
+<p>
+
+
+
+</p>
+<p style="text-align: center;">
+  <em>Figure 3: Kernel timings comparing coalesced and on-coalesced global memory access</em>
+</p>
+
+<p>If the <strong>nd_range</strong> is 1-dimensional this is straightforward because the work-item iteration space is already linear, so the mapping to consecutive processing elements is already coalesced. However, when the <strong>nd_range</strong> is multi-dimensional, OpenCL doesn't make any guarantee as to how work-items are mapped to consecutive processing elements.</p>
+
+<p>When the <strong>nd_range</strong> is multi-dimensional things are different. Describing the mapping of indexes in a multi-dimensional <strong>nd_range</strong> iteration space into a linear iteration space that maps to consecutive processing elements can be described as iteration space linearization, and there are generally two ways in which this can be done by a SYCL implementation. These are often referred to as row-major and column-major, so named because the contiguous indexes once moved to a linear iteration space are along the same row and column in the multi-dimensional space respectively.</p>
+
+<p>However, a more useful way to think about about this linearization can be to consider which dimension is used for vectorization.</p>
+
+<p>In the two examples below we show the nd-range of { 3, 4 } we described earlier, colour-coded with groups of four work-items that are mapped to consecutive processing elements. Figure 4 shows the use of row-major, where the work-items that are consecutive in their mapping to processing elements are in the second dimension. Figure 5 shows the use of column-major, where the work-items that are consecutive in their mapping to processing elements are in the first dimension.</p>
+<p style="text-align: center;">
+
+    <img src="{{ '/assets/images/portal/article-images/d614fa956ced43da0fbe0c20733ad9d4.png' | relative_url }}"><img src="{{ '/assets/images/portal/article-images/dea7bc492eaa59c3ae16d0f8c413b6eb.png' | relative_url }}"><br>
+
+</p>
+<p style="text-align: center;">
+  <em>Figure 4: Row-major mapping&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                          </em>
+  <em>Figure 5: Column-major mapping</em>
+</p>
+
+<p>This concept of linearization also applies in how the coordinates of an <strong>accessor's</strong> two-dimensional data space linearize into a linearized space where consecutive elements are contiguous in memory.  This is where it becomes important for performance because depending on whether the linearization of the <strong>nd_range</strong> iteration space matches the linearization of the <strong>accessor</strong> data space.</p>
+
+<p>If they do match you get coalesced global memory access, but if they don't match then you get non-coalesced global memory access, which leads to the kind of performance drop we saw earlier.</p>
+
+<p>So the crux of the issue is that the SYCL API performs linearization of multi-dimensional iteration spaces using row-major order, the reason for this is that it maps well to multi-dimensional arrays in C++, which also linearize into contiguous memory following row-major linearization. However, it is most common for OpenCL devices to use column-major linearization for mapping the <strong>nd_range</strong> iteration space to consecutive processing elements. This meant that the default for <strong>the SYCL API, while consistent with C++ was often not the most efficient</strong> as seen in Figure 6. However, after the optimization of transposing the mapping of the <strong>nd_range</strong> iteration space, the linearization of the SYCL API now matches the linearization of the <strong>nd_range</strong> iteration space to OpenCL processing elements, therefore resulting in coalesced global memory access by default as seen in figure 7.</p>
+
+<img src="{{ '/assets/images/portal/article-images/62fec7e007ea997c9941c655327f1022.png' | relative_url }}"/>
+<p><em>Figure 6: Original mapping of work-items to OpenCL processing elements</em></p>
+
+<img src="{{ '/assets/images/portal/article-images/20fa4534324fd269be9f1e3fe7fc3b53.png' | relative_url }}">&nbsp;
+<p><em style="letter-spacing: 0.0px;">Figure 7: New mapping of work-items to OpenCL processing elements</em></p>

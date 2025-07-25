@@ -1,0 +1,145 @@
+---
+category: blogs
+date: '2023-08-31T09:21:50.054224'
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/solutions/ecosystem/sycl-banner-code.png
+title: 'My Summer of Bad Code: an Investigation of Common Pitfalls When Writing SYCL
+  Code'
+user_id: 28173
+---
+<h2>Introduction </h2><p>When learning a new programming language, there are almost always tutorials on how to write and execute the most basic programs to get started. But rarely do these tutorials explain what not to do, or teach you bad practices and how to spot and avoid them. During my internship at Codeplay I have been working with SYCL, a C++ programming model for heterogeneous computing. In particular, I have been working on curating a failure taxonomy for SYCL, that is an organised collection of tests that compile without errors but don't behave as expected when executed. One of my goals with this project was to educate others on how to write more robust, bug-free SYCL code, something that is not always obvious how to do when first learning. </p>
+
+<p>I aimed to write tests that accurately represent realistic errors that anyone with any level of SYCL knowledge could unknowingly introduce into their code, with ideas sourced from many places, including the internet and colleagues, as well as my own experience learning SYCL. I focus on areas where it is very easy to make mistakes that lead to errors without noticing, and that may not be obvious to debug straight away. For example missing a single wait statement somewhere, causing the code to rely on a data race or subtly misusing a feature, the effects of which don't become evident until the code is deployed on a different device than the one it was tested on. </p>
+
+<p>The testing were run using the Intel(R) oneAPI DPC++/C++ Compiler 2023.1.0, and ComputeCpp CE 2.11.0 (now deprecated) when necessary. The hardware I used was an Intel(R) UHD Graphics 770 1.3 GPU with an Intel(R) Level-Zero backend and a 12th Gen Intel(R) Core(TM) i9-12900K 3.0 with an Intel(R) OpenCL backend. </p>
+
+<h2>Motivation </h2><p>But why do we care about writing good SYCL code? As software and automation become more commonplace across all industries, they are also being used to automate advanced functions in industries where safety is paramount, such as the automotive and avionics industries. The algorithms used to automate these functions are often highly complex, and therefore require high-level APIs to implement, as well as enough physical resources. Thus, the move away from traditional embedded processors towards modern heterogeneous semiconductors. This shift makes it necessary for a high-level heterogeneous computing API, such as SYCL, to adapt to these safety critical applications and meet industry demands for higher compute power. </p>
+
+<p>For these reasons, the development of SYCL SC, a safety critical version of the SYCL API has been started, to create the first multi-platform, high-level compute API for safety critical systems. It is particularly important to ensure code that is used in safety critical systems is carefully written, because a bug in safety critical code has the potential to put human lives at risk. Although developing safety critical code involves a lot more than simply reducing the number of bugs. It requires features such as deterministic execution, comprehensive error-handling and an unambiguous API, which are all goals that SYCL SC aims to achieve. This doesn't take all the burden off of the developer though, as even with a perfectly designed safety critical API there is still plenty of scope for the developer to misuse it. </p>
+
+<p>But the reasons to write good code are not confined to safety critical applications. Robust and high-quality code is important across all applications. One of the underlying concepts of SYCL is portability, which allows the same application to execute on many different devices with potentially different SYCL implementations. If we compromise this feature by developing sloppy code, which can be done very easily as shown in the examples below, then we lose the value of SYCL. </p>
+<h2>Negative SYCL Tests </h2><p>The examples below contain code from negative tests I have written, which showcase bad SYCL code. Each one shows unexpected behaviour, and explains what the origin of it was and what consequences it can lead to, if not found early. </p>
+
+<p>The four examples I discuss each originate from a different kind of mistake, which I have used to roughly categorise my tests. The first is synchronization, since in SYCL it is very important to make sure data is in the right place when executing operations between different devices. There are lots of different places where synchronization is needed, and therefore it is a common place to make a mistake. The second is implementation-defined behaviour, which is behaviour that is not defined by the SYCL specification and therefore can be different across implementations. This can cause problems if not handled properly and can come in multiple forms. </p>
+
+<p>The third is misuse of features, which includes examples of features being used in a slightly incorrect way. Using a feature incorrectly can also lead to undefined behaviour. This is the result of illegal code, where the specification states that anything is allowed to happen, including crashing, reporting an error, behaving exactly as the developer intended or worst of all: quietly doing something subtly different from what the developer intended, so no one notices for a long time. Lastly I talk about implicit behaviour. This happens when behaviour that is not explicitly written in code can affect the execution of our program. </p>
+
+<h2>Synchronization </h2><p>In the following code there are two kernels that have dependencies on one another, as they access the same data. The user would expect these kernels to execute in the order that they are presented below, with devicePtrOut containing 2 times the original value of devicePtrIn. But these dependencies are neither expressed explicitly nor implicitly guaranteed by SYCL, and therefore it is implementation-defined what order the kernels are executed in. It could be easily fixed by adding wait statements at the end of each command group, or even using an in-order queue instead of an out-of-order one. Using an in-order queue guarantees that the kernels are executed in the same order that they are submitted, but in general using in-order queues may sacrifice performance. </p>
+
+<p>The mistake that is made in this example is very easy to make when writing SYCL code. One of the key things to consider when writing SYCL code is whether the operations are synchronized. This dilemma can be found in any place where there can be a data race, and due to the asynchronous nature of SYCL, this is a lot of places. That means SYCL supplies a lot of features to maintain this synchronization, but there are also a lot of opportunities to make mistakes. For example, barriers are used to synchronize work items, wait statements used to synchronize operations, atomics used to synchronize memory accesses. Synchronization is one of the biggest things to keep in mind when writing SYCL code, to ensure that it does what you expect it to. </p>
+
+<p>When the code is executed on a CPU, the code behaves non-deterministically, passing the majority of the time but sometimes failing (when I tested it the incorrect behaviour was observed approximately 1 in 100 times). In contrast, I was not able to reproduce this failure when testing on a GPU. A possible explanation for this difference in behaviour is due to added latency involved when communicating with the GPU compared to the CPU. Although this explanation is purely speculative and not derived from studying the actual DPC++ implementation and there is also no guarantee this behaviour will remain the same over future versions of DPC++. </p>
+<pre><code>auto queue = sycl::queue{sycl::cpu_selector_v};
+
+auto devicePtrIn = sycl::malloc_device(dataSize, queue);
+auto devicePtrOut = sycl::malloc_device(dataSize, queue);
+
+queue.parallel_for(
+    sycl::range{dataSize}, [=](sycl::id&lt;1&gt; idx) {
+      auto globalId = idx[0];
+      devicePtrIn[globalId] = devicePtrIn[globalId] * 2.0f;
+    });
+
+queue.parallel_for(
+    sycl::range{dataSize}, [=](sycl::id&lt;1&gt; idx) {
+      auto globalId = idx[0];
+      devicePtrOut[globalId] = devicePtrIn[globalId];
+    });
+
+queue.wait(); </code></pre>
+<p>One of SYCL's biggest strengths is its device portability, which is defeated if we introduce device-specific behaviour into our program, which is when the runtime behaviour differs depending on the device the code is running on. If you develop and test such code on a single device, it may perform as expected on that device. , but if you deploy the code on another device without testing on the target device first, the reliance on device-specific behaviour results in a bug. Device-specific code can also be caused by implementation-defined behaviour, as the code can rely on certain features being implemented for certain devices, as we see below where not every device supports the specified subgroup size. </p>
+<p>The above example gives a good idea of device-specific behaviour, but the code is not in accordance with the specification. In the example below, we use an optional feature (this means the SYCL implementation does not have to support it), which leads to device-specific behaviour and a lack of device portability. </p>
+<pre><code>[=](sycl::nd_item&lt;1&gt; item)
+  [[sycl::reqd_sub_group_size(4)]] {
+    int idx = item.get_global_id(0);
+    auto work_group = item.get_group();
+
+    auto res = sycl::reduce_over_group(
+        work_group, accA[idx], sycl::maximum&lt;&gt;());
+
+    if (idx == 0) accB[0] = res;
+  }; </code></pre>
+<p>In this kernel we force a specific subgroup size using the kernel attribute shown. It is implementation-defined whether any specific subgroup size is supported on the target device, but if it is not supported as is the case here, then an exception is thrown. This kind of error may go undetected in the situation where the code is only tested on a single device that isn't identical to the target device. </p>
+<h2>Implementation-Defined Behaviour </h2><p>There are multiple different implementations of SYCL, such as DPC++, HipSYCL, and ComputeCpp (which has since been deprecated), that all differ from each other in certain ways, but also all adhere to the same specification. As they all differ at the implementation level, we observe different implementation-specific behaviours in certain situations. </p>
+<p>A good example of this is how ComputeCpp and DPC++ both handle a specific error. The code below contains an error in the form of an invalid work group size. </p>
+<pre><code>try {
+  sycl::queue queue(sycl::default_selector{});
+
+  queue.submit([&amp;](sycl::handler&amp; cgh) {
+    // invalid work group size causes an exception
+    auto range = sycl::nd_range&lt;1&gt;(sycl::range&lt;1&gt;(1), sycl::range&lt;1&gt;(10));
+    cgh.parallel_for(range, [=](sycl::nd_item&lt;1&gt;) {});
+  });
+
+  queue.wait_and_throw();
+} catch (sycl::exception const&amp; e) {
+  std::cout &lt;&lt; "Caught synchronous SYCL exception:\n"
+            &lt;&lt; e.what() &lt;&lt; std::endl;
+} </code></pre>
+<p>This error manifests differently in these two implementations. In DPC++ this error is thrown synchronously, so can be handled using a try catch block. This means the exception is handled nicely without the program crashing. The exact error message is shown below. </p>
+<pre><code>Caught synchronous SYCL exception:
+Non-uniform work-groups are not supported by the target device -54 (PI_ERROR_INVALID_WORK_GROUP_SIZE) </code></pre>
+<p>However when we compile the same code in the now-deprecated ComputeCpp, the error is different. It is thrown asynchronously, and hence is not handled with the error handling we have provided. Instead the default asynchronous error handler is called, which contains a call to std::terminate, causing the program to crash. The error message in ComputeCpp is shown below. </p>
+<pre><code>ComputeCpp&gt; Warning: Asynchronous exceptions thrown by the runtime but no async handler provided
+ComputeCpp&gt; -&gt; Triggered at: terminate_async_handler.h (32)
+ComputeCpp&gt; Warning: Unhandled exception:
+    Error: [ComputeCpp:RT0301] Work-group size is invalid (Local size exceeds the global work group size )
+ComputeCpp&gt; -&gt; Triggered at: terminate_async_handler.h (38)
+terminate called without an active exception  </code></pre><p>Aborted (core dumped) It is worth noting that this behaviour is still in accordance with the specification, as it is implementation-defined whether an exception is thrown synchronously or asynchronously. <br/></p>
+<p>This example shows that behaviour is not necessarily the same across different implementations, which could even be true for different versions of the same implementation. For example, if an application has been tested and performs as expected, then is deployed, and then you update your SYCL implementation, perhaps to fix a bug. This update could change the behaviour of your application, if it relied on implementation-defined behaviour, because the implementation is allowed to implement this behaviour any way it wants and still be conformant with the specification. </p>
+<p>Note: one interesting observation that I made when comparing the error handling in DPC++ and the now-deprecated ComputeCpp was that DPC++ throws almost all exceptions synchronously, even when I expected an exception to be thrown asynchronously. </p>
+<p>The above example shows the potential for implementation-defined behaviour to cause problems, but there are many reasons why it exists. SYCL is an open standard, which means that the specification of SYCL is publicly available for anyone to implement. This specification defines the higher level abstraction of the API, but leaves much of the implementation detail up to the implementer, which is what causes implementation-defined behaviour. It may seem counter-intuitive but this wiggle-room allows implementers to do things their own way, and innovate as much as they desire on the implementation level. </p>
+<h2>Feature Misuse </h2><p>Feature misuse can be a very easy mistake to make when first learning SYCL. Even if you are not doing something blatantly wrong, there can be subtle mistakes such as using the wrong parameters for the exact situation. </p>
+<p>The command group below shows a simple kernel that adds every element in A into B using an atomic accessor to make sure all accesses to B are synchronized. The error here is a small one that could easily be missed if the code is not thoroughly tested. </p>
+<pre><code>q.submit([&amp;](sycl::handler&amp; cgh) {
+       sycl::accessor accA{bufA, cgh, sycl::read_only};
+       sycl::accessor accB{bufB, cgh, sycl::read_write};
+
+       cgh.parallel_for(
+           sycl::nd_range&lt;1&gt;{dataSize, groupSize}, [=](sycl::nd_item&lt;1&gt; item) {
+             auto id = item.get_global_id(0);
+
+             sycl::atomic_ref
+                 atomic_access(accB[0]);
+             atomic_access.fetch_add(accA[id]);
+           });
+     }).wait(); </code></pre>
+<p>The atomic accessor targets the incorrect address space, therefore it won't be able to find the data. But when tested using the CPU as the target device, it runs as we would expect with the correct accessor, but still fails on the GPU. This is because there is no local memory on the CPU, so the accessor defaults to global memory and finds the buffer. </p>
+
+<p>This example shows that errors don't necessarily have to be complex to cause unsafe behaviour, they can be as simple as using the wrong address space. This simple error introduces device-specific behaviour and could slip under the radar if not properly tested, for example if the code is written without ever testing on a GPU. </p>
+
+<p>The above error is a good example of undefined behaviour, as the SYCL 2020 specification tells us: </p>
+<p>Specifying an address space that does not match the object’s actual address space results in undefined behavior </p>
+<p>Undefined behaviour means the specification imposes no requirements, and therefore anything can happen. There are advantages and disadvantages to undefined behaviour, but we generally want to avoid relying on it, as by definition we cannot reliably say what will happen, and even if we observe certain behaviour, we cannot guarantee it will stay constant. Undefined behaviour is a very interesting but complex topic, but I will not go into the details here. If you are interested in learning more about undefined behaviour, which is a very complex topic, then there are many great resources online that dive deeper into the topic. </p>
+<h2>Implicit Behaviour </h2><p>In the previous example, the error is introduced by the programmer themselves. In the following example the error is more subtle. Rather than being introduced by the programmer, the error comes from implicit behaviour. This means behaviour that is not written explicitly but happens as a side effect of code that is written. </p>
+<pre><code>auto bufA = sycl::buffer{a, sycl::range{dataSize}};
+auto bufB = sycl::buffer{b, sycl::range{dataSize}};
+auto bufR = sycl::buffer{r, sycl::range{dataSize}};
+
+queue.submit([&amp;](sycl::handler&amp; cgh) {
+      sycl::accessor accA{bufA, cgh, sycl::read_only};
+      sycl::accessor accB{bufB, cgh, sycl::read_only};
+      sycl::accessor accR{bufR, cgh, sycl::write_only};
+      cgh.parallel_for(
+          sycl::range{dataSize},
+          [=](sycl::id&lt;1&gt; idx) { accR[idx] = accA[idx] + accB[idx]; });
+    })
+    .wait();
+
+queue.throw_asynchronous();
+
+for (int i = 0; i &lt; dataSize; ++i) {
+  assert(r[i] == static_cast(i) * 2.0f);
+} </code></pre>
+<p>In the above code, a simple vector add is performed, but due to the implicit nature of buffers/accessors the code does not behave as expected. As the buffer never goes out of scope, the data is never copied back to the host allocation, therefore the test fails. This can be easily missed, as we never write explicitly when to copy the data back to the host. </p>
+
+<h2>Challenges </h2><p>This blog post showcases a few examples of the tests that I have written during my time here. There were a few challenges I faced while writing these tests that I would like to mention here, as they may be interesting to consider. </p>
+
+<p>The first challenge was finding tests that fall into the exact niche that I was looking for. It is very easy to run into a few different deadends, the first being spending a lot of time searching for bugs in the SYCL specification and implementation, which may take a very long time to return results, if any. The second is that often mistakes made when writing SYCL code eventually come down to the same few things, so trying to write new tests that were not just a reorganisation of an old test proved a bigger challenge than expected. For example, a lot if the tests I have written could be fixed by adding some kind of synchronization into the program often in the form of a wait or a barrier. Simply writing more tests that were new situations that just lacked synchronization is not overly useful and doesn't provide any new insight. Both of these kinds of tests lack value, for the former we can simply fix the bug and the test becomes defunct, and the second doesn't actually teach us anything new about writing SYCL code. Finding the ground between these is important to give value to the tests and allow us to learn lessons from them that can be taken forward to improve SYCL development. </p>
+<p>The second challenge is finding realistic tests, i.e. code that could come up in a real scenario. We could write loads of tests where everything is done incorrectly, which would create the desired kinds of behaviour, but is very unlikely to appear in real life. It is difficult to take lessons away from tests like this, as it's very difficult to apply to your own code. </p>
+<p>Trying to work around these points was a fun challenge, to find the right kind of tests that could actually be used to help think about the difference between good and bad code. </p>
+
+<h2>Conclusion </h2><p>Anyone learning SYCL is bound to make these kinds of mistakes at some point, which is why it is important that there are materials out there about dangerous behaviour in SYCL. Writing robust code is becoming more and more important, not only in environments where people's safety relies on code behaving as intended, but in every piece of code that is written, to ensure that we can rely on the systems we create. By breaking down mistakes in SYCL it can allow us to better understand where mistakes are likely to originate from and even allow us to develop better tooling to support SYCL development. The more we analyse faulty SYCL code, the more we understand the requirements to write robust, high quality code. </p>
+
+

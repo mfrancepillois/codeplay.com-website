@@ -1,0 +1,33 @@
+---
+id: 83
+url: codeplay-to-present-at-hipeac-conference-in-haifa
+user_id: 333
+date: 2013-11-07T16:34:47.3600Z
+category: news
+title: "Codeplay to present at HiPEAC Conference in Haifa"
+showOnFrontPage: 0
+views: 411
+tags:
+redirect_from:
+  - /portal/codeplay-to-present-at-hipeac-conference-in-haifa
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Codeplay's Paul Keir is delighted to have the opportunity to present at this year's <a href="http://software.intel.com/en-us/articles/compilerconf2013">HiPEAC Compiler, Architecture and Tools Conference</a> in Haifa, Israel. The talk is entitled &quot;Fusing GPU kernels within a novel single-source C++ API&quot;. The work has been undertaken by Codeplay and TU Berlin's <a href="http://www.aes.tu-berlin.de/">AES group</a> as part of the EU FP7 project: <a href="http://lpgpu.org">LPGPU</a>. The abstract follows:
+</p>
+<p>
+<strong>Fusing GPU kernels within a novel single-source C++ API</strong>
+</p>
+<p>
+The prospect of GPU kernel fusion is often described in research papers as a standalone command-line tool. Such a tool adopts a usage pattern wherein a user isolates, or annotates, an ordered set of kernels. Given such OpenCL C kernels as input, the tool would output a single kernel, which performs similar calculations, hence minimising costly runtime intermediate load and store operations. Such a mode of operation is, however, a departure from normality for many developers, and is mainly of academic interest.
+</p>
+<p>
+Automatic compiler-based kernel fusion could provide a vast improvement to the end-user's development experience. The OpenCL Host API, however, does not provide a means to specify opportunities for kernel fusion to the compiler. Ongoing and rapidly maturing compiler and API research by Codeplay aims to provide a higher-level, single-source, industry-focused C++-based interface to OpenCL. Opportunities for kernel fusion have now also been investigated here; utilising features from C++11 including lambda functions; variadic templates; and lazy evaluation using std::bind expressions.
+</p>
+<p>
+While pixel-to-pixel transformations are interesting in this context, insomuch as they demonstrate the expressivity of this new single-source C++ API, we also consider fusing transformations which utilize synchronization within workgroups. Hence convolutions, utilising halos; and the use of the GPU's local shared memory are also explored.
+</p>
+<p>
+A perennial problem has therefore been restructured to accommodate a modern C++-based expression of kernel fusion. Kernel fusion thus becomes an integrated component of an extended C++ compiler and API.</p>
+

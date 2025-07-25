@@ -1,0 +1,380 @@
+---
+---
+
+/**
+* Global elements
+*/
+body {
+    --oneapi-blue: #001cea;
+}
+
+/**
+ * Section: Splash
+ */
+section#splash {
+    background-color: var(--oneapi-blue);
+    color: white;
+}
+
+section#splash .button {
+    background: rgba(0, 0, 0, .7) !important;
+}
+
+@media screen and (min-width: 1050px) {
+    section#splash {
+        background-image: linear-gradient(90deg, rgba(0,28,234,0) 0%, rgba(0,28,234,1) 51%),
+        url({{ '/assets/images/solutions/oneapi/splashbg.png' | relative_url }});
+    }
+}
+
+section#splash #splash-image {
+    overflow: hidden;
+    max-width: 537px;
+    max-height: 503px;
+    height: auto;
+    width: 100%;
+}
+
+section#splash #splash-image img {
+    opacity: 1;
+}
+
+section#splash #splash-image img:nth-of-type(2) {
+    left: -217px;
+    animation: linear;
+    animation-name: left-to-right;
+    animation-duration: .5s;
+    animation-fill-mode: forwards;
+    animation-delay: 1s;
+}
+
+section#splash #splash-image img:nth-of-type(3) {
+    left: 232px;
+    animation: linear;
+    animation-name: right-to-left;
+    animation-duration: .5s;
+    animation-fill-mode: forwards;
+    animation-delay: 1s;
+}
+
+@-webkit-keyframes left-to-right {
+    0% {
+        left: -217px;
+    }
+    100% {
+        left: 0;
+}
+}
+
+@-webkit-keyframes right-to-left {
+    0% {
+        left: 232px;
+    }
+    100% {
+        left: 0;
+    }
+}
+
+/**
+ * Section: Open Source
+ */
+section#open-source {
+    background-color: #00094a;
+    color: white;
+}
+
+section#open-source .button {
+    background: var(--oneapi-blue) !important;
+}
+
+section#open-source .wrapper {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2rem;
+    text-align: center;
+}
+
+section#open-source p {
+    margin-bottom: 0;
+}
+
+@media screen and (min-width: 1000px) {
+    section#open-source {
+        padding: 0;
+    }
+
+    section#open-source .wrapper {
+        flex-direction: row;
+        column-gap: 4rem;
+        padding-top: 0;
+        padding-bottom: 0;
+        min-height: 240px;
+        text-align: left;
+    }
+
+    section#open-source .wrapper > * {
+        display: flex;
+        align-items: center;
+    }
+
+    section#open-source .wrapper > div:nth-of-type(1) {
+        position: relative;
+        width: 321px;
+    }
+
+    section#open-source .wrapper > div:nth-of-type(1) > img {
+        position: relative;
+        bottom: -27px;
+        width: 100%;
+    }
+
+    section#open-source .wrapper > div:nth-of-type(2) {
+        flex: 1;
+    }
+}
+
+section#open-source h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/**
+ * Section: oneAPI for NVIDIA
+ */
+section#oneapi-for-nvidia {
+    background-color: #ebebeb !important;
+}
+
+/**
+ * Section: oneAPI for AMD
+ */
+section#oneapi-for-amd {
+    background-color: #fff !important;
+}
+
+/**
+ * Section: Charts
+ */
+.chart-section .gpu-chart {
+    height: 500px;
+    width: 100%;
+}
+
+@media screen and (min-width: 1000px) {
+    .chart-section .gpu-chart {
+        width: 800px;
+        height: 490px;
+    }
+}
+
+.chart-section .button {
+    background: var(--oneapi-blue) !important;
+}
+
+.chart-section  .disclaimer {
+    font-size: 11px;
+    color: #5d5d5d;
+    margin-top: 2rem;
+}
+
+/**
+ * Section: Support
+ */
+section#support {
+    background-color: #ebebeb !important;
+}
+
+section#support .notice {
+    background-color: #ccc !important;
+    display: flex;
+    flex-direction: row;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+section#support .notice > div {
+    display: flex;
+    align-items: center;
+    opacity: .8;
+}
+
+section#support .notice > div:nth-of-type(1) {
+    padding: 0 1rem;
+}
+
+
+section#support .package-list {
+    padding-bottom: 1rem;
+    display: grid;
+    grid-gap: 1rem;
+}
+
+@media screen and (min-width: 1180px) {
+    section#support .package-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-column-gap: 1rem;
+    }
+}
+
+section#support .package {
+    background-color: white;
+    border: rgba(0, 0, 0, .2) 1px solid;
+    border-radius: 12px;
+    position: relative;
+    transition: .3s all;
+    box-shadow: 2px 2px 5px -1px rgba(0, 0, 0, .1);
+}
+
+section#support .package ul {
+    padding: 0 2rem;
+}
+
+section#support .package *:not(.button) {
+    cursor: default;
+}
+
+section#support .package:hover {
+    transform: scale(1.015);
+    box-shadow: 2px 2px 5px -1px rgba(0, 0, 0, .2);
+}
+
+section#support .package * {
+    box-sizing: border-box;
+}
+
+section#support .package h1 span {
+    vertical-align: text-bottom;
+}
+
+section#support .package h1 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-top: 1.4rem;
+}
+
+section#support .package p {
+    opacity: .7;
+}
+
+section#support .package > div {
+    padding: 2rem 3rem;
+}
+
+section#support .package > div:not(:last-of-type) {
+    border-bottom: rgba(0, 0, 0, .2) 1px solid;
+}
+
+section#support .package > div:nth-of-type(2) {
+    min-height: 431px;
+}
+
+section#support .package > div:nth-of-type(3) {
+    background-color: #efefef;
+}
+
+section#support .package li {
+    list-style: none;
+    padding: .5rem 0;
+    position: relative;
+}
+
+section#support .package li::before {
+    content: '\2022';
+    color: var(--oneapi-blue);
+    font-weight: bold;
+    font-size: 3rem;
+    display: inline-block;
+    position: absolute;
+    left: -2rem;
+    top: -1rem;
+}
+
+section#support .package .button {
+    background: var(--oneapi-blue);
+    color: white;
+    width: 100%;
+    text-align: center;
+    margin-top: 0;
+}
+
+section#support .package .button span {
+    vertical-align: middle;
+    margin-right: .2rem;
+}
+
+section#support .package.free {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+
+section#support .package.free > div:nth-of-type(1) {
+    position: relative;
+}
+
+section#support .package.free > div:nth-of-type(2) {
+    min-height: auto;
+    width: 1px;
+    padding: 0;
+    margin: 0;
+}
+
+section#support .package.free > div:nth-of-type(3) {
+    width: 560px;
+    display: flex;
+    align-items: center;
+}
+
+section#support .package-list .free-tag {
+    position: absolute;
+    right: -15px;
+    top: 3.1rem;
+    background-color: #e50000;
+    color: white;
+    padding: .5rem 1.5rem;
+    font-size: 12px;
+}
+
+section#support .package-list .free-tag:before {
+    content: '';
+    width: 0;
+    height: 0;
+    top: -30px;
+    right: -5px;
+    border-style: solid;
+    border-width: 15px 15px 15px 0;
+    border-color: transparent transparent #c50000 transparent;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+    position: absolute;
+}
+
+/**
+ * Popup: Support Packages
+ */
+#support-packages-popup {
+    padding: 2rem 3rem !important;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+@media screen and (min-width: 56.25rem) {
+    #support-packages-popup {
+        height: auto !important;
+        text-align: left !important;
+    }
+}
+
+#support-packages-popup .button {
+    background-color: var(--oneapi-blue);
+    color: white;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+#support-packages-popup .sent {
+    display: none;
+}

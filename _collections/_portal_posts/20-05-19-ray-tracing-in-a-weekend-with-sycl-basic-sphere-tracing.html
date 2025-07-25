@@ -1,0 +1,508 @@
+---
+title: "Ray-tracing in a Weekend with SYCL: Basic sphere tracing"
+date: 2020-05-19T17:16:22.720000+00:00
+category: blogs
+id: 386
+url: 05-19-20-ray-tracing-in-a-weekend-with-sycl-basic-sphere-tracing
+user_id: 852
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/05-19-20-ray-tracing-in-a-weekend-with-sycl-basic-sphere-tracing
+thumbnail: /assets/images/portal/article-images/10256999c3d171d5515506e91e197e29.jpg
+layout: portal/portal-article-view
+---
+
+<h2>Introduction</h2>
+
+<p>
+    C++ <em>Ray-Tracing in a Weekend</em> by Peter Shirley is a great resource to start learning about ray-tracers and how to implement one, and at the same time providing all the source code in a&nbsp;<a class="external-link" href="https://github.com/petershirley/raytracinginoneweekend" rel="nofollow"></a><a class="external-link" href="https://github.com/petershirley/raytracinginoneweekend" rel="nofollow">GitHub repository
+    </a>. You can find more information about his books on ray-tracing techniques with accompanying implementations on his <a class="external-link" href="http://in1weekend.blogspot.com/" rel="nofollow">blog</a>, and you can also download the books as .pdf, or load them on your Kindle device for free from the <a href="https://github.com/RayTracing/InOneWeekend">GitHub project</a>.</p>
+<p>The main goal of this blog post is not to teach the concepts of ray-tracing, Peter does a great job of that, but provide a walk-through tutorial on how to accelerate practical applications and algorithms using SYCL.</p>
+
+<p>During this tutorial I used ComputeCpp, Codeplay's implementation of SYCL, and for a reference, here are the relevant hardware and software the machine I've used  during development.</p>
+<p><strong>CPU</strong>: Intel Core i7-6700K</p>
+<p><strong>GPU</strong>: Intel HD Graphics 530</p>
+<p><strong>Operating System</strong>: Ubuntu 18.04 - x86_64</p>
+<p>The CPU will be our <strong>host device </strong>that will carry out the required API calls to the SYCL runtime library for memory copy, command group submission and kernel execution.</p>
+<p>The GPU will be the <strong>SYCL device</strong> on which the SYCL kernels will execute the data-parallel computation.</p>
+
+<p>I would recommend having the original C++ code of the "<em>Ray-Tracing in a Weekend"</em> project on your machine. This makes it possible to reference what changes need to be made during the process of using SYCL to parallelize the code.</p>
+
+<p>For SYCL development, <a class="external-link" href="https://www.codeplay.com/products/computesuite/computecpp" rel="nofollow">ComputeCpp</a> (Codeplay's SYCL implementation) was used and can be downloaded from the <a class="external-link" href="https://developer.codeplay.com" rel="nofollow">Codeplay developer website</a> with support for both Windows and Linux environments.</p>
+
+<p>ComputeCpp is SYCL 1.2.1 conformant with support for not only C++11 but a wide range of the C++14 language feature set. This allows developers to leverage the use of generic lambdas, constexpr evaluations and have guaranteed performance by default. Other SYCL implementations may only support C++11 since this is the minimum required for the SYCL 1.2.1 specification. So whenever a C++14 feature is referred to in this article, a C++11 alternative will also be presented.</p>
+
+
+<div class="two-column-layout">
+    <div>
+        <h2>Profiling the Raytracing Application</h2>
+        <br>
+<p>The first thing to do before blindly starting to introduce parallelism, <span style="color: rgb(23,43,77);">although it might seem obvious where we should start,</span> we will run a profiler on the binary produced from the compilation of the original sequential code to identify the hot paths of the application, and see where is crucial for optimization. The diagram on the right illustrates the output from the profiler.</p>
+
+<p>From the diagram on the right we can see that the most time is spent in the <code>color()</code> function therefore we will parallelize the computation carried out by that function. Effectively, the nested for loops where <code>color</code> is being called per pixel is where the bulk of the computations actually happen. In our SYCL application, this will be the <code>render kernel</code> that will call the <code>color()</code> function that encapsulates the ray-tracing logic.</p>
+
+<p>As we can see color is an indirection to the actual ray-tracing logic which is actually inside the <code>hit()</code> function, that performs a ray-geometry intersection to determine the final color for a point in the geometry. Roughly <code>90%</code> of the application run-time is taken by a <code>sphere::hit</code>.</p>
+
+<p>Additionally, we have to take care of the recursion inside color since this is a sub-optimal on GPUs and other heterogeneous devices and is also restricted in OpenCL, which is the standard backend of a SYCL implementation, meaning we will have to work around this part.</p>
+
+<p>Here is how it will work in very minimal pseudo-code.</p>
+        <br>
+<pre><code>render_kernel (index2D i, spheres[] world):
+  out[i] = color (world)
+main:
+  parallel_for (render_kernel, range2D(image.width, image.height))
+</code></pre>
+
+        <br>
+        <p class="auto-cursor-target">
+            <code>range2D</code> defines the kernel iteration space and will execute the <code>render_kernel</code> for both <code>x</code> and <code>y</code> coordinates of the image, similarly to the original two sequential nested for loops, but this will happen in parallel on the selected SYCL device.</p>
+<pre><code>for x in image.width:
+  for y in image.height:
+    out[x][y] = color (world)
+  endfor
+endfor
+</code></pre>
+
+
+    </div>
+    <div>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+		<br>
+        <img src="{{ '/assets/images/portal/article-images/10256999c3d171d5515506e91e197e29.jpg' | relative_url }}">
+	</div>
+</div>
+<div class="two-column-layout">
+<div>
+        <h2>The parallel <code>render</code> - host setup</h2>
+
+<p>Before beginning with the SYCL code to draw pixels on our screen, let's define the basic structure of the SYCL kernel functor as C++ class. This will contain the ray-tracing computation logic.</p>
+
+<p>This is just a high-level interface of the rendering SYCL kernel functor. Each stage of the development will introduce changes to the structure, new <code>accessor objects</code> and <code>member functions</code> to produce the final scene from the <em>Ray-Tracing in a Weekend</em> book.</p>
+
+<p>The total number of elements or work-items to be computed equals the product of the frame buffer (image) dimensions: <code>width * height</code>. However in SYCL, similar to other compute APIs, we group these elements in what is called work-groups. The size of a work-group is determined by what is most optimal for the kernel and also the device it is running on.</p>
+
+<p>In our case, we are working with a 2D kernel, which means the work-group (or local) range, will be <code>{8, 8}</code>.</p>
+<pre><code>namespace constants {
+  static constexpr auto TileX = 8;
+  static constexpr auto TileY = 8;
+}
+</code></pre>
+
+<p>It is advisable to tweak the work group sizes https://www.codeplay.com/portal/01-09-20-sycl-performance-post-choosing-a-good-work-group-size-for-sycl for your specific hardware to achieve the best performance.</p>
+        <hr>
+
+<p>We can abstract the execution of the <code>render</code> kernel in a function that will take care of allocating memory on the device, setting up the kernel index space, and running the kernel in parallel via <code>parallel_for</code>. A general structure of how this would look can be seen below.</p>
+<pre><code>template &lt;int width, int height&gt;
+void render(sycl::queue&amp; queue, vec3* fb_data) {
+  constexpr auto num_pixels = width * height;
+
+  auto frame_buf = sycl::buffer&lt;vec3, 1&gt;(fb_data, sycl::range&lt;1&gt;(num_pixels));
+
+  // submit command group on device
+  queue.submit([&amp;](sycl::handler&amp; cgh) {
+    // get memory access
+    auto frame_ptr = frame_buf.get_access&lt;sycl::access::mode::write&gt;(cgh);
+    // setup kernel index space
+    const auto global = sycl::range&lt;2&gt;(width, height);
+    const auto local = sycl::range&lt;2&gt;(constants::TileX, constants::TileY);
+    const auto index_space = sycl::nd_range&lt;2&gt;(global, local);
+    // construct kernel functor
+    auto render_k = render_kernel&lt;width, height&gt;(frame_ptr);
+    // execute kernel
+    cgh.parallel_for(index_space, render_k);
+  });
+</code></pre>
+</div>
+<div>
+        <h2>The parallel render_kernel class</h2>
+
+<p>The render_kernel class will be used as a function object with a private function color that computes the tracing as well as providing other helper functions for calculating ray intersections between objects in the scene.</p>
+<pre><code>template &lt;int width, int height&gt;
+class render_kernel {
+ public:
+  render_kernel(sycl::accessor&lt;vec3, 1, sycl::access::mode::write, sycl::access::target::global_buffer&gt; frame_ptr) {
+    /* initialize accessors */
+  }
+
+  void operator()(nd_item&lt;2&gt; item) {
+    // get our Ids
+    const auto x_coord = item.get_global_id(0);
+    const auto y_coord = item.get_global_id(1);
+    // map the 2D indices to a single linear, 1D index
+    const auto pixel_index = y_coord * width + x_coord;
+
+    vec3 final_color;
+
+    /* kernel logic - raytracing algorithm */
+
+    final_color = color();
+
+    // write final color to the frame buffer global memory
+    m_frame_ptr[pixel_index] = final_color;
+  }
+
+ private:
+  /* member functions */
+
+  vec3 color(ray) {
+    vec3 result;
+    result = &lt;&lt;&lt; ray-tracing computation &gt;&gt;&gt;;
+    return result;
+  }
+
+  /* accessor objects */
+  sycl::accessor&lt;vec3, 1, sycl::access::mode::write, sycl::access::target::global_buffer&gt; m_frame_ptr;
+};
+</code></pre>
+
+<p>We can construct and use the <code>render_kernel</code> function inside the command group and pass it to <code>parallel_for</code> for execution.</p>
+    </div>
+</div>
+<div>
+    <h2>Application Entry Point</h2>
+
+<p>The program's <strong>main()</strong> is where we set up everything we need on the <strong>host</strong> and invoke the ray-tracer.</p>
+<pre><code>int main() {
+  // frame buffer dimensions
+  constexpr auto width = 1200;
+  constexpr auto height = 800;
+  constexpr auto num_pixels = width * height;
+
+  // select the SYCL accelerator (i.e Intel GPU for this machine)
+  auto queue = sycl::queue(sycl::gpu_selector{});
+
+  // allocate the frame buffer on the Host
+  std::vector&lt;vec3&gt; fb(num_pixels); // frame buffer
+
+  // run the SYCL render kenel
+  render&lt;width, height&gt;(queue, fb.data());
+
+  // save the pixel data as an image file
+  save_image&lt;width, height&gt;(fb.data());
+
+  return 0;
+}
+</code></pre>
+
+<p>This function generates a .ppm image file that can be read, for example, by GIMP or converted to .jpg, .png and other image file formats so that the output can be easily viewed.</p>
+    <h2>Saving the image output</h2>
+<pre><code>template &lt;int width, int height&gt;
+void save_image(vec3* fb_data) {
+  std::cout &lt;&lt; "P3\n" &lt;&lt; width &lt;&lt; " " &lt;&lt; height &lt;&lt; "\n255\n";
+  for (int y = height - 1; y &gt;= 0; y--) {
+    for (int x = 0; x &lt; width; x++) {
+      auto pixel_index = y * width + x;
+      int r = static_cast&lt;int&gt;(255.99 * fb_data[pixel_index].r);
+      int g = static_cast&lt;int&gt;(255.99 * fb_data[pixel_index].g);
+      int b = static_cast&lt;int&gt;(255.99 * fb_data[pixel_index].b);
+      std::cout &lt;&lt; r &lt;&lt; " " &lt;&lt; g &lt;&lt; " " &lt;&lt; b &lt;&lt; "\n";
+    }
+  }
+}
+</code></pre>
+
+<p>Also, although we will be doing single-precision floating computations, we can also template the <code>vec3</code> class from the original code of the application. This means that it could work with either single-precision (floats) or double-precision (doubles). <br>For the purpose of making this article easier to follow, I will avoid making the class templates too convoluted and define a <code>real type</code> alias as <code>float</code>.</p>
+    <pre><code>using real_t = float;</code></pre>
+    <p class="auto-cursor-target">With that being set, we are now one <code>vec3 class</code> away from implementing our first version of the <code>render_kernel</code> and outputting its result in an image.</p>
+
+    <h2>Write the pixel data using a custom vec3</h2>
+
+<p>In computer graphics, colors and positions are represented as triples of floats. This type of format is defined using the vec3 data structure which is used in our application for all the linear algebra that is required. The only change done to the original <code>class vec3</code> is that we added a nicer representation of the underlying data that allows us to access the elements of the array as either <strong>x, y, z </strong>or <strong>r, g, b </strong>by using <code>union</code>.</p>
+<pre><code>class vec3 {
+ public:
+  union {
+    real_t data[3];
+    struct {
+      real_t x, y, z;
+    };
+    struct {
+      real_t r, g, b;
+    };
+  };
+
+  /* Constructor(s) */
+  [...]
+
+  /* Methods */
+  [...]
+};
+</code></pre>
+
+<p>In addition to that, if you are using <strong>ComputeCpp</strong> with C++14, to offload some computations to compile-time you can define the vector math functions that don't modify the underlying data members of the class as <code>constexpr</code>. Some other SYCL implementations may not have language support beyond C++11 for features such as the <code>constexpr</code> improvements that were introduced, for these the function declarations can remain as they are in the original source.</p>
+
+<p>Now we are ready to use <code>vec3</code> and design a simple application that yields an image as an output, which will serve as the base for the more interesting ray-tracing bit. Bear with me for now, ray-tracing is coming but building it up step-by-step is important as it allows me to gradually introduce the design and what changes need to occur as we build up the complexity.</p>
+
+<p>As I already mentioned, we will abstract the tracing in the color member function of the render kernel. It is quite simple for now as it only takes <strong>x</strong> and <strong>y</strong> or <strong>red</strong> and <strong>green</strong> values that are computed inside the SYCL kernel and returns the color per pixel.</p>
+<pre><code>vec3 color(real_t u, real_t v) {
+  return vec3(u, v, 0.2);
+}
+</code></pre>
+
+<p>And then we can call the function from within the kernel body where, apart from this minor change, everything else remains the same.</p>
+<pre><code>void operator()(nd_item&lt;2--&gt; item) {
+  [...]
+
+  vec3 final_color;
+
+  real_t u = static_cast&lt;real_t&gt;(x_coord) / width;
+  real_t v = static_cast&lt;real_t&gt;(y_coord) / height;
+
+  final_color = color(u, v);
+
+  [...]
+}
+</code></pre>
+
+<p>The result of this kernel will be the RGB gradient values which are stored in the <code>frame</code> accessor object and later automatically copied over to the <strong>host</strong> frame buffer memory. Memory cleanup on the SYCL device is automatically done on exit of the command group scope, following the C++ RAII programming idiom.</p>
+
+<p>
+        <span class="ILfuVd">
+          <span class="e24Kjd">With this we have almost set the ground for adding our tracing functionality. There is one modification that needs to be done in the <code>vec3 class</code>.  If you are following this by typing along on your machine, and tried to execute the this kernel, you will see that the ComputeCpp device compiler will output the following warning:</span>
+        </span>
+    </p>
+    <pre><code>warning: [Computecpp:CC0034]: Function sqrtf is undefined but referenced on the device and the associated kernels may fail to build or execute at run time [-Wsycl-undef-func]]</code></pre>
+
+<p>Therefore, we either need to create our own square root function or use the SYCL <a href="https://www.khronos.org/registry/SYCL/specs/sycl-1.2.1.pdf#page=233">built-in math functions</a> that can be used in both host and device code.<br>For the case of square root, we will use <code>cl::sycl::sqrt</code>.</p>
+
+<p>Now that the vec3 class is setup and the simple gradient color rendering kernel are taken care of, we can run the application and get the following output:</p>
+
+    <img src="{{ '/assets/images/portal/article-images/149ebb4924d4f130ecf4fea6784b81cd.jpg' | relative_url }}">
+</div>
+<h2>Sphere tracing</h2>
+<div class="two-column-layout">
+    <div>
+        <h3>Host Application</h3>
+
+<p>So now we can use the same concept introduced above to trace spheres by defining a sphere class which encapsulates the properties of a sphere as well as the <code>hit</code> routine that is called from the SYCL device.</p>
+<pre><code>class sphere {
+ public:
+  sphere() = default;
+  sphere(const vec3&amp; cen, real_t r) : center(cen), radius(r) {}
+
+  bool hit(const ray&amp; r, real_t min, real_t max, hit_record&amp; rec) const {
+    vec3 oc = r.origin() - center;
+    auto a = dot(r.direction(), r.direction());
+    auto b = dot(oc, r.direction());
+    auto c = dot(oc, oc) - radius * radius;
+    auto discriminant = b * b - a * c;
+    if (discriminant --&gt; 0) {
+      auto temp = (-b - sycl::sqrt(discriminant)) / a;
+      if (temp &lt; max &amp;&amp; temp &gt; min) {
+        rec.t = temp;
+        rec.p = r.point_at_parameter(rec.t);
+        rec.normal = (rec.p - center) / radius;
+        return true;
+      }
+      temp = (-b + sycl::sqrt(discriminant)) / a;
+      if (temp &lt; max &amp;&amp; temp &gt; min) {
+        rec.t = temp;
+        rec.p = r.point_at_parameter(rec.t);
+        rec.normal = (rec.p - center) / radius;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // geometry properties
+  vec3 center;
+  real_t radius;
+}
+</code></pre>
+
+<p>The definition of the <code>sphere</code> class mostly follows that of the book and has no SYCL specific code apart from the use of the built-in <code>sycl::sqrt</code> function.</p>
+
+<p>So now we have to make a <code>hit_world</code> function that will call the hit routine for each sphere object on the device. In order to do that, we define a <code>
+            hit_record</code> struct that holds the point of intersection, the distance and the surface normal. The definition is exactly the same as in the book and will make checking for all intersections between objects in a scene slightly easier to implement.</p>
+<pre><code>struct hit_record {
+  float t;
+  vec3 p;
+  vec3 normal;
+};
+</code></pre>
+
+<p>Another approach would have been to keep an <code>Id</code> of each sphere and return that on hit instead of keeping the intersection data in a separate struct but the struct is small enough and is what the author uses for the reference C++ ray-tracing code.</p>
+        <br>
+
+
+
+
+    </div>
+    <div>
+        <h2>Render kernel</h2>
+
+<p>Now we can define the <code>hit_world</code> function as well as the rest of the changes that need to be made to the <code>render_</code>kernel class.</p>
+<pre><code>template &lt;int width, int height, num_spheres&gt;
+class render_kernel {
+ public:
+  [...]
+
+  void operator()(sycl::nd_item&lt;2&gt; item) {
+    [...]
+  }
+
+ private:
+  bool hit_world(const ray&amp; r, real_t min, real_t max, hit_record&amp; rec, sphere* spheres) {
+    auto temp_rec = hit_record{};
+    auto hit_anything = false;
+    auto closest_so_far = max;
+    for (auto i = 0; i &lt; num_spheres; i++) {
+      if (spheres[i].hit(r, min, closest_so_far, temp_rec)) {
+        hit_anything = true;
+        closest_so_far = temp_rec.t;
+        rec = temp_rec;
+      }
+    }
+    return hit_anything;
+  }
+
+  vec3 color(const ray&amp; r, sphere* spheres) {
+    hit_record rec;
+    if (hit_world(r, real_t{0.001}, real_max, rec, spheres)) {
+      return 0.5 * vec3(rec.normal.x() + 1.0, rec.normal.y() + 1.0,
+      rec.normal.z() + 1.0);
+    }
+    vec3 unit_direction = unit_vector(r.direction());
+    float hit_pt = 0.5 * (unit_direction.y() + 1.0);
+    return (1.0 - hit_pt) * vec3(1.0, 1.0, 1.0) + hit_pt * vec3(0.5, 0.7, 1.0);
+  }
+};
+</code></pre>
+
+<p>The <code>render_kernel function call operator overload </code> requires passing a pointer to the spheres object and we will have to use the <code>cl::sycl::accessor::get_pointer</code> function to retrieve the raw pointer type and from the global memory device accessor.</p>
+<pre><code>void operator()(sycl::nd_item&lt;2&gt; item) {
+  [...]
+
+  auto r = get_ray(u, v);
+  final_color = color(r, m_spheres_ptr.get_pointer());
+
+  m_frame_ptr[pixel_index] = final_color;
+}
+</code></pre>
+
+    </div>
+</div>
+
+<div>
+
+<p>Currently we represent our array of geometries as a vector of sphere objects. The spheres accessor handles the memory access for all spheres on the device and its access target is the global memory address space. Thus, in our render kernel body we pass the spheres argument to the color member function as a raw pointer. In order to pass the spheres accessor argument we need to get the underlying pointer in the correct memory address. This is achieved by using a function of the SYCL accessor class that returns the data pointer in the memory address space used by the accessor. This function is called <code>get_pointer()</code> which we have already used in the above implementation of the render kernel by accessing the spheres pointer in global memory via the accessor as follows: <code>m_spheres_ptr.get_pointer()</code>.</p>
+
+<p>But SYCL also provides the ability to explicitly target the memory address you that will be used for our device pointers through an interface of the <code>class multi_ptr</code>.
+        <br>The <code>multi_ptr class</code> in SYCL is used for typing purposes. It provides a syntax to wrap pointers in classes by adapting them to the correct address space. For example, it is possible to access the address of a data member which is defined as a raw pointer within a struct via an accessor by explicitly specifying its address space in device memory with the use of the <code>multi_ptr</code> class.</p>
+</div>
+
+
+<div class="two-column-layout">
+    <div>
+        <h3>Using SYCL pointer aliases to explicitly target device-side memory region</h3>
+
+<p>In the following example I am trying to instantiate a <code>data_struct</code> object with a pointer to the global memory.</p>
+<pre><code>struct data_struct {
+  int* p;
+  [...]
+};
+
+sycl_accessor glob_acc;
+[...]
+parallel_for([=](...) {
+  data_struct ds = (&amp;glob_acc[0]);
+});
+</code></pre>
+
+<p>However, what I have written is invalid because we don't know the address space of member pointer <code>(int* p)</code> inside the struct.  In SYCL the host and device memory addresses are are separate and we cannot have an implicit translation from one to the other.<br>SYCL defines the following memory regions for access on the device side.</p>
+<pre><code>enum class address_space : int {
+  global_space,
+  local_space,
+  constant_space,
+  private_space
+};
+</code></pre>
+
+<p>So by defining the pointer to <code>int</code> in our structure as <code>multi_ptr&lt;int, access::address_space::global_space&gt;</code> we are able to access it on the device inside the <code>parallel_for</code> construct in the global memory address space. Furthermore, SYCL provides template specialization aliases for different pointer address spaces.</p>
+
+<p>We can re-write the struct using an alias type to target global address space.</p>
+<pre><code>struct data_struct {
+  global_ptr&lt;int&gt; p; // pointer to int in global address space
+  [...]
+};
+</code></pre>
+    </div>
+    <div>
+        <h3>Modifying the <code>render</code> kernel to use SYCL pointer aliases</h3>
+
+<p><span class="auto-cursor-target">The described approach can also be done for the rest of the address spaces, intuitively, following the naming used in the <code>address_space enum class</code>, so <code>constant_ptr</code> for constant space, <code>local_ptr</code> for local space and <code>private_ptr</code> for private space.</span></p>
+
+<p><span class="auto-cursor-target">In order to adapt our member functions in the <code>class render_kernel</code> functor - <code>color</code> and <code>hit_world</code>, we have to change the parameter type for spheres from <code>spheres*</code> to their corresponding <code>multi_ptr</code> alias type.</span> Our spheres are defined in global address space, thus we will be using <code>global_ptr</code>.</p>
+<pre><code>bool hit_world(const ray&amp; r, real_t min, real_t max, hit_record&amp; rec,
+    const sycl::global_ptr&lt;sphere&gt;&amp; spheres) {
+  return [...]
+}
+
+vec3 color(const ray&amp; r, const sycl::global_ptr&lt;sphere&gt;&amp; spheres) {
+  return [...]
+}
+</code></pre>
+
+<p>And within the render kernel body we pass the accessor as it is without the need to use <code>get_pointer()</code>.</p>
+<pre><code>void operator()(sycl::nd_item&lt;2--&gt; item) {
+  [...]
+
+  auto r = get_ray(u, v);
+  final_color = color(r, m_spheres_ptr);
+
+  [...]
+  m_frame_ptr[pixel_index] = final_color;
+}
+</code></pre>
+
+<p>This approach is not of crucial necessity to this project, however it provides better readability and consistency through explicit typing for our member functions that require passing pointers to the device memory we are accessing.</p>
+
+<p>As a result, we no longer need to use <code>get_pointer()</code> to pass a device pointer in the helper functions defined in <code>render_kernel</code> class in order to get access to the pointer to sphere in device memory address space.</p>
+    </div>
+</div>
+
+<div>
+    <h3>Calling the <code>render</code> kernel</h3>
+
+<p>In order to call the updated kernel functor from the <code>render function</code> we need to make some changes, such as updating the device buffers definitions and instantiating the <code>render_kernel functor</code> with the new spheres accessor.</p>
+<pre><code>template &lt;int width, int height, num_spheres&gt;
+void render(vec3* fb_data, const sphere* spheres, output_format out_fmt) {
+  [...]
+
+  sycl::buffer&lt;sphere, 1=""&gt; spheres_buf(spheres, sycl::range&lt;1&gt;(num_spheres));
+
+  queue.submit([&amp;](sycl::handler&amp; cgh) {
+    [...]
+
+    auto render_kernel_func = kernels::render_kernel&lt;width, height, num_spheres&gt;(frame_ptr, spheres_ptr);
+    cgh.parallel_for(sycl::nd_range&lt;2&gt;(global, local), render_kernel_func);
+  });
+}
+</code></pre>
+
+<p>Finally, we set up the spheres on the host in <code>main().</code>
+    </p>
+<pre><code>constexpr auto num_spheres = 2;
+std::vector&lt;sphere&gt; spheres(num_spheres);
+spheres.push_back(sphere(vec3(0.0, 0.0, -1.0), 0.5));      // (small) center sphere
+spheres.push_back(sphere(vec3(0.0, -100.5, -1.0), 100.0)); // (large) ground sphere
+
+render&lt;width, height, num_spheres&gt;(fb.data(), spheres.data());
+</code></pre>
+
+
+<p>The final result should be two traced spheres, one of which is used as floor or ground in the scene and the other one is centered on the ground.</p>
+    <img src="{{ '/assets/images/portal/article-images/c302de221e0efc589a9a18879f3cdac1.jpeg' | relative_url }}">
+
+<p>Now everything looks fine but we have modified the application so that doesn't behave in a polymorphic way, like the implementation in the book. The reason is that we are currently working with a concrete <code>class sphere</code>. We will get back to this part in the next article and explain the possible techniques of working around that since dynamic polymorphism is not possible in SYCL, this limitation is inherited from OpenCL. Before we get there, we have other problems to tackle such as random number generation on the device-side of the application so we can achieve anti-aliasing by averaging a bunch of random samples inside each pixel.</p>
+
+<p>If you've found this interesting, there <a href="https://www.codeplay.com/portal/blogs/2020/06/19/ray-tracing-in-a-weekend-with-sycl-part-2-pixel-sampling-and-material-tracing.html">is a second part of this article</a> where we examine pixel sampling and material tracing. <a href="https://twitter.com/codeplaysoft/">Follow us on Twitter</a> to be the first to find out about new blog posts.<br></p>
+</div>

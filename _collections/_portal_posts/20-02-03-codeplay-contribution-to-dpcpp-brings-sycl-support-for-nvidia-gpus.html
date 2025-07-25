@@ -1,0 +1,99 @@
+---
+title: "Codeplay contribution to DPC++ brings SYCL support for NVIDIA GPUs"
+date: 2020-02-03T11:57:23.360000+00:00
+category: news
+id: 373
+url: 02-03-20-codeplay-contribution-to-dpcpp-brings-sycl-support-for-nvidia-gpus
+user_id: 653
+showOnFrontPage: 0
+views: 0
+redirect_from:
+  - /portal/02-03-20-codeplay-contribution-to-dpcpp-brings-sycl-support-for-nvidia-gpus
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/article-images/dpdcc_cuda_blog2020.png
+---
+
+<p>Codeplay has been a part of the SYCL™ community from the beginning, and our team has worked with peers from some of the largest semiconductor vendors including Intel and Xilinx for the past 5 years to define the SYCL standard. Over that time the interface that SYCL provides to developers has evolved and we expect to be able to talk about the latest version of the standard this year. ComputeCpp, our implementation of SYCL, was the first implementation to be SYCL v1.2.1 conformant which is something that we are deeply proud of and we continue to develop this product to improve performance and increase the number of supported devices.</p>
+
+<p>Last year we were really excited to learn that Intel is putting a huge effort behind SYCL and has been developing <a href="https://software.intel.com/en-us/oneapi">oneAPI</a> that includes DPC++ (an implementation of SYCL with extensions) for its CPUs, GPUs and FPGAs. With the additional support for SYCL from Xilinx, Renesas and Imagination Technologies, software developers are now able to target a wide range of devices using SYCL.</p>
+
+<p>While ComputeCpp offers experimental support for NVIDIA® GPUs using OpenCL™ and NVIDIA's PTX, DPC++ (Intel®'s SYCL implementation) offered the opportunity to add full support for NVIDIA GPUs integrated into the LLVM compiler without going through OpenCL, and today we are pleased to open source the initial, experimental phase of our implementation that enables SYCL developers to target NVIDIA GPUs..</p>
+<p><strong></strong>The codebase for this implementation now lives in the main DPC++ LLVM Compiler project.</p>
+
+
+<p><strike>This is an early, incomplete, release and further work is ongoing to integrate more features and improved performance.</strike></p><p>Update for 2021: At the time of this original blog post the implementation was early however now it includes most features required and there is an ongoing project, <a href="https://www.nersc.gov/news-publications/nersc-news/nersc-center-news/2021/nersc-alcf-codeplay-partner-on-sycl-for-next-generation-supercomputers/">in partnership with LBNL and ANL</a>, to continue to develop this work. Visit our <a href="https://www.codeplay.com/solutions/oneapi/for-cuda/">dedicated developer page</a> for instructions on how to set up and use the oneAPI for CUDA implementation we have developed.<br></p>
+<h3>How is the NVIDIA GPU support implemented?</h3>
+
+<p>The original approach we used in ComputeCpp to support NVIDIA platforms was to rely on the NVIDIA OpenCL 1.2 implementation and use our device compiler to emit PTX (the NVIDIA Intermediate Representation) instead of SPIR-V. This approach was enough to demonstrate SYCL running on different platforms using open standards, but we realised quickly that the capabilities of the OpenCL 1.2 support from NVIDIA were limited.</p>
+
+<p>The support for NVIDIA platforms we are adding to the DPC++ compiler is based directly on NVIDIA's CUDA™, rather than OpenCL. DPC++ uses a Plugin Interface (PI) to target different backends. Intel provides an OpenCL 2.2 plugin that enables DPC++ to run on OpenCL platforms, and we have implemented a plugin that can be selected at runtime (by setting the environment variable SYCL_BE=PI_CUDA).
+    <br>By using native CUDA, DPC++ does not need to rely on the OpenCL support from NVIDIA, enabling more features and with potentially better overall performance.
+</p>
+
+<p>
+Furthermore we have implemented several changes to the <code>libclc</code> library to add support for PTX builtins created from SPIR-V and this enables usage of SYCL builtins on NVIDIA GPUs.</p>
+<p>
+Since a SYCL for CUDA application is a native CUDA application, all existing tooling and libraries from the CUDA ecosystem will work with a SYCL application build using this back-end.
+</p>
+<h3>What can I use this project for?</h3>
+
+<p>This project enables you to target NVIDIA GPUs using SYCL code, without having to go through the OpenCL layer in the system. If you have a NVIDIA GPU, now you can run DPC++ on your system to compile SYCL applications. If you have an existing CUDA application, you can port it incrementally to SYCL using the CUDA support, and then run it on a platform that doesn't have CUDA. This enables developers to port their application quickly to other platforms.</p>
+<h3>How do I use the project?</h3>
+
+<p>There are instructions on the project README file explaining how to use the NVIDIA back-end for DPC++. These are easy to follow, requiring the use of some flags when compiling, and some code to set up your device selector to ensure the runtime knows what device to target. In particular the section "<a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/GetStartedGuide.md#build-dpc-toolchain-with-support-for-nvidia-cuda">Build SYCL toolchain with support for NVIDIA CUDA</a>" and the Clang compiler options have <a href="https://github.com/intel/llvm/blob/sycl/sycl/doc/GetStartedGuide.md#using-the-dpc-toolchain-on-cuda-platforms">specific instructions</a>.</p>
+
+<p>In SYCL a device selector is used to tell your target what device you want to run your code on. For NVIDIA devices your SYCL device selector needs to look something like this:</p>
+
+<pre><code>class CUDASelector : public cl::sycl::device_selector {
+   public:
+      int operator()(const cl::sycl::device &amp;Device) const override {
+         using namespace cl::sycl::info;
+
+         const std::string DeviceName = Device.get_info&lt;device::name&gt;();
+         const std::string DeviceVendor = Device.get_info&lt;device::vendor&gt;();
+
+         if (Device.is_gpu() &amp;&amp; (DeviceName.find("NVIDIA") != std::string::npos)) {
+            return 1;
+         };
+         return -1;
+      }
+};</code></pre>
+
+
+<h3>What is working and what is not?</h3>
+
+<p>This project has been tested with Ubuntu 18.04 using CUDA 10.1 on a Titan RTX GPU (compute capabilities 7.5). However, it should also work on other Linux versions with any NVIDIA GPU compatible with SM 5.0 or above.</p>
+
+<p>
+  At the moment, the compiled SYCL application will only be able to either target CUDA or OpenCL, not both at the same time. In order to build a SYCL application for the CUDA back-end, the flag nvptx64-nvidia-cuda-sycldevice is required, as shown below:
+</p>
+
+<pre><code>$ clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice  sycl-app.cpp -o sycl-app.exe</code></pre>
+
+<p>Then, when executing the application, the CUDA SYCL back-end must be selected at runtime:</p>
+
+<pre><code>$ SYCL_BE=PI_CUDA sycl-app.exe</code></pre>
+
+<p>This will be replaced later on once the PI interface is able to support multiple back-ends at the same time.</p>
+
+<p>We are also aware of some situations where the NVIDIA OpenCL headers create a conflict with the OpenCL headers required for using DPC++. The NVIDIA OpenCL headers are for an older version of OpenCL that is not supported by DPC++. Although the CMake configuration for DPC++ install its own headers, in some configurations, we have found that the NVIDIA OpenCL headers are still selected.</p>
+
+<p>Overall, the functionality provided matches what you can do today using the NVIDIA OpenCL implementation, but we are working on extensions to SYCL that will expose more capabilities from the underlying hardware.</p>
+<h3>What performance can I expect?</h3>
+
+<p>This initial release of the project has not been optimized, so performance may not be optimal in all circumstances.</p>
+
+<p>Currently the code generation doesn't apply any particular optimization passes, and the CUDA implementation of the SYCL specification in the Plugin Interface doesn't use any advanced CUDA features.</p>
+<h3>How can I get support for this project?</h3>
+
+<p>If you encounter an issue specifically related to NVIDIA GPU support, indicate that in your <a href="https://github.com/intel/llvm/issues">issue in the Intel/llvm repository</a>.</p>
+<h3>What are the future plans for this project?</h3>
+
+<p>The current focus is to implement as much functionality as possible so that developers can run a range of SYCL applications on NVIDIA GPU platforms. Once we are confident we have good coverage, we'll work with the community to identify performance bottlenecks that need to be addressed.</p>
+
+<p>Our aim is to enhance the experience for SYCL developers and increase the support of SYCL for devices built on the CUDA platform. The components open-sourced by Codeplay are reusable by other implementations, including ComputeCpp, so expect the ecosystem support for NVIDIA hardware to increase during 2020.</p>
+<h3>How can I contribute?</h3>
+
+<p>We are interested in seeing how your code performs on different NVIDIA GPUs to identify where performance bottlenecks are and what variations occur across different hardware models. If you would like to provide your own results please submit these through the Issue tracker on the <a href="https://github.com/intel/llvm/issues">Intel/llvm repository</a>.</p>
+
+<p>SYCL and SPIR are trademarks of the Khronos Group Inc. Nvidia and CUDA are registered trademark of NVIDIA Corporation. OpenCL and the OpenCL logo are trademarks of Apple Inc. used by permission by Khronos. Imagination Imagination Technologies is a registered trademark of Imagination Technologies Limited. Intel is a trademark of Intel Corporation in the U.S. and/or other countries. Linux is the registered trademark of Linus Torvalds in the U.S. and other countries.</p>

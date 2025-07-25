@@ -1,0 +1,73 @@
+---
+id: 36
+category: features
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "The Software Cache"
+redirect_from:
+  - /kb/36
+layout: products/offload/kb/view
+---
+<p>Offload&trade; will automatically uses a Software Cache on SPU to manage random reads and writes of data from from/to main memory locations. This cache allows for very quick migration of code to SPU, as usually when manually writing source code for SPU you will need to patch pointers within structures to be resident in local memory before they are used. In addition, it allows for a constant local store overhead which is ideal when you may not know the size of your datasets.
+</p>
+
+<p>
+From version 2.0.0 of Offload&trade;, there are two versions of the Software Cache available to developers.
+</p>
+
+<h1>Standard Software Cache</h1><p>The Standard Software Cache is implemented as 4-way set associative. There is no cache line replacement algorithm, and simply chooses a line ID in a linear fashion across all sets, unless the line has a prefetch pending, at which point it chooses another line. If all lines within a set are prefetching, it will wait on a line being available before immediately replacing it with new data.
+</p><p>
+The size of the Software Cache can be modified by changing the -cachesets=n command line option. Currently this will set the caches of all offload blocks within the translation unit to be 2^n. If n = 0 the Slim Cache, outlined below, is used. Each cache line is 128 bytes.
+</p><h3><strong>Performance</strong></h3><p>The following numbers do not include the time taken to actually perform the read or write, only the time taken for the cache system to perform it's lookups and return a valid SPU local store address.
+</p><p>
+<strong>Cache hit (for read)</strong>: 28 Cycles
+</p><p>
+<strong>Cache hit (for write)</strong>: 62 Cycles
+</p><p>
+<strong>Cache miss</strong>: <span class="escaped">6</span>00 Cycles (consisting of DMA transfer, may also require a cache writeback)
+</p><p>
+<strong>Cache line writeback:</strong> Expensive depending on cache modifications. If the whole line is modified a single DMA operation will occur to main memory. If only a subset of the line is modified, a series of atomic DMA operations are required. A DMA read of the latest main memory view of the cache line performed and the modifications are merged into that before being committed back to main memory.
+</p><p>
+<strong>Cache flush</strong>: Depends on size of cache.
+</p>
+
+
+
+
+
+<h1>Slim Software Cache</h1><p>The Slim Software Cache is enabled when the command line option -cachesets=n is set so n=0.
+</p><p>
+It is implemented as 4-way set addociative, with a single set. There is no cache line replacement algorithm, and simply chooses a line ID in a linear fasion, unless the line has a prefetch pending, at which point it chooses another line. If all lines within a set are prefetching, it will wait on a line being available before immediately replacing it with new data.
+</p><p>
+The size of the Software Cache cannot be modified, and is always simply 4 lines of 128 bytes each. Global registers are used to make this version of the cache as fast as possible, ideal for when Offload blocks have most of their data on Local Store and the cache is used infrequently.
+</p><h3><strong>Performance</strong></h3><p>The following numbers do not include the time taken to actually perform the read or write, only the time taken for the cache system to perform it's lookups and return a valid SPU local store address.
+</p><p>
+<strong>Cache hit (for read)</strong>: 20 Cycles
+</p><p>
+<strong>Cache hit (for write)</strong>: 50 Cycles
+</p><p>
+<strong>Cache miss</strong>: <span class="escaped">6</span>00 Cycles (consisting of DMA transfer, may also require a cache writeback)
+</p><p>
+<strong>Cache line writeback:</strong> Expensive depending on cache modifications. If the whole line is modified a single DMA operation will occur to main memory. If only a subset of the line is modified, a series of atomic DMA operations are required. A DMA read of the latest main memory view of the cache line performed and the modifications are merged into that before being committed back to main memory.
+</p><p>
+<strong>Cache flush</strong>: Depends on size of cache.
+</p>
+
+<h1>Issues</h1><p>PS3 Implementation:
+</p><p>
+
+</p>
+
+
+
+
+
+<p>
+<strong> </strong>
+</p><p>
+<strong> </strong>
+</p><p>
+<strong/>
+</p>
+
+

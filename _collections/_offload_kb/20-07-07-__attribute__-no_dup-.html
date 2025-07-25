@@ -1,0 +1,25 @@
+---
+id: 24
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__attribute__((no_dup))"
+redirect_from:
+  - /kb/24
+layout: products/offload/kb/view
+---
+<p>This attribute is used to force Offload&trade; not to duplicate the given method for SPU.
+</p>
+<pre><code>static int foo() __attribute__((no_dup));
+
+static void func()
+{
+	offloadThread_t handle = __offload()
+	{
+		int bar = foo(); // will fail at compile time, as foo is no allowed to be duplicated
+	};
+}
+</code></pre><p>It is useful to ban methods that you do not want any programmers to ever call from the SPU.
+</p>
+
+

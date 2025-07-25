@@ -1,0 +1,227 @@
+---
+layout: page
+nav_style: fancy
+title: Careers
+permalink: /company/careers/
+stylesheets:
+  - /assets/css/pages/company/careers/careers.css
+redirect_from:
+  - /jobs/
+  - /careers/
+  - /company/jobs.html
+---
+
+<!-- Section: Splash -->
+<section id="splash" class="splash">
+    <div class="splash-bg-loader" data-fade-to="0.4">
+        <video muted="muted" autoplay loop>
+            <source src="{{ '/assets/images/company/careers/splash.mp4' | relative_url }}" type="video/mp4">
+        </video>
+    </div>
+    <div class="wrapper">
+        <div>
+            <div>
+                <h1>Careers</h1>
+                <h2>Work alongside a talented team of engineers developing ground-breaking technologies, defining
+                    standards
+                    and working with some of the world's biggest companies.</h2>
+                <a class="button image-button call-to-action-button" href="#career-list">
+                    <i class="material-icons">outlined_flag</i>View Current Careers
+                </a>
+            </div>
+        </div>
+        <div>
+            <div id="splash-img" class="layered-image in-view-fade-in">
+                <img src="{{ '/assets/images/company/careers/splash-icon-2.png' | relative_url }}" alt="Splash Icon 2" />
+                <img src="{{ '/assets/images/company/careers/splash-icon-3.png' | relative_url }}" alt="Splash Icon 3" />
+                <img src="{{ '/assets/images/company/careers/splash-icon-4.png' | relative_url }}" alt="Splash Icon 4" />
+                <img src="{{ '/assets/images/company/careers/splash-icon-1.png' | relative_url }}" alt="Splash Icon 1" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Message from the CEO -->
+<section id="message-from-ceo" class="reduce-top-header">
+    <div class="wrapper">
+        <iframe data-requiresCookieAcceptance="true"
+                data-requiresCookieAcceptanceSwap="src,https://www.youtube.com/embed/Gb0Eq2Q8zoc"
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+    </div>
+</section>
+
+<!-- Section: Why Work With Us -->
+<section id="why-work-with-us">
+    <div class="wrapper">
+        <header>
+            <h1>Work with Us?</h1>
+            <h2>Build your career with Codeplay and become an industry expert.</h2>
+        </header>
+        <div class="columns three image-block-style">
+            <div>
+                <div>
+                    <i class="material-icons">card_travel</i>
+                </div>
+                <div>
+                    <h1>Industry Expert</h1>
+                    <p>After a few years of working at Codeplay, you will have the skills and experience to be
+                        classed as an expert in your field. We have created a diverse knowledge sharing system
+                        that allows our team to share information, ideas and knowledge to other members of the
+                        team that are interested, providing a unique chance to further develop skills.</p>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <i class="material-icons">self_improvement</i>
+                </div>
+                <div>
+                    <h1>Travel Opportunities</h1>
+                    <p>Working at Codeplay will provide you with the unique opportunity to represent the company
+                        worldwide. We regularly travel to America and many European countries to meet clients,
+                        set up new partnerships, and share presentations of our technology.</p>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <i class="material-icons">design_services</i>
+                </div>
+                <div>
+                    <h1>Shape the Industry</h1>
+                    <p>Codeplay work alongside some of the biggest companies in the industry. We also sit on a number
+                        of standards bodies that define the new standards for future technologies. Working with us,
+                        you'll be helping to shape the future of our industry!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Equal Opportunities Employer -->
+<section id="equal-opportunities-employer" class="reduce-top-header">
+    <div>
+        <div class="wrapper">
+            <div>
+                <div class="columns two">
+                    <div>
+                        <header>
+                            <h1>Codeplay Is Proud To Be An <b>Equal Opportunities</b> Employer</h1>
+                        </header>
+                        <p>Codeplay is proud to be an Equal Opportunities employer. We celebrate and value diversity. We
+                            are committed to creating an inclusive environment for all employees, regardless of race, colour,
+                            gender, religion, national origin, ancestry, citizenship, disability, age, sexual orientation or
+                            any other characteristic protected by law. All employment is decided on the basis of qualifications,
+                            merit and business need and we strongly encourage applicants from all backgrounds and walks of
+                            life. We are committed to providing flexible working options such as
+                            part-time/compressed hours/timeshifting. If you have a disability or additional need that
+                            requires accommodation, just let us know.</p>
+                        <a class="button image-button" href="https://www.techtalentcharter.co.uk/" target="_blank">
+                            <i class="material-icons">link</i>
+                            Visit TechTalent.co.uk
+                        </a>
+                    </div>
+                    <div>
+                        <img src="{{ '/assets/images/company/careers/tech-talent-banner.png' | relative_url }}" />
+                        <p class="info">We're very proud to be a signatory to the TechTalentCharter and we'll
+                            be working on our continued commitment to D&I both in our organisation and our
+                            recruitment processes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section: Career List -->
+<section id="career-list" class="reduce-top-header">
+    <div class="wrapper">
+        <header>
+            <h1>Available Positions</h1>
+        </header>
+
+        <div class="notice recruitment-notice">
+            <h1>Notice to Recruitment Agents</h1>
+            <p>We only accept direct applications from candidates. If you send us a candidates CV, this does
+                <b>NOT</b> constitute terms of business with us.</p>
+        </div>
+
+        <div class="columns two">
+            <div>
+                <h2>Permanent</h2>
+                {%- assign careers = site.careers | where: "type", "permanent" -%}
+                {%- assign careers = careers | where: "hidden", "false" -%}
+                {%- assign careers = careers | where: "closed", "false" -%}
+                {%- assign careers = careers | reverse -%}
+                {%- assign collectionLength = careers | size -%}
+
+                {%- if collectionLength == 0 -%}
+                <b>No Careers Listings Available</b>
+                {%- endif -%}
+
+                <ol>
+                    {%- for career in careers -%}
+                    <li>
+                        <div>
+                            <a href="{{career.url}}">
+                                <h3>{{career.title}}</h3>
+                                <p>{{career.description}}</p>
+                            </a>
+                        </div>
+                    </li>
+                    {%- endfor -%}
+                </ol>
+            </div>
+            <div>
+                <h2>Internship</h2>
+                {%- assign careers = site.careers | where: "type", "internship" -%}
+                {%- assign careers = careers | where: "hidden", "false" -%}
+                {%- assign careers = careers | where: "closed", "false" -%}
+                {%- assign sorted = careers | reverse -%}
+                {%- assign collectionLength = careers | size -%}
+
+                {%- if collectionLength == 0 -%}
+                <b>No Careers Listings Available</b>
+                {%- endif -%}
+
+                <ol>
+                    {%- for career in sorted -%}
+                    <li>
+                        <div>
+                            <a href="{{career.url}}">
+                                <h3>{{career.title}}</h3>
+                                <p>{{career.description}}</p>
+                            </a>
+                        </div>
+                    </li>
+                    {%- endfor -%}
+                </ol>
+            </div>
+            <div>
+                <h2>Studentship</h2>
+                {%- assign careers = site.careers | where: "type", "studentship" -%}
+                {%- assign careers = careers | where: "hidden", "false" -%}
+                {%- assign careers = careers | where: "closed", "false" -%}
+                {%- assign sorted = careers | reverse -%}
+                {%- assign collectionLength = careers | size -%}
+
+                {%- if collectionLength == 0 -%}
+                <b>No Careers Listings Available</b>
+                {%- endif -%}
+
+                <ol>
+                    {%- for career in sorted -%}
+                    <li>
+                        <div>
+                            <a href="{{career.url}}">
+                                <h3>{{career.title}}</h3>
+                                <p>{{career.description}}</p>
+                            </a>
+                        </div>
+                    </li>
+                    {%- endfor -%}
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>

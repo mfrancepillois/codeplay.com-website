@@ -1,0 +1,36 @@
+---
+id: 121
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Reserved SDK Specifics"
+redirect_from:
+  - /kb/121
+layout: products/offload/kb/view
+---
+<p>Software cache on SPU uses DMA TAG 5 for PUT, 6 for GET, and 7-10 for GET prefetching.
+</p>
+
+<p>
+<strong>SIEVE_SERVICE_PORT_SIEVETHREADS</strong>
+</p><p>
+<strong/>
+</p><p>
+Port 2 of SPURS attached event queue is reserved for outer call and SPU printf functionality within __offload threads.
+</p>
+
+<p>
+By default, the following TAGS are used by duplicated PS3SDK features:
+</p>
+<pre><code>#define __SIEVE_CELL_SYNC_MUTEX_DEFAULT_TAG		11
+#define __SIEVE_CELL_SYNC_BARRIER_DEFAULT_TAG		12
+#define __SIEVE_CELL_SYNC_QUEUE_DEFAULT_TAG		 13
+#define __SIEVE_CELL_SYNC_RWM_DEFAULT_TAG		14
+</code></pre>
+
+
+<p>
+The above tags can be modified by predefining the macros before the inclusion of liboffload.
+</p>
+
+

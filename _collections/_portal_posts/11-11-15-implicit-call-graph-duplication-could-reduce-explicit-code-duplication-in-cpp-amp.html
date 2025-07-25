@@ -1,0 +1,54 @@
+---
+id: 66
+url: implicit+call+graph
+user_id: 73
+date: 2011-11-15T17:08:58.3600Z
+category: news
+title: "Implicit call-graph duplication could reduce explicit code duplication in C++ AMP"
+showOnFrontPage: 0
+views: 323
+tags:
+redirect_from_utf8:
+  - /portal/implicit\+call\+graph
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Since my previous blog about C++ AMP and how it would benefit from call-graph duplication implemented in Offload C++, Microsoft have released another <a href="http://blogs.msdn.com/b/nativeconcurrency/archive/2011/10/26/binomial-option-using-c-amp.aspx">C++ AMP demo</a> that highlights an important pattern of current multicore software: <strong>separate implementation of the same functionality for different processors</strong>. The following 2 functions (one for CPU and one for GPU) taken from the mentioned MS blog implement virtually the same functionality except that the GPU implementation is annotated with restrict(direct3d) for overloading and it calls a GPU specific, high-performance equivalent of exp.
+</p>
+<pre>//----------------------------------------------------------------------------
+// GPU implementation - Call value at period t : V(t) = S(t) - X
+//----------------------------------------------------------------------------
+float expiry_call_value(float s, float x, float vdt, int t) restrict(direct3d)
+{
+	float d = s * direct3d::fast_exp(vdt * (2.0f * t - NUM_STEPS)) - x;
+	return (d &gt; 0) ? d : 0;
+}
+
+//----------------------------------------------------------------------------
+// CPU implementation - Call value at period t : V(t) = S(t) - X
+//----------------------------------------------------------------------------
+float expiry_call_value(float s, float x, float vdt, int t)
+{
+	float d = s * ::exp(vdt * (2.0f * t - NUM_STEPS)) - x;
+	return (d &gt; 0) ? d : 0.0f;
+}
+</pre>
+<p>To make the similarity between GPU and CPU function even more obvious the GPU version could be refactored to have the same body as the CPU version by overloading ::exp with a GPU version:
+</p>
+<pre>static inline float exp(float arg) restrict(direct3d)  {
+      return direct3d::fast_exp(arg); //just calls the fast GPU version
+}
+</pre>
+<p>Now the GPU function is exactly the same as the CPU function except for the <strong>restrict(direct3d)</strong> directive:
+</p>
+<pre>float expiry_call_value(float s, float x, float vdt, int t)  restrict(direct3d)
+{
+	float d = s * ::exp(vdt * (2.0f * t - NUM_STEPS)) - x;//resolves to the GPU version because the call is inside an &quot;restrict(direct3d&quot; context.
+	return (d &gt; 0) ? d : 0;
+}
+</pre>
+<p>The problem is having to maintain separate libraries with the same functionality for CPU and GPU is leading to the usual well-known problems with code duplication.   Call-graph duplication could address this problem in C++AMP by not requiring the annotation of library functions for accelerators (such as the GPU) using &quot;restrict(direct3d)&quot;. Upon calling a normal function from inside a &quot;restrict(direct3d)&quot; context the compiler generates a &quot;restrict(directed)&quot; annotated copy of that function and all functions it calls directly and indirectly, hence the name call-graph duplication. This allows CPU and GPU to share the same source base and tweaking performance by adding fast GPU overloads if required.   Granted, the above code is very simple and the code duplication could in this example be achieved by using macros. However, not only do macros limit the debuggability of the code they generate, the power of call-graph duplication really shows on large, very complex call-graphs involving argument pointers to different memory types (See <a href="{{ '/kb/123' | relative_url }}">issues with pointer types</a>), where the duplication is driven behind the scenes by the (pointer) types of the arguments, something that could not be done by macros because they are not part of the C++ type system.  Call-graph duplication is part of the <a href="{{ '/public/uploaded/public/offloadlanguageextensions.pdf' | relative_url }}">Offload C++ specification</a> implemented by <a href="http://offload.codeplay.com/games/">Codeplay's Offload compiler</a> which was used to boost performance of AI and visual effects in the AAA PS3 title <a href="http://nascarthegame.com/">NASCAR The Game</a>.
+</p>
+
+

@@ -1,0 +1,75 @@
+---
+title: "SYCL Highlights at the SC20 Conference"
+date: 2020-12-08T19:05:17.413000+00:00
+category: blogs
+layout: portal/portal-article-view
+user_id: 840
+thumbnail: /assets/images/portal/article-images/SC20.png
+---
+
+Before the <a href="https://sc20.supercomputing.org/">SuperComputing Conference (SC20)</a> in November we talked about all the sessions that Codeplay were going to be involved in and how the SYCL open standard now reaches across all sections of the conference agenda (<a href="https://www.codeplay.com/portal/news/2020/11/05/codeplay-supporting-sycl-at-supercomputing-2020.html">see Codeplay's pre-conference blog post</a>). This post will cover the main talking points and link to some of the interesting papers that were published during the conference.
+<p>If you are new to SYCL, it is an open standard specification from the Khronos® Group defining a single-source C++ programming layer that allows developers to leverage C++ features on a range of heterogeneous devices. A heterogeneous device is a platform with one or more CPUs with additional acceleration devices like GPUs, DSPs, FPGAs and AI/ML chips. SYCL takes advantage of heterogeneous hardware architectures that enable parallel execution to provide a foundation for creating efficient, portable, and reusable middleware libraries and accelerated applications. If you want to find out more about SYCL, the <a href="https://sycl.tech">SYCL.tech community website</a> is a good place to start.</p>
+<p>The conference started as usual with the tutorials, these are expert led half-day or full-day sessions. This year the <a href="https://sc20.supercomputing.org/presentation/?id=tut115&amp;sess=sess247">HPC Application Development Using C++ and SYCL</a> tutorial was presented by members from all the SYCL implementations, and offered a great introduction to parallel programming with SYCL. Despite running the turorials online, there were some great positives such as more attendees from all across the world being able to join in meaning that more SYCL experts were available to contribute with all the great questions and answers.</p>
+<p>If you want to watch the tutorial it's still possible to register for the on-demand recording of the SYCL tutorial through the <a href="https://sc20.supercomputing.org/">SC20 website</a>.</p>
+<h2>oneAPI Developer Summit</h2>
+<p>Intel's <a href="https://www.oneapi.com/">oneAPI</a> Gold launch was announced as at SC20. oneAPI is a cross-industry, open, standards-based unified programming model being spearheaded by Intel and at the heart of it is SYCL. oneAPI defines a set of frameworks and libraries that can work seamlessly with SYCL to deliver portable performance. Alongside this launch Intel organized the <a href="https://www.oneapi.com/events/devcon2020/">oneAPI Developer Summit</a> with some interesting sessions from companies working on SYCL applications, research and libraries. Codeplay's CEO Andrew Richards presented during the keynote session to introduce the SYCL ecosystem and helped to set the scene for the conference. You can <a href="https://www.oneapi.com/videos/building-an-open-ai-hpc-ecosystem/">watch his presentation here</a>.</p>
+<p>All the presentations are worth viewing (no registration required), but here are a few that demonstrated some really interesting topics:</p>
+<p>
+  <i><strong><br></strong></i></p><p><i><strong>SYCL Developer Productivity</strong></i>
+</p>
+<p>
+  <a href="https://oneapi.com/videos/boosting-productivity-of-decision-making-with-oneapi-based-heterogeneous-schedulers-on-socs/">"Boosting Productivity of Decision-making with oneAPI-based Heterogeneous Schedulers on SoCs"</a> offers some insight into the how productive developers are when using OpenCL and SYCL, using recognized statistical measurements. SYCL does offer some significant benefits to developer productivity compared to OpenCL.</p>
+<p>The slide below summarizes the results that the presenters measured.</p>
+<p>
+
+
+
+</p>
+<img src="{{ '/assets/images/portal/article-images/sc20-img1.png' | relative_url }}" width="510" height="286"><br><p><a href="https://www.oneapi.com/oneapi/wp-content/uploads/sites/74/DevCon20_DConstantinescu_TechTalk3Day1_Slides.pdf">Reference Link</a>&nbsp;
+</p>
+
+<p>
+  <i><strong><br></strong></i></p><p><i><strong>Accelerating Data Processing with SYCL</strong></i>
+</p>
+<p>Attila Krasznahorkay, who works at CERN, presented on how his team has been using SYCL to improve the performance of data processing from the Large Hadron Collider, utilizing GPUs instead of CPUs. Watch the video of the presentation <a href="https://www.oneapi.com/videos/atlas-charged-particle-seed-finding-with-dpc/">"ATLAS Charged Particle Seed Finding with DPC++"</a> to find out more about this work. The prototype that has been developed shows how CERN will be able to use GPUs to vastly accelerate execution times for their data processing code.</p>
+
+<p>
+  <i><strong><br></strong></i></p><p><i><strong>Migrating From CUDA to SYCL</strong></i>
+</p>
+<p>If you are interested in migrating your CUDA codebase to SYCL, Steffen Christgau's presentation <a href="https://www.oneapi.com/videos/gaining-support-for-multiple-device-by-migrating-a-cuda-code-to-oneapi-experiences-with-the-intel-dpc-compatibility-tool/">"Experiences with the DPC++ Compatibility Tool"</a> will be very useful. Steffen talks through the experience he had in using this tool to take a lot of the heavy lifting out of porting code from CUDA to SYCL. This code is used by the German Research Centre for tsunami simulation and crucially the execution demonstrates competitive performance when comparing the CUDA code execution with the SYCL code on the same Nvidia GPU.</p>
+<p>
+
+
+
+</p>
+<img src="{{ '/assets/images/portal/article-images/sc20-img2.png' | relative_url }}"><p><a href="https://www.oneapi.com/oneapi/wp-content/uploads/sites/74/DevCon20_SChristgau_MKaust_LightningTalk3Day1_Slides.pdf">Reference Link</a>&nbsp;
+</p>
+<h2>SC20 Workshops</h2>
+<p>There are so many workshops at the SuperComputing conference and it's impossible to cover everything but here are some of the SYCL relevant sessions and papers.</p>
+<p>
+  <strong>Exascale a Big Topic at P3HPC</strong>
+</p>
+<p>Exascale supercomputers are coming soon, but how are developers and researchers going to make sure they can maximize their usage of them? "<a href="https://conferences.computer.org/scwpub/pdfs/P3HPC2020-7JoPMqLDMtHxH13RaK79h8/108800a045/108800a045.pdf">Evaluating the Performance and Portability of Contemporary SYCL Implementations</a>," authored by members of the Oak Ridge National Lab, presented the results of running the SYCL-Bench benchmarks with various SYCL implementations. These results showed that developers do have several well performing implementations to choose from and further reinforced SYCL as a programming choice for developers using the next generation of GPU-based supercomputers. Mehdi Goli from Codeplay presented the paper "<a href="https://conferences.computer.org/scwpub/pdfs/P3HPC2020-7JoPMqLDMtHxH13RaK79h8/108800a025/108800a025.pdf">Towards Cross-Platform Performance Portability of DNN Models using SYCL"</a> that demonstrates it is possible to build complex libraries that can deliver a simple interface for deep learning whilst retaining performance and portability. There is also interest from Europe in exascale computing too, with Tom Deakin from the University of Bristol presenting his results of running a common set of benchmarks across many programming models and how SYCL is crucial in <a href="https://conferences.computer.org/scwpub/pdfs/P3HPC2020-7JoPMqLDMtHxH13RaK79h8/108800a001/108800a001.pdf">Tracking Performance Portability on the Yellow Brick Road to Exascale</a>.</p>
+<p>
+  <span>
+    <strong>SYCL Helping Space Exploration</strong>
+    <br>
+  </span>
+</p>
+<p>
+  <span>We also discovered within NASA there is also interest in SYCL, with Aaron Walden presenting a paper on <a href="https://waccpd.org/wp-content/uploads/2020/10/ws_waccpd104s2-file1.pdf">Performance and Portability of a Linear Solver Across Emerging Architectures</a> at the WACCPD workshop. Aaron found that SYCL performance on a Nvidia GPU closely matches that of the CUDA implementation of the same code using the <a href="https://www.codeplay.com/portal/news/2020/02/03/codeplay-contribution-to-dpcpp-brings-sycl-support-for-nvidia-gpus.html">Codeplay implementation of Nvidia support for DPC++</a>.</span>
+</p>
+<h2>
+  <span>SYCL and ISO C++ Birds Of a Feather</span>
+</h2>
+<p>This year the SYCL and ISO C++ BoFs were special, being combined and brought into a virtual setting. This did, like for many other sessions, give the organizers an opportunity to include experts who might not normally be able to travel to the conference. In particular the panel of guests included Bjarne Stroustup the creator of the C++ programming language.</p>
+<p>One of the main themes was whether portable code and performance combined is possible with SYCL. The panel discussed that, while the same SYCL code can execute across hardware architectures and perform well, hardware architectures that differ significantly will require their SYCL code to be optimized to achieve the best performance. However SYCL will get code to a point of acceptable performance, and the changes to optimize tend to be minor, a process that is well understood and expected within all other C++ environments. What's also important is that the SYCL standard is defined in a way that helps to ensure consistent behavior between implementations and that all the compilers are compliant with the standard. Tom Deakin, one of the panelists, published a paper in this area and says that SYCL does most of the work but there may be some things that need to be tweaked.</p>
+<p>Another subject that came up was from developers seeking assurances for the continued maintenance and support of the SYCL compilers that are being used today. The panel emphasized the importance for developers to have choices when using SYCL, and at the moment there are three major implementations, adding that the implementations must also grow into sustainable projects supported by a larger community.</p>
+<p>The panel also reviewed how SYCL and C++ complement each other, concluding that they are evolving in the same direction with ISO C++ adopting many of the concepts from heterogeneous programming. In practice some ideas are already being refined for heterogeneous computing in SYCL and migrated to ISO C++. Also because SYCL uses standard C++ code it makes it easier to integrate some of the concepts into ISO C++. One of the final points from Bjarne was how C++ needs specialists to help drive ISO C++ in the right direction.</p>
+<p>
+  <br>
+</p>
+<p>In conclusion, SC20 was absolutely packed and the discussions and debates about SYCL in HPC were extremely interesting, especially as we move towards exascale computing.</p>
+<p>
+  <br>
+</p>

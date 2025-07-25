@@ -1,0 +1,31 @@
+---
+id: 54
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "offloadShutdown"
+redirect_from:
+  - /kb/54
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p>
+<pre><code>int offloadShutdown( void );
+</code></pre>
+
+
+<p>
+This must be called at process destruction, or just before the dropping of any SPURS instances provided to the runtime. If offloadSetSpurs is not used, offloadShutdown is automatically called at process exit.
+</p>
+
+<p>
+<div class="ps3"></p><p>
+Content has been removed.
+</div>
+</p>
+
+<p>
+a non-zero return value indicates error.
+</p>
+
+

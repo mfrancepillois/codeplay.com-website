@@ -1,0 +1,25 @@
+---
+id: 97
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Offload1203"
+redirect_from:
+  - /kb/97
+layout: products/offload/kb/view
+---
+<h3>This virtual call or pointer call may fail due to a missing domain. The __offload block declared at % must have a domain attached to be able to offload functions, for example __offload [&amp; myfunction] { ....</h3><p>This warning is issued if a domain declaration is missing on an __offload block .
+</p>
+<pre><code>int (* ptr)();
+
+void test()
+{
+	__offload  //missing domain
+	{
+		ptr(); // call that requires domain
+	}
+}
+</code></pre><p>Avoid this warning by adding an appropriate domain (containing the function that is called through ptr) to the __offload block.
+</p>
+
+

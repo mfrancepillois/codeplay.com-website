@@ -1,0 +1,21 @@
+---
+id: 71
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "Overview"
+redirect_from:
+  - /kb/71
+layout: products/offload/kb/view
+---
+<p><strong>Include:</strong> &lt;liboffload&gt;
+</p><p>
+Within liboffload there are various helper classes for managing data. Provided within the data locality library is:
+</p><ul>
+<li> A Local template class, which can help if you have a large data structure that is used often and want to place that in local store of SPU when running on PS3. </li>
+<li> A ReadArray class, when you have an array you want to bring to local store seamlessly for reading.</li>
+<li> A WriteArray class, when you are writing to an array which is then committed back to main memory.</li>
+<li> A ReadWriteArray for both reading and writing arrays of data.</li>
+</ul>
+
+

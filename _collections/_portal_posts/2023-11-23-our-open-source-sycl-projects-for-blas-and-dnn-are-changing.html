@@ -1,0 +1,19 @@
+---
+category: blogs
+date: '2023-12-07T14:22:10.527044'
+hidden: false
+layout: portal/portal-article-view
+redirect_from: []
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+title: Our Open Source SYCL Projects for BLAS and DNN are Changing
+user_id: 1
+---
+
+
+<p>In a technology landscape that evolves quickly, developers consistently require better and more efficient application performance. Being locked to one hardware manufacturer by proprietary code limits choice, and leaves developers and organisations unable to leverage the latest advancements in a diverse field of hardware. At Codeplay, we are committed to expanding the open ecosystems for accelerated computing, with the SYCL open standard and oneAPI programming model simplifying the process of targeting multiple hardware architectures and bringing us closer to true code portability. As part of our ongoing commitment to this vision, we are renaming several libraries. <br/></p>
+<p style="text-align: left;"><a href="https://github.com/codeplaysoftware/portBLAS">SYCL-BLAS</a><a href="https://github.com/codeplaysoftware/sycl-blas" target="_blank"></a><a href="https://github.com/codeplaysoftware/portBLAS" target="_blank">,</a> an ongoing research collaboration with the High-Performance Computing &amp; Architectures (HPCA) group, will become portBLAS. This project will continue to implement Basic Linear Algebra Subroutines using SYCL. Using C++ meta programming, portBLAS is able to provide a decent generalized routine implementation for the linear algebra operations that can be tailored to various devices without modifying the actual routine implementation. It will continue its efforts to improve performance portability for these dense BLAS routine implementations targeting major vendor platforms including, but not limited to, NVIDIA, AMD and Intel GPUs. portBLAS currently provides support for accessing Tensor Cores on the latest NVIDIA GPUs for performing GEMM operation using DPC++ joint_matrix api as well, and it would strive to extend this support over to similar hardware units from Intel and AMD alike in future.  </p>
+<p><a href="https://github.com/codeplaysoftware/portDNN">SYCL-DNN</a><a href="https://github.com/codeplaysoftware/SYCL-DNN" target="_blank"></a>, a library for implementing neural network algorithms with SYCL, will become portDNN. The project is an open-source single-source C++ library that supports numerous Deep Learning primitives such as Convolution, Pooling and BatchNorm. PortDNN is written using the heterogenous programming model SYCL which enables its algorithms to be portable across different devices and architectures. Additionally, using C++ meta-programming portDNN is able to tailor its primitives to various target devices in order to get comparable performance against native Deep Learning Libraries. </p>
+<p style="text-align: left;">This library renaming emphasises our commitment to code portability, and to expanding open ecosystems - while also now matching the oneAPI backend naming standard. Codeplay will continue to maintain and develop each of these projects, and we encourage you to get involved by engaging with the repos and giving your own feedback.</p><p style="text-align: left;">You can find these libraries at,</p>
+<p style="text-align: center;"><a href="https://github.com/codeplaysoftware/portBLAS">portBLAS</a> </p>
+<p style="text-align: center;"><a href="https://github.com/codeplaysoftware/portDNN">portDNN</a></p>
+

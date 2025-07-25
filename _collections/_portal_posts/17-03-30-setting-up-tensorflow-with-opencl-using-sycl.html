@@ -1,0 +1,312 @@
+---
+id: 251
+url: 03-30-17-setting-up-tensorflow-with-opencl-using-sycl
+user_id: 497
+date: 2017-03-30T11:53:18.7200Z
+category: blogs
+title: "Setting Up TensorFlow With OpenCL Using SYCL"
+showOnFrontPage: 0
+views: 0
+tags:
+redirect_from:
+  - /portal/03-30-17-setting-up-tensorflow-with-opencl-using-sycl
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+<p style="background-color: red; color: white; padding: 2rem;">
+This blog post is out of date, a guide to using TensorFlow with ComputeCpp  is available <a href="https://developer.codeplay.com/computecppce/latest/getting-started-with-tensorflow"> on our website here</a> that explains how to get set up and start using SYCL.
+</p>
+<h3>Intro</h3>
+<p>This short post aims to guide through set-up process for TensorFlow with OpenCL support. It’s a “copy-paste” type of post. There is nothing ground breaking in it, all the instructions can be found across other websites / forums.
+</p>
+<p>The aim was to put all relevant information in one place which should make it more convenient/easier to go through the set-up process.<br><br></p>
+
+<h3>Requirements<br></h3><br><ul><li>ComputeCpp CE 0.1.2
+</li><li>Python 2.7
+</li><li>Ubuntu 14.04.05 LTS Headless Server
+</li><li>AMD R9 Nano GPU</li></ul><br>
+
+
+<h3>Dependencies</h3>
+<p>The assumption is that you have a vanilla server with 14.04.05 LTS Ubuntu64 installed.
+</p>
+<p>Install Ubuntu kernel 3.19.0-79-generic using:</p>
+
+<pre><code>$ sudo apt-get install linux-image-3.19.0-79-generic linux-image-extra-3.19.0-79-generic linux-headers-3.19.0-79-generic
+$ sudo apt-get remove linux-image-4.2.0-42-generic
+$ sudo update-grub
+$ sudo reboot</code></pre>
+
+
+<p>Install Git, LLVM and Build Essential using:</p><br>
+<pre><code>$ sudo apt-get install build-essential git llvm</code></pre>
+
+
+<p>Install JDK8 &amp; Bazel using:</p>
+<pre><code>$ sudo add-apt-repository ppa:webupd8team/java
+$ sudo apt-get update
+$ sudo apt-get install oracle-java8-installer
+$ echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+$ curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+$ sudo apt-get update &amp;&amp; sudo apt-get install bazel
+$ sudo apt-get upgrade bazel</code></pre>
+
+
+
+<p>Install the AMD OpenCL 1.2 headers using:</p>
+<pre><code>$ sudo apt-get install ocl-icd-opencl-dev opencl-headers
+$ wget --referer=http://support.amd.com https://www2.ati.com/drivers/linux/fglrx_15.302-0ubuntu1_amd64_ub_14.01.deb
+$ wget --referer=http://support.amd.com https://www2.ati.com/drivers/linux/fglrx-core_15.302-0ubuntu1_amd64_ub_14.01.deb
+$ sudo dpkg -i fglrx-core_15.302-0ubuntu1_amd64_ub_14.01.deb fglrx_15.302-0ubuntu1_amd64_ub_14.01.deb
+$ sudo adduser $(whoami) video
+$ sudo reboot</code></pre>
+
+
+
+<p>Install ComputeCpp CE 0.1.2:</p>
+<p>Visit <a href="https://computecpp.codeplay.com">https://computecpp.codeplay.com</a>, register and download Ubuntu 14.04 release, unzip and copy the content – bin, include and lib are essential – to /usr/local/computecpp ( you will need sudo to do it )</p><br>
+
+
+<p>Install Numpty using:</p>
+<pre><code>$ sudo apt-get install python-numpy python-dev python-wheel python-mock python-psutil
+$ sudo pip install --upgrade pip
+$ sudo pip install py-cpuinfo portpicker numpy
+$ sudo pip install --upgrade scipy</code></pre>
+
+
+<h3>Set up</h3>
+<pre><code>$ export TF_NEED_OPENCL=1
+$ export HOST_CXX_COMPILER=/usr/bin/g++-4.8
+$ export HOST_C_COMPILER=/usr/bin/gcc-4.8
+$ export COMPUTECPP_TOOLKIT_PATH=/usr/local/computecpp
+$ export COMPUTE=:0</code></pre>
+
+
+
+<p>You might consider adding the above to the ~/.bashrc and apply them to the current terminal session by:</p>
+<pre><code>$ . ~/.bashrc</code></pre>
+
+
+<br><h3>Verification</h3>
+<p>At this point you should be able to verify your set up.</p>
+<pre><code>$ clinfo</code></pre>
+
+
+
+
+<p>Should have returned something along these lines:</p><br>
+<pre><code>Number of platforms: 1
+Platform Profile: FULL_PROFILE
+Platform Version: OpenCL 2.0 AMD-APP (1912.5)
+Platform Name: AMD Accelerated Parallel Processing
+Platform Vendor: Advanced Micro Devices, Inc.
+Platform Extensions: cl_khr_icd cl_amd_event_callback cl_amd_offline_devices
+
+Platform Name: AMD Accelerated Parallel Processing
+Number of devices: 2
+Device Vendor ID: 1002h
+Board name:
+Device Topology: PCI[ B#1, D#0, F#0 ]
+Max compute units: 64
+Max work items dimensions: 3
+Max work items[0]: 256
+Max work items[1]: 256
+Max work items[2]: 256
+Max work group size: 256
+Preferred vector width char: 4
+Preferred vector width short: 2
+Preferred vector width int: 1
+Preferred vector width long: 1
+Preferred vector width float: 1
+Preferred vector width double: 1
+Native vector width char: 4
+Native vector width short: 2
+Native vector width int: 1
+Native vector width long: 1
+Native vector width float: 1
+Native vector width double: 1
+Max clock frequency: 1000Mhz
+Address bits: 64
+Max memory allocation: 3002336256
+Image support: Yes
+Max number of images read arguments: 128
+Max number of images write arguments: 64
+Max image 2D width: 16384
+Max image 2D height: 16384
+Max image 3D width: 2048
+Max image 3D height: 2048
+Max image 3D depth: 2048
+Max samplers within kernel: 16
+Max size of kernel argument: 1024
+Alignment (bits) of base address: 2048
+Minimum alignment (bytes) for any dataSingle precision floating point capability
+Denorms: No
+Quiet NaNs: Yes
+Round to nearest even: Yes
+Round to zero: Yes
+Round to +ve and infinity: Yes
+IEEE754-2008 fused multiply-add: Yes
+Cache Cache line size: 64
+Cache size: 16384
+Global memory size: 4242251136
+Constant buffer size: 65536
+Max number of constant args: 8
+Local memory Local memory size: 32768
+Max pipe arguments: 16
+Max pipe active reservations: 16
+Max pipe packet size: 3002336256
+Max global variable size: 2702102528
+Max global variable preferred total size: 4242251136
+Max read/write image args: 64
+Max on device events: 1024
+Queue on device max size: 8388608
+Max on device queues: 1
+Queue on device preferred size: 262144
+SVM capabilities:
+Coarse grain buffer: Yes
+Fine grain buffer: Yes
+Fine grain system: No
+Atomics: No
+Preferred platform atomic alignment: 0
+Preferred global atomic alignment: 0
+Preferred local atomic alignment: 0
+Kernel Preferred work group size multiple: 64
+Error correction support: 0
+Unified memory for Host and Device: 0
+Profiling timer resolution: 1
+Device endianess: Little
+Available: Yes
+Compiler available: Yes
+Execution capabilities:
+Execute OpenCL kernels: Yes
+Execute native function: No
+Queue on Host properties:
+Out-of-Order: No
+Profiling : Yes
+Queue on Device properties:
+Out-of-Order: Yes
+Profiling : Yes
+Platform ID: 0x7f8a310c4a18
+Name: Fiji
+Vendor: Advanced Micro Devices, Inc.
+Device OpenCL C version: OpenCL C 2.0
+Driver version: 1912.5 (VM)
+Profile: FULL_PROFILE
+Version: OpenCL 2.0 AMD-APP (1912.5)
+Extensions: cl_khr_fp64 cl_amd_fp64 cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_int64_base_atomics cl_khr_int64_extended_atomics cl_khr_3d_image_writes cl_khr_byte_addressable_store cl_khr_gl_sharing cl_khr_gl_depth_images cl_ext_atomic_counters_32 cl_amd_device_attribute_query cl_amd_vec3 cl_amd_printf cl_amd_media_ops cl_amd_media_ops2 cl_amd_popcnt cl_khr_image2d_from_buffer cl_khr_spir cl_khr_subgroups cl_khr_gl_event cl_khr_depth_images cl_khr_mipmap_image cl_khr_mipmap_image_writes
+
+[...]</code></pre>
+
+
+
+
+
+<p>The above output means that there is an OpenCL platform with devices – GPU (The R9 Nano) and the CPU (most likely) available</p>
+
+<p>Call computecpp_info which is located in the bin folder of the ComputeCpp installation:</p>
+<pre><code>$ /usr/local/computecpp/bin/computecpp_info</code></pre>
+
+
+<p>The output should look something like thisL
+</p><pre><code>********************************************************************************
+
+ComputeCpp Info (CE 0.1.2)
+
+********************************************************************************
+
+Toolchain information:
+
+GLIBCXX: 20150426
+This version of libstdc++ is supported.
+
+********************************************************************************
+
+Device Info:
+
+Discovered 2 devices matching:
+platform :
+device type :
+
+--------------------------------------------------------------------------------
+Device 0:
+
+Device is supported : YES - Tested internally by Codeplay Software Ltd.
+CL_DEVICE_NAME : Fiji
+CL_DEVICE_VENDOR : Advanced Micro Devices, Inc.
+CL_DRIVER_VERSION : 1912.5 (VM)
+CL_DEVICE_TYPE : CL_DEVICE_TYPE_GPU
+--------------------------------------------------------------------------------
+Device 1:
+
+Device is supported : YES - Tested internally by Codeplay Software Ltd.
+CL_DEVICE_NAME : Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz
+CL_DEVICE_VENDOR : Intel(R) Corporation
+CL_DRIVER_VERSION : 1.2.0.25
+CL_DEVICE_TYPE : CL_DEVICE_TYPE_CPU
+********************************************************************************</code></pre>
+
+
+<p>At this point, we have verified that we have SYCL 1.2/OpenCL 1.2 supported device(s) available in our system.
+
+</p><h3>TensorFlow</h3>
+
+<p>Finally, lets get TensorFlow, there are three places worth consideration:</p>
+
+
+<p>Official upstream (stable branch):</p>
+<pre><code>$ git clone https://github.com/tensorflow/tensorflow.git</code></pre>
+
+
+<p>Development branch – Benoit Steiner fork OpenCL hub:</p>
+<pre><code>$ git clone https://github.com/benoitsteiner/tensorflow-opencl.git</code></pre>
+
+
+<p>Experimental branch – Mine for high pace experimental:</p>
+<pre><code>$ git clone https://github.com/lukeiwanski/tensorflow-opencl.git</code></pre>
+<pre><code>$ cd tensorflow-opencl
+$ ./configure</code></pre>
+
+
+<p>Configure is an interactive bash script that sets-up environment for TensorFlow.</p>
+
+<p>If you exported the variables mentioned in “Set Up” section you should be able to press enter for all the options. Otherwise you will have to answer few questions:</p>
+<pre><code>Please specify the location of python. [Default is /usr/bin/python]:
+Do you wish to build TensorFlow with Google Cloud Platform support? [y/N]
+No Google Cloud Platform support will be enabled for TensorFlow
+Do you wish to build TensorFlow with Hadoop File System support? [y/N]
+No Hadoop File System support will be enabled for TensorFlow
+Found possible Python library paths:
+/usr/local/lib/python2.7/dist-packages
+/usr/lib/python2.7/dist-packages
+Please input the desired Python library path to use. Default is [/usr/local/lib/python2.7/dist-packages]
+Using python library path: /usr/local/lib/python2.7/dist-packages
+Do you wish to build TensorFlow with OpenCL support? [y/N] y
+OpenCL support will be enabled for TensorFlow
+Do you wish to build TensorFlow with CUDA support? [y/N]
+No CUDA support will be enabled for TensorFlow
+Please specify which C++ compiler should be used as the host C++ compiler. [Default is /usr/bin/clang++-3.6 ]: /usr/bin/clang++-3.6
+Please specify which C compiler should be used as the host C compiler. [Default is /usr/bin/clang-3.6 ]: /usr/bin/clang-3.6
+Please specify the location where ComputeCpp for SYCL 1.2 is installed. [Default is /usr/local/computecpp]:</code></pre>
+
+
+<p>After that is finished you can either run TensorFlow testsuite (recommended):</p>
+<pre><code>$ bazel test --config=sycl -k --test_timeout 1600 -- //tensorflow/... -//tensorflow/contrib/... -//tensorflow/java/... -//tensorflow/compiler/...
+</code></pre>
+
+
+<p>or, build pip package (pip package):</p>
+<pre><code>$ bazel build --local_resources 2048,.5,1.0 -c opt --config=sycl //tensorflow/tools/pip_package:build_pip_package</code></pre>
+<pre><code>$ mkdir _python_build
+$ cd _python_build
+$ ln -s ../bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/* .
+$ ln -s ../tensorflow/tools/pip_package/* .</code></pre>
+
+
+<p>Keep in mind OpenCL support at this point is experimental and at an early stage in development.</p>
+
+<h3>Next Steps</h3>
+
+<p>TensorFlow introduction:<br> <a target="_blank" href="https://www.tensorflow.org/get_started/basic_usage">https://www.tensorflow.org/get_started/basic_usage</a><br>
+OpenCL support status: <br> <a target="_blank" href="https://www.tensorflow.org/get_started/basic_usage">https://github.com/tensorflow/tensorflow/issues/22</a></p>
+
+

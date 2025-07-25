@@ -1,0 +1,48 @@
+---
+id: 18
+url: how-offload-cpp-works---every-function-is-a-template
+user_id: 73
+date: 2011-08-09T17:05:38.7200Z
+category: news
+title: "How Offload C++ works - every function is a template"
+showOnFrontPage: 0
+views: 443
+tags:
+redirect_from:
+  - /portal/how-offload-cpp-works---every-function-is-a-template
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>Offload C++ adds an implicit &quot;template shell&quot; around C/C++ code and many features are very template-like, in fact this &quot;template shell&quot; emerged as a powerful pattern for programming heterogeneous systems.  In this blog we draw an analogy between some of these features and the corresponding C++ template features and how these Offload C++ features help with programming heterogeneous architectures.
+</p><h3>Every function is a template!</h3>
+<p>The Offload C++ compiler implicitly treats every function as a template. The benefit of this is that any function can be implicitly &quot;instantiated&quot; by the compiler for different processors and memory types (deduced from arguments) without further annotations. This instantiation is also called call-graph duplication (See <a href="{{ '/articles/193-Automatic+separate+compilation+-+aka+Call-Graph+Duplication' | relative_url }}">this article</a> for a more detailed description). An example:
+</p>
+<pre>void add(int* result, int* a,int* b)  //normal C function
+{    *result = *a + *b;
+}
+
+void addtest(int* res, int* a, int* b)
+{    add(res,a,b); //normal call on the host
+     __offload
+     {   //on the accelerator
+         int lres,la = *a,lb  = *b; //declaring an initializing local data on accelerator
+         add(&amp;lres,&amp;la,&amp;lb);  //&quot;instantiating&quot; add as function on accelerator with signature __offload void add(__local*int,__local int*,__local int*)
+     }
+}
+</pre>
+<p>The code inside the __offload block runs on the accelerator (SPU or GPU for example). For the call to add the compiler &quot;instantiates&quot; that function (and the functions it invokes) for the accelerator (i.e. the code is compiled for the accelerator) and with parameters pointers deduced to be local memory pointers because the arguments are accelerator-local addresses.
+</p>
+<p>
+Automatic deduction and propagation of annotationsBeing able to call the same functions from different processors and have the compiler automatically generate the required &quot;instantiation&quot; behind the scenes saves time, helps keeping the code generic C/C++ and enables the programmer to call standard functions on the accelerator without having to annotate them. The compiler automatically generates and compiled the functions required on the accelerator and propagates the __offload annotation and memory types (deduced from arguments) through their call-graphs.
+</p><h3>Offload functions - explicit specializations</h3>
+<p>Since normal functions are treated as templates, functions declared using __offload can be considered explicit specialisations of those functions. For example in the code above, had there been the following __offload function available
+</p>
+<pre> __offload void add(int* result, int* a,int* b)  //specialization for accelerator using local parameter pointers
+{    *result = __special_fast_offload_add(a,b);
+}
+</pre>
+<p>the compiler would have automatically selected this function for the call to add inside the __offload block instead of &quot;instantiating&quot; the original function for the   In a later blog we describe the Offload features corresponding to explicit instantiation and class templates.
+</p>
+
+

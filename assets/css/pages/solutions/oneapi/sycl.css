@@ -1,0 +1,46 @@
+---
+---
+
+
+body {
+    --sycl-color: #de4400;
+}
+
+section#splash {
+    background-color: var(--sycl-color);
+    color: white;
+}
+
+section#splash .button {
+    background: rgba(0, 0, 0, .7) !important;
+}
+
+section#sycl-academy img {
+    width: 848px;
+}
+
+section a.button {
+    margin-top: .5rem;
+    background: var(--sycl-color) !important;
+}
+
+/**
+ * Section: SYCL-SC
+ */
+section#sycl-sc {
+    background-size: cover;
+    color: white;
+    background-color: black;
+}
+
+section#sycl-sc h1 {
+    font-weight: 400;
+}
+
+@media screen and (max-width: 1050px) {
+    section#sycl-sc .wrapper {
+        grid-template-areas:
+        "left"
+        "right";
+    }
+}

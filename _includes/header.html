@@ -1,0 +1,230 @@
+<!-- The top level navigation bar that provides access to the home page and main menu. -->
+<div class="wrapper">
+    <ol class="nav-items">
+        <input id="nav-burger-checkbox" type="checkbox" />
+        <li class="burger">
+            <a href="#" class="nav-item-centered" aria-label="Show the mobile menu">
+                <label for="nav-burger-checkbox" class="nav-item-centered"><i class="material-icons">menu</i></label>
+            </a>
+        </li>
+        <li class="logo">
+            <a href="{{ '/' | relative_url }}" class="nav-item-centered" aria-label="Go to the home page">
+                <div class="logo-image"></div>
+            </a>
+        </li>
+        <li class="menu">
+            <ol>
+                <li>
+                    <a href="{{ '/' | relative_url }}">Home</a>
+                </li>
+                <li class="drop">
+                    <a href="{{ '/solutions/oneapi/' | relative_url }}" data-href="{{ '/solutions/oneapi/' | relative_url }}">oneAPI</a>
+                    <div>
+                        <ol class="wrapper">
+                            <li>
+                                <a href="{{ '/solutions/oneapi/overview' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/oneapi.png' | relative_url }}"
+                                                 alt="Acoran Icon" />oneAPI</h1>
+                                        <p>What is SYCL? What is oneAPI? Click here to learn about the oneAPI
+                                            ecosystem, as well as the tools and technologies supporting it.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/solutions/oneapi/plugins' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/oneapi-plugin.png' | relative_url }}"
+                                                 alt="Silicon Enablement Icon"/>oneAPI for NVIDIA&reg;/AMD</h1>
+                                        <p>Codeplay provides plugins for both NVIDIA&reg; and AMD GPUs, that will allow
+                                        you to build SYCL based software using oneAPI.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://developer.codeplay.com/products/oneapi/construction-kit/home/" target="_blank">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/construction-kit.png' | relative_url }}"
+                                                 alt="Ecosystem Icon" />oneAPI Construction Kit</h1>
+                                        <p>The oneAPI Construction Kit brings the oneAPI ecosystem and a wealth of
+                                            SYCL libraries to new and custom accelerators.</p>
+                                    </div>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ '/solutions/oneapi/sycl' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/sycl.png' | relative_url }}"
+                                                 alt="Ecosystem Icon" />SYCL&trade;</h1>
+                                        <p>The royalty-free, cross platform abstraction layer that enables oneAPI.
+                                            Learn about the SYCL standard.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/solutions/oneapi/research' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/research.png' | relative_url }}"
+                                                 alt="Ecosystem Icon" />Research Projects</h1>
+                                        <p>Learn about our work with the AERO and SYCLOPS Research Projects.</p>
+                                    </div>
+                                </a>
+                            </li>
+                        </ol>
+                    </div>
+                </li>
+                <li class="drop">
+                    <a href="{{ '/portal/all-updates/' | relative_url }}" data-href="{{ '/portal/' | relative_url }}">News</a>
+                    <div>
+                        <ol class="wrapper">
+                            <li>
+                                <a href="{{ '/portal/all-updates/' | relative_url }}">
+                                    <div>
+                                        <h1>
+                                            <img src="{{ '/assets/images/global/nav/menu-icons/all-updates.png' | relative_url }}"
+                                                 alt="News Icon" />All Updates</h1>
+                                        <p>Brows a combined list of blogs, press-releases, news and announcements all
+                                            in one place.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/portal/news/' | relative_url }}">
+                                    <div>
+                                        <h1>
+                                            <img src="{{ '/assets/images/global/nav/menu-icons/news.png' | relative_url }}"
+                                                 alt="News Icon" />News</h1>
+                                        <p>Read the latest updates and news, directly from the team at Codeplay.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/portal/press-releases/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/press-updates.png' | relative_url }}"
+                                                 alt="Press Updates Icon" />Press Updates</h1>
+                                        <p>A combined list of all our current and previous press-releases.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/portal/blogs/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/blogs.png' | relative_url }}"
+                                                 alt="Blogs Icon" />Blogs</h1>
+                                        <p>Read blogs for our talented engineers at Codeplay and the industry at
+                                            large.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/portal/videos/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/video.png' | relative_url }}"
+                                                 alt="Videos Icon" />Videos</h1>
+                                        <p>Watch videos for our talented engineers at Codeplay and the industry at
+                                            large.</p>
+                                    </div>
+                                </a>
+                            </li>
+                        </ol>
+                    </div>
+                </li>
+                <li class="drop">
+                    <a href="{{ '/company/about/' | relative_url }}" data-href="{{ '/company/' | relative_url }}">Company</a>
+                    <div>
+                        <ol class="wrapper">
+                            <li>
+                                <a href="{{ '/company/about/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/about.png' | relative_url }}"
+                                                 alt="About Us Icon" />About Us</h1>
+                                        <p>Learn about Codeplay, who we are, what we have done and view our
+                                            timeline.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/company/careers/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/careers.png' | relative_url }}"
+                                                 alt="Careers Icon" />Careers</h1>
+                                        <p>Interested in joining our team? View all our current positions as well as
+                                            tips to build a successful application.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/company/team/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/team.png' | relative_url }}"
+                                                 alt="Management Team Icon" />Management Team</h1>
+                                        <p>Meet our senior management team along with our founder and CEO.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/company/collaborations/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/partners.png' | relative_url }}"
+                                                 alt="Partners Icon" />Collaborations</h1>
+                                        <p>See some of the companies, industry partners and standards bodies we
+                                            have collaborate with. </p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/company/press-packs/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/press-packs.png' | relative_url }}"
+                                                 alt="Press-Packs Icon" />Press-Packs</h1>
+                                        <p>Download our press-packs containing logos and guides on how to use them.</p>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ '/company/contact/' | relative_url }}">
+                                    <div>
+                                        <h1><img src="{{ '/assets/images/global/nav/menu-icons/contact.png' | relative_url }}"
+                                                 alt="Contact Us Icon" />Contact Us</h1>
+                                        <p>Get in touch with us and we will help with any queries you have. </p>
+                                    </div>
+                                </a>
+                            </li>
+                        </ol>
+                    </div>
+                </li>
+                <li>
+                    <a href="{{ '/company/contact' | relative_url }}">Contact</a>
+                </li>
+                <li>
+                    <a href="https://developer.codeplay.com" target="_blank" rel="noopener">
+                        <i class="material-icons">construction</i> Developer Portal
+                    </a>
+                </li>
+            </ol>
+        </li>
+        <li class="social">
+            <ul class="social-icons">
+                <li>
+                    <a class="social-icon-newsletter"
+                       href="https://eepurl.com/g7gMMf"
+                       title="Subscribe To Newsletter" target="_blank" rel="noopener"></a>
+                </li>
+                <li>
+                    <a class="social-icon-facebook"
+                       href="https://facebook.com/codeplaysoft"
+                       title="Visit Our Facebook" target="_blank" rel="noopener"></a>
+                </li>
+                <li>
+                    <a class="social-icon-twitter"
+                       href="https://twitter.com/codeplaysoft"
+                       title="Visit our Twitter" target="_blank" rel="noopener"></a>
+                </li>
+            </ul>
+        </li>
+    </ol>
+</div>
+
+

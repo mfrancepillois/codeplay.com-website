@@ -1,0 +1,47 @@
+---
+id: 7
+url: offload-compiler-helps-spotting-undefined-behaviour-caused-by-c-style-casts
+user_id: 73
+date: 2011-05-17T15:57:07.7200Z
+category: news
+title: "Offload&trade; compiler helps spotting undefined behaviour caused by C-style casts"
+showOnFrontPage: 0
+views: 345
+tags:
+redirect_from:
+  - /portal/offload-compiler-helps-spotting-undefined-behaviour-caused-by-c-style-casts
+layout: portal/portal-article-view
+thumbnail: /assets/images/portal/no-thumbnail-placeholder.png
+---
+
+<p>C++ is known to have a wide &quot;undefined behaviour envelope&quot;. Some of that envelope is inherited from C (see <a href="http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html">http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html</a> for a discussion), but C++ provides even more traps for programmers to fall into. C-Style casts for example are widely used in C++ applications, but these casts are also a common source of problems especially when used with undefined and polymorphic types. The following source code is a test example that we used to show to applicants at job interviews. We found, however, that even experienced developers struggled to identify the problem. Code using &quot;that feature&quot; was actually written during a real software project and the resulting program was crashing in inexplicable ways. After some debugging nightmares with wrong virtual methods getting called and other problems, the developers eventually decided to blame the compiler. I would probably blame the compiler, too, but for not providing information about the problem. But then again the C++ standard does usually not mandate diagnostics in these situations.
+</p>
+<pre>struct str1* p1;
+struct str2* p2;
+
+void f()
+{
+	/*this function should be moved after the definition of str1 and str2 for
+	the following cast to compile correctly*/
+	p1 = (str1*)p2;
+}
+
+struct str2 { };
+
+struct str1: str2
+{
+	virtual void m(){}
+};
+</pre>
+<p>The problem is the C-style cast in function f. When the compiler sees this cast the structs str1 and str2 are still undefined, so the compiler just re-interprets the pointer types and does a plain assignment. Later on, however, str1 is defined as a subclass of str2 and by declaring the virtual method str1::m the compiler implicitly adds a pointer to the vtable to the layout of str1. That means that the base class str2 is allocated (in most C++ Abi's) after the vtable pointer (at an non-zero offset). As a result the cast from str2* to str1* needs to perform a pointer adjustment (i.e. subtract the size of the vtable pointer). So the cast in the code above compiles correctly only if the function f is moved after the definition of str1 and str2.
+</p><h1>How the Offload compiler can help</h1>
+<p>Since we came across this type of code very frequently in C++ applications written by C programmers, we decided to make the Offload compiler help finding such problematic casts so that the developer can restructure their code accordingly. On the example above the Offload compiler issues the following warning:
+</p>
+<pre>*** WARNING: Dangerous pointer cast from 'struct str2 *' to 'struct str1 *' may cause unpredictable behaviour !!!
+This cast should be compiled after the definition of both 'struct str2 ' and 'struct str1 ' as it performs
+pointer adjustment.
+</pre>
+<p>This help is very useful, but it is also limited to one translation unit. Changing C-style casts to static_casts where possible would flag up the problem at compile time as static_cast cannot cast pointer types to unrelated structs. In reality however, C++ code bases have huge numbers of C-style casts all over the place and changing them would be a huge effort. Instead, the offload compiler implements the command-line option -cp_c2staticcasts to compile C-style casts with the limited semantic of static_casts.
+</p>
+
+

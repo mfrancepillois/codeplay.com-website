@@ -1,0 +1,35 @@
+---
+id: 11
+category: offload-library
+date: 2020-07-07T17:23:33.7200Z
+date_modified: 1970-01-01T01:00:00.3600Z
+title: "__outer_call"
+redirect_from:
+  - /kb/11
+layout: products/offload/kb/view
+---
+<p>One of the most useful features of Offload is being able to call a function on PPU from SPU using __outer_call.
+</p>
+<pre><code>#include &lt;liboffload&gt;
+static int foo() __outer_call;
+
+static int func()
+{
+	offloadThread_t handle = __offload()
+	{
+		int bar = foo(); // calls back onto the PPU and performs its execution there
+	};
+}
+</code></pre><p>In the above example, the function foo will have its execution performed on the PPU, before returning the result back within the Offload&trade; context. This may be useful for example for PPU memory allocations from the SPU.Some restrictions apply on functions with the outer_call attribute.
+</p><ul>
+<li> cannot be virtual methods</li>
+<li> all pointer variables must be outer pointers (pointers to main memory)</li>
+<li> the this pointer (if a non-static member function) must be an outer pointer</li>
+<li> all duplicated types must be outer</li>
+</ul><p>
+__outer_call is simply a define to __attribute__((outer_call)) within the library header.
+</p><p>
+Note that outer calls interrupt the PPU, so doing many outer calls severly impact performance!
+</p>
+
+

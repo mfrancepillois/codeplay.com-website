@@ -1,0 +1,77 @@
+section#what-is-compute-aorta {
+    background-color: #477d44;
+    color: #efefef;
+}
+section#what-people-are-saying {
+    text-align: center;
+}
+section#what-people-are-saying #quotes {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 1rem;
+}
+@media screen and (min-width: 800px) {
+    section#what-people-are-saying #quotes {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media screen and (min-width: 1200px) {
+    section#what-people-are-saying #quotes {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+}
+section#what-people-are-saying #quotes > div {
+    background-color: #477d44;
+    color: #efefef;
+    padding: 4rem;
+    position: relative;
+}
+section#what-people-are-saying #quotes > div:after {
+    content: '';
+    position: absolute;
+    left: 22%;
+    top: 100%;
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid #477d44;
+    clear: both;
+}
+section#what-people-are-saying #quotes > div:nth-child(even) {
+    background-color: #2a552a;
+}
+section#what-people-are-saying #quotes > div:nth-child(even):after {
+    left: 62%;
+}
+section#what-people-are-saying #quotes h1 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 2rem;
+}
+section#what-people-are-saying #quotes h2 {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, .7);
+}
+
+
+section#what-is-compute-aorta #timed-image {
+    height: 414px;
+    max-width: 405px;
+    position: relative
+}
+
+section#what-is-compute-aorta #timed-image img:nth-of-type(1),
+section#what-is-compute-aorta #timed-image img:nth-of-type(2) {
+    position: absolute
+}
+
+section#what-is-compute-aorta #timed-image img:nth-of-type(1) {
+    display: none;
+}
+
+
+section#the-perfect-framework .layered-image {
+    max-width: 397px;
+    height: 397px;
+}
