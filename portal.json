@@ -28,7 +28,7 @@
             }],
             "url": "{{ site.url }}/{{ site.baseurl }}{{ post.url }}",
             "category": "{{ post.category }}",
-            "thumbnail": "{{ site.url }}{{ post.thumbnail }}",
+            "thumbnail": "{{site.url}}/{{site.baseurl}}{{ post.thumbnail }}",
             "description": "{{ post.description }}",
             "date_published": "{{ post.date | date_to_long_string }}"
         }
