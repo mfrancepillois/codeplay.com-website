@@ -1,3 +1,6 @@
+---
+---
+
 let timer = null;
 function debounce(func) {
    clearTimeout(timer);
@@ -9,7 +12,7 @@ $(document).ready(function () {
    let originalPosts = $('#news-list').contents();
 
    let searchIndex = [];
-   $.getJSON('/portal.json', function( data ) {
+   $.getJSON('{{ site.url }}/{{ site.baseurl }}/portal.json', function( data ) {
       searchIndex = data['items'];
    });
 
