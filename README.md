@@ -9,10 +9,6 @@ To build the website, run `bundle install jekyll build`.
 
 To optimize (compress css/js), run the script `./scripts/optimize.sh`.
 
-## Support
-
-Contact <info@codeplay.com>
-
 ## License
 
 This repository uses two licenses. 
