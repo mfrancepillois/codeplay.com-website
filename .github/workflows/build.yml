@@ -69,7 +69,7 @@ jobs:
           ./scripts/optimize.sh "$PWD/_site/codeplay.com-website"
 
       - name: Prepare
-        run: mv ./site/codeplay.com-website/* ./site && rm -rf codeplay.com-website
+        run: mv ./_site/codeplay.com-website/* ./_site && rm -rf codeplay.com-website
 
       - name: Upload Optimized Site
         uses: actions/upload-pages-artifact@v3
