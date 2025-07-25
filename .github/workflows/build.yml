@@ -68,6 +68,9 @@ jobs:
           chmod +x ./scripts/optimize.sh
           ./scripts/optimize.sh "$PWD/_site/codeplay.com-website"
 
+      - name: Prepare
+        run: mv ./site/codeplay.com-website/* ./site && rm -rf codeplay.com-website
+
       - name: Upload Optimized Site
         uses: actions/upload-pages-artifact@v3
 
