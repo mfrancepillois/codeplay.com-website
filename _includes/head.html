@@ -71,7 +71,7 @@
     <script>
         $(function() {
             if(cookiePolicyManager.isCookiePolicyAccepted()) {
-                $.getScript("{{script}}");
+                $.getScript("{{ script | relative_url }}");
             }
         });
     </script>
@@ -86,7 +86,7 @@
     {%- endif -%}
     {%- if scripts -%}
     {%- for script in scripts -%}
-    <script src="{{script}}?v={{site.version_cache_hash}}"></script>
+    <script src="{{ script | relative_url }}?v={{site.version_cache_hash}}"></script>
     {%- endfor -%}
     {%- endif -%}
 
