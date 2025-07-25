@@ -95,7 +95,7 @@ function createNewsPanel(id, url, thumbnailUrl, authorAvatarUrl, authorTitle, ca
    return $('<div class="news-panel">' +
 '                        <a href="' + url + '">' +
 '                            <div>' +
-'                                <img src="{{site.url}}/{{site.baseurl}}' + thumbnailUrl + '" alt="' + title + ' Image" />' +
+'                                <img src="' + thumbnailUrl + '" alt="' + title + ' Image" />' +
 '                            </div>' +
 '                            <div>' +
 '                                <div class="avatar">' +
