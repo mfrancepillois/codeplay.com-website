@@ -15,4 +15,11 @@ Contact <info@codeplay.com>
 
 ## License
 
-Apache License 2.0
+This repository uses two licenses. 
+
+* **Apache License 2.0**
+
+  all directories except `./_collections/_portal_posts`
+* **Creative Commons - Attribution-ShareAlike 4.0 International**
+
+  `./_collections/_portal_posts` directory
