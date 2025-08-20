@@ -3,7 +3,7 @@ category: blogs
 date: '2025-07-08T09:00:00.0'
 hidden: false
 layout: portal/portal-article-view
-thumbnail: /assets/images/portal/article-images/2025-07-02-sycl-10-years/thumbnail.webp
+thumbnail: /assets/images/portal/article-images/2025-07-08-sycl-runtime-compilation/thumbnail.webp
 title: 'SYCL Runtime Compilation: A New Way to Specialise Kernels Using C++ Metaprogramming'
 user_id: 501121313
 ---
