@@ -61,10 +61,10 @@ Intel GPUs) using registers.
 Registers are a kind of small and fast memory bank (called Register File) located just beside the compute engine, as
 this can be seen on the following diagrams showing selected parts of an Intel GPU architecture.
 
-![Xe2 GPU Vector engine Illustration](/assets/images/portal/article-images/2025-09-02-intel-gpu/ComputeUnit.jpg)<br>
+![Xe2 GPU Vector engine Illustration]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/ComputeUnit.jpg' | relative_url }})<br>
 *Illustration of an Intel Xe2 GPU Vector engine architecture (simplified)*
 
-![XeCore GPU Illustration](/assets/images/portal/article-images/2025-09-02-intel-gpu/XeCore.jpg)<br>
+![XeCore GPU Illustration]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/XeCore.jpg' | relative_url }})<br>
 *Illustration of an Intel XeCore architecture (simplified)*
 
 Basically, the tensor core reads operands A and B from a the *register file* and then writes the accumulated output C
@@ -158,7 +158,7 @@ from Global Memory to the L1 Cache, then the second step is carried out by the `
 Registers, hopefully from the L1 cache if the data is still available in cache (cache hit).
 The diagram below illustrates this process:
 
-![Intel Backend Memory Semantic](/assets/images/portal/article-images/2025-09-02-intel-gpu/IntelMemory.jpg)<br>
+![Intel Backend Memory Semantic]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/IntelMemory.jpg' | relative_url }})<br>
 *Intel Backend Memory Semantic (synchronous)*
 
 Nvidia has chosen to leverage the Share Local Memory (SMEM) instead of the cache. SMEM is indeed a scratch pad memory
@@ -168,7 +168,7 @@ a memory buffer in SMEM, but also `TritonGPU::LocalLoadOp` and `TritonGPU::Local
 between SMEM and Registers.
 Consequently, the triton process for loading and storing data (synchronously) in the Nvidia architecture is as follow:
 
-![Nvidia Backend Memory Semantic](/assets/images/portal/article-images/2025-09-02-intel-gpu/NvidiaMemory.jpg)<br>
+![Nvidia Backend Memory Semantic]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/NvidiaMemory.jpg' | relative_url }})<br>
 *Nvidia Backend Memory Semantic (synchronous)*
 
 
@@ -195,7 +195,7 @@ So, in our example, if A needs $NumReg_A$ registers to be stored, this means tha
 for A across the loop, and thus the compiler needs to fit the variables used between line 1 and 7 in $N - NumReg_A$
 registers, with $N$ being the total number of registers available.
 
-![variable liveness simple example](/assets/images/portal/article-images/2025-09-02-intel-gpu/liveness_example_annotated.jpg)<br>
+![variable liveness simple example]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/liveness_example_annotated.jpg' | relative_url }})<br>
 *Variable liveness simple example*
 
 It is therefore easy to understand that in such a kernel, if the variable A is large and the kernel processing between
@@ -387,7 +387,7 @@ an [optimization pass](https://github.com/intel/intel-xpu-backend-for-triton/blo
 which aims to reduce variable liveness where possible.
 To this ends, the pass attempts to bring load operations closer to the actual uses of the loaded data.
 
-![Reduce Variable Liveness pass diagram](/assets/images/portal/article-images/2025-09-02-intel-gpu/liveness-pass-diagram.jpg)<br>
+![Reduce Variable Liveness pass diagram]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/liveness-pass-diagram.jpg' | relative_url }})<br>
 *Reduce Variable Liveness pass diagram*
 
 The diagram above shows how the compiler pass works to reduce the liveness of `DotOp` operands.
@@ -436,10 +436,10 @@ We have evaluated the performance of Triton FlashAttention v2 on Intel PVC GPU.
 The following plots show the normalised performance of the FlashAttention kernel with the *reduce-liveness-pass* enabled
 for different input configurations.
 
-![Normalized performance PVC1100](/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1100_new.png)<br>
+![Normalized performance PVC1100]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1100_new.png' | relative_url }})<br>
 *FlashAttention v2 Normalized performance PVC1100*
 
-![Normalized performance PVC1550](/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1550_new.png)<br>
+![Normalized performance PVC1550]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1550_new.png' | relative_url }})<br>
 *FlashAttention v2 Normalized performance PVC1550*
 
 We can see that the pass has improved the performance for several configurations on all the targets evaluated by more
