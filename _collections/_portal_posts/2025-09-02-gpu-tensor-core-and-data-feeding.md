@@ -67,7 +67,7 @@ this can be seen on the following diagrams showing selected parts of an Intel GP
 ![XeCore GPU Illustration]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/XeCore.jpg' | relative_url }})<br>
 *Illustration of an Intel XeCore architecture (simplified)*
 
-Basically, the tensor core reads operands A and B from a the *register file* and then writes the accumulated output C
+Basically, the tensor core reads operands A and B from the *register file* and then writes the accumulated output C
 back to the *file register*.
 
 However, as we have seen in [Introduction](#gpu-tensor-core-and-data-feeding), Tensor Cores have improved significantly,
