@@ -445,7 +445,7 @@ for different input configurations.
 ![Normalized performance PVC1100]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1100_new.jpg' | relative_url }})
 *FlashAttention v2 Normalized performance PVC1100*
 
-![Normalized performance PVC1550]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1550_new.jpg' |
+![Normalized performance PVC1550]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1550_new.jpg' | relative_url }})
 *FlashAttention v2 Normalized performance PVC1550*
 
 The testbed used for these evaluations and a disclaimer can be found [at the bottom](#disclaimer) of this blog post.
