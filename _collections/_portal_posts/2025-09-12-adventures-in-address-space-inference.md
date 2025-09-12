@@ -3,7 +3,7 @@ category: blogs
 date: '2025-09-12T02:00:00.0'
 hidden: false
 layout: portal/portal-article-view
-thumbnail: /assets/images/portal/article-images/2025-09-12-adventures-in-address-space-inference/MemLayout.jpg
+thumbnail: /assets/images/portal/article-images/2025-09-12-adventures-in-address-space-inference/MemLayout.png
 title: 'Adventures in Address Space Inference'
 user_id: 61238111182
 ---
@@ -45,7 +45,7 @@ are three different scopes that memory can exist in:
 * **Local**: Available and shared between all work items in a single work group.
 * **Global**: Shared between all work items regardless of work group.
 
-![A diagram of the OpenCL memory layout. There are two blocks labelled named "Work Group", each containing four circles (representing work items) linked to various memory regions. Each work item is linked to their own "Private" memory, a work-group-specific "Local Memory" and a single shared "Global Memory"]({{ '/assets/images/portal/article-images/2025-09-12-adventures-in-address-space-inference/MemLayout.jpg' | relative_url }})
+![A diagram of the OpenCL memory layout. There are two blocks labelled named "Work Group", each containing four circles (representing work items) linked to various memory regions. Each work item is linked to their own "Private" memory, a work-group-specific "Local Memory" and a single shared "Global Memory"]({{ '/assets/images/portal/article-images/2025-09-12-adventures-in-address-space-inference/MemLayout.png' | relative_url }})
 
 Reads and writes to memory need to know what type of memory to access, so languages that compile to OpenCL extend
 the type system with so called **address spaces** to contain this information. Instead of an `int *`, OpenCL C has
