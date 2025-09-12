@@ -442,7 +442,7 @@ We have evaluated the performance of Triton FlashAttention v2 on Intel GPU Max P
 The following plots show the normalised performance of the FlashAttention kernel with the *reduce-liveness-pass* enabled
 for different input configurations.
 
-![Normalized performance PVC1100]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1100_new.jpg' |
+![Normalized performance PVC1100]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1100_new.jpg' | relative_url }})
 *FlashAttention v2 Normalized performance PVC1100*
 
 ![Normalized performance PVC1550]({{ '/assets/images/portal/article-images/2025-09-02-intel-gpu/pvc1550_new.jpg' |
