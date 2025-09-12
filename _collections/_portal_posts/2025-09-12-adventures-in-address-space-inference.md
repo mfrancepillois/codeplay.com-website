@@ -77,7 +77,7 @@ For anyone interested, however, Victor Lomüller has done a talk about it, avail
 The main limitation with this system was that it required each pointer had to have precisely one address space
 which was deduced as part of its initialization. For example:
 
-```c++
+```cpp
 int* a = some_func(); // the address space of a will be dependant on the return type of some_func
 
 int* b; // default address space is private
@@ -126,7 +126,7 @@ consider that LLVM instructions can generally be treated as function calls.
 
 Here is some nonsensical example code to use as an example:
 
-```c
+```cpp
 local int *local_input = 0x1000;
 unknown int *unknown_input = 0x3000;
 global int *global_input = 0x2000;
@@ -168,7 +168,8 @@ With these tools, we can loop through each statement in the module and do the fo
   3. Any other functions do nothing special.
 
 Applying this on the previous example, we get the following:
-```c
+
+```cpp
 local int *local_input = 0x1000;
 __a int *unknown_input = 0x3000;
 global int *global_input = 0x2000;
@@ -207,7 +208,7 @@ With our example, `__b`, `__a` and `__c` both share a bag with `local`, so get r
 bag with `global` and so gets replaced with `global` itself. This results in the final value of our module being the
 following:
 
-```c
+```cpp
 local int *local_input = 0x1000;
 local int *unknown_input = 0x3000;
 global int *global_input = 0x2000;
@@ -239,7 +240,7 @@ language. This language is very restrictive though, so we need to expand both th
 In our rules for `eq` we define the function as having two input bags that are combined into one single bag. Let's steal
 some syntax from C++ to represent this, and define a few more functions:
 
-```c
+```cpp
 bool eq<A>(A int *, A int *);
 B int *memcpy<A, B>(A int *, B int *, int);
 A int *get_ptr_offset<A>(A int *, int);
@@ -262,7 +263,7 @@ from the previous section with the following:
 
 As an example, consider:
 
-```c
+```cpp
 A int *do_something_strange<A>(A int *, private int *);
 
 global int *first = 0x1000;
@@ -282,7 +283,7 @@ know that the second argument has the `private` address space, so we add it to `
 
 Then the result of applying these solutions are as follows:
 
-```c
+```cpp
 global int *do_something_strange<global>(global int *, private int *);
 
 global int *first = 0x1000;
@@ -305,7 +306,8 @@ We will expand our toy language to include the following:
 * A `return` expression that returns a given value from the function.
 
 Then, we will work on another example program:
-```c
+
+```cpp
 int *my_func(unknown int *a, unknown int *b, global int *iftrue, unknown int *iffalse) {
   bool check = eq(a, b);
   goto truebranch if check else falsebranch;
@@ -321,7 +323,7 @@ int *my_func(unknown int *a, unknown int *b, global int *iftrue, unknown int *if
 Generating a templated declaration is relatively simple: We give the return value and arguments bags like any other
 value and solve them in the same way. For `my_func`, this would result in this:
 
-```c
+```cpp
 global int *my_func(__a int *a, __a int *b, global int *iftrue, global int *iffalse) {
   // Constrains a and b to the same address space
   bool check = eq(a, b);
@@ -340,7 +342,7 @@ global int *my_func(__a int *a, __a int *b, global int *iftrue, global int *iffa
 Looking at this function, we see that we can substitute `__a` with any address space we like and still have a valid
 function. For stylistic reasons, we use upper case unsolved names, resulting in `my_func` having a declaration of:
 
-```c
+```cpp
 global int *my_func<A>(A int *, A int *, global int *, global int *);
 ```
 
@@ -369,7 +371,7 @@ functions (I told you the name would make sense later):
 
 With that, we are now able to fully handle arbitrary user provided functions. For example, we can go from this:
 
-```c
+```cpp
 int *my_func(unknown int *a, unknown int *b, global int *iftrue, unknown int *iffalse) {
   bool check = eq(a, b);
   goto truebranch if check else falsebranch;
@@ -394,7 +396,8 @@ void main() {
 ```
 
 To this:
-```c
+
+```cpp
 global int *my_func__private(private int *a, private int *b, global int *iftrue, global int *iffalse) {
   bool check = eq(a, b);
   goto truebranch if check else falsebranch;
@@ -430,7 +433,7 @@ void main() {
 Until now we've only been looking at types that only have a single address. Real world code tends to be more complex,
 with multiple levels of pointers, structs and arrays. Take this example, with unsolved address spaces:
 
-```c++
+```cpp
 struct Element {
   __a int * __b *Active;
   __c int *Stuff[5];
