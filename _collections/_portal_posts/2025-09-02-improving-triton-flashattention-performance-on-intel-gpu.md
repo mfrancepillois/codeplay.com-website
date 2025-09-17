@@ -246,7 +246,6 @@ def FlashAttention2_forward(Q, K, V):
         L.store(li, i) # Store data to Global Memory as the i-th block of L
 
     return O, L 
-
 ```
 
 In the second version of the implementation of the FlashAttention model, the loop order has been reversed to promote
