@@ -206,7 +206,7 @@ This is exactly what happens in the widespread case of [FlashAttention version 2
 
 The FlashAttention v2 Forward pass algorithm in pseudo-code is:
 
-```python {.line-numbers}
+```python
 # Inputs : Q, K and V are 2D Matrices in Global Memory
 def FlashAttention2_forward(Q, K, V):
     O = torch.zeros_like(Q, requires_grad=True)
